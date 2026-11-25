@@ -215,6 +215,8 @@
           <input type="password" id="loginPassInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleFirebaseLogin()" />
         </div>
         <button class="btn-primary" style="width:100%;padding:11px;" onclick="handleFirebaseLogin()">🔐 Login dengan Firebase</button>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--text-muted);font-size:12px;"><span style="flex:1;border-top:1px solid var(--border);"></span>atau<span style="flex:1;border-top:1px solid var(--border);"></span></div>
+        <button class="btn-outline" style="width:100%;padding:11px;background:#ffffff;color:#1f2937;border:1px solid #dadce0;" onclick="handleGoogleLogin()"><span style="font-weight:800;color:#4285F4;">G</span>&nbsp; Lanjutkan dengan Google</button>
       </div>
 
       <div id="loginErrorMsg" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;font-weight:600;"></div>
@@ -597,6 +599,20 @@
       document.getElementById("loginPinBox").classList.toggle("hidden", mode !== "pin");
       document.getElementById("loginFirebaseBox").classList.toggle("hidden", mode !== "firebase");
       document.getElementById("loginErrorMsg").textContent = "";
+    }
+
+    async function handleGoogleLogin() {
+      const errEl = document.getElementById("loginErrorMsg");
+      if (!auth) {
+        errEl.textContent = "Firebase belum terhubung. Masuk via PIN Cepat dulu lalu pasang Firebase Config di Pengaturan.";
+        return;
+      }
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await auth.signInWithRedirect(provider);
+      } catch (e) {
+        errEl.textContent = "Login Google gagal: " + (e && e.message ? e.message : e);
+      }
     }
 
     async function handlePinLogin() {
@@ -1320,6 +1336,16 @@ ${link}`;
     (async function boot() {
       loadLocal();
       initFirebase();
+      if (auth) {
+        try {
+          const res = await auth.getRedirectResult();
+          if (res && res.user) {
+            localStorage.setItem(SESSION_KEY, "true");
+          }
+        } catch (e) {
+          console.warn("Google redirect gagal:", e);
+        }
+      }
       const params = new URLSearchParams(window.location.search);
       const invParam = params.get("inv");
       if (invParam) {
