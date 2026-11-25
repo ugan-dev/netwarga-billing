@@ -1065,7 +1065,12 @@ function receiptMessage(c, cfg, link, owedAmount) {
   }
 
   function planOptions(selected) {
-    return (APP.settings.plans || []).map(p => `<option value="${esc(p.name)}">`).join("");
+    const plans = APP.settings.plans || [];
+    let opts = plans.map(p => `<option value="${esc(p.name)}" ${p.name === selected ? "selected" : ""}>${esc(p.name)} · ${fmtRp(p.amount)}</option>`).join("");
+    if (selected && !plans.some(p => p.name === selected)) {
+      opts = `<option value="${esc(selected)}" selected>${esc(selected)}</option>` + opts;
+    }
+    return opts;
   }
   function openCustomerForm(id) {
     const c = id ? getC(id) : null;
@@ -1094,8 +1099,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
       <div class="grid2">
         <div class="field">
           <label>Paket</label>
-          <input id="f_plan" list="planList" value="${esc(c ? c.plan : (APP.settings.plans[0] ? APP.settings.plans[0].name : ""))}" />
-          <datalist id="planList">${planOptions()}</datalist>
+          <select id="f_plan">${planOptions(c ? c.plan : (APP.settings.plans[0] ? APP.settings.plans[0].name : ""))}</select>
         </div>
         <div class="field"><label>Iuran / bulan (Rp)</label><input id="f_amount" inputmode="numeric" value="${esc(c ? c.amount : (APP.settings.plans[0] ? APP.settings.plans[0].amount : 100000))}" /></div>
       </div>
@@ -1625,6 +1629,10 @@ function receiptMessage(c, cfg, link, owedAmount) {
     const t = e.target;
     if (t.dataset && t.dataset.change === "month" && t.value) { APP.month = t.value; $$(".monthPick").forEach(m => m.value = t.value); renderHome(); renderCash(); }
     else if (t.id === "sortSel") renderCustomers();
+    else if (t.id === "f_plan") {
+      const p = (APP.settings.plans || []).find(x => x.name === t.value.trim());
+      if (p) $("#f_amount").value = p.amount;
+    }
     else if (t.id === "s_qrisFile") handleQrisFile(e);
     else if (t.id === "importFile") importBackup(e);
     else if (t.id === "payN") { const c = getC(($("#sheetBody [data-act='savePay']") || {}).dataset?.id); updatePaySum(c); }
