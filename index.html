@@ -432,10 +432,9 @@
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
-  <!-- Firebase compat SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- Firebase compat SDK dimuat dinamis hanya untuk halaman admin (login).
+       Halaman tagihan publik (?inv=...) tidak butuh SDK: datanya dibaca
+       lewat REST API Firestore supaya buka pertama dari link jauh lebih cepat. -->
 
   <script>
   /* ============================================================
@@ -655,6 +654,58 @@ function receiptMessage(c, cfg, link, owedAmount) {
   /* ============================================================
      FIREBASE
      ============================================================ */
+  /* SDK dimuat dinamis hanya untuk admin, supaya halaman tagihan publik
+     tidak perlu menunggu unduhan SDK saat pertama dibuka dari link. */
+  function loadFirebaseSdk() {
+    const srcs = [
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js",
+      "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"
+    ];
+    let chain = Promise.resolve();
+    for (const src of srcs) {
+      chain = chain.then(() => new Promise((res, rej) => {
+        const s = document.createElement("script");
+        s.src = src; s.onload = res; s.onerror = () => rej(new Error("Gagal memuat " + src));
+        document.head.appendChild(s);
+      }));
+    }
+    return chain;
+  }
+  /* Baca Firestore lewat REST API (tanpa SDK) — untuk halaman tagihan publik. */
+  const FB_REST = "https://firestore.googleapis.com/v1/projects/" + FB_CONFIG.projectId + "/databases/(default)/documents";
+  function restVal(v) {
+    if (!v || typeof v !== "object") return v;
+    if ("stringValue" in v) return v.stringValue;
+    if ("integerValue" in v) return Number(v.integerValue);
+    if ("doubleValue" in v) return v.doubleValue;
+    if ("booleanValue" in v) return v.booleanValue;
+    if ("nullValue" in v) return null;
+    if ("arrayValue" in v) return (v.arrayValue.values || []).map(restVal);
+    if ("mapValue" in v) return restDoc(v.mapValue);
+    return undefined;
+  }
+  function restDoc(doc) {
+    const o = {};
+    for (const [k, v] of Object.entries(doc.fields || {})) o[k] = restVal(v);
+    return o;
+  }
+  async function restGetDoc(path) {
+    const r = await fetch(FB_REST + "/" + path);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return restDoc(await r.json());
+  }
+  async function restQuery(collectionId, field, value, limit) {
+    const r = await fetch(FB_REST + ":runQuery", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ structuredQuery: { from: [{ collectionId }], where: { fieldFilter: { field: { fieldPath: field }, op: "EQUAL", value: { stringValue: value } } }, limit } })
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const rows = await r.json();
+    return rows.filter(x => x.document).map(x => ({ id: x.document.name.split("/").pop(), data: restDoc(x.document) }));
+  }
   function initFirebase() {
     try {
       if (typeof firebase === "undefined") return false;
@@ -1472,21 +1523,22 @@ function receiptMessage(c, cfg, link, owedAmount) {
       return;
     }
     try {
-      // Halaman tagihan membaca langsung dokumen pelanggan lewat token
-      // (bukan koleksi invoices terpisah), supaya tetap jalan dengan rules
-      // Firestore yang sudah terbit — rules itu hanya membuka
-      // customers/ledger/app_meta.
-      const [cq, st] = await Promise.all([
-        db.collection("customers").where("publicToken", "==", token).limit(1).get(),
-        db.collection("app_meta").doc("settings").get()
+      // Halaman tagihan membaca lewat REST API (tanpa SDK Firebase) supaya
+      // buka pertama dari link tidak perlu menunggu unduhan SDK. Datanya
+      // tetap dokumen pelanggan lewat token (bukan koleksi invoices
+      // terpisah), sesuai rules Firestore yang sudah terbit — rules itu
+      // hanya membuka customers/ledger/app_meta.
+      const [custs, st] = await Promise.all([
+        restQuery("customers", "publicToken", token, 1),
+        restGetDoc("app_meta/settings")
       ]);
-      if (cq.empty) {
+      if (!custs.length) {
         box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Tagihan tidak ditemukan</b>Link ini mungkin sudah tidak berlaku. Hubungi admin.</div>`;
         return;
       }
-      const cDoc = cq.docs[0];
-      const c = cDoc.data();
-      const s = { ...SETTINGS_DEFAULT, ...(st.exists ? st.data() : {}) };
+      const cDoc = custs[0];
+      const c = cDoc.data;
+      const s = { ...SETTINGS_DEFAULT, ...(st || {}) };
       const cf = { ...s, reminderDays: Number(s.reminderDays ?? 5), graceDays: Number(s.graceDays ?? 10) };
       const today = todayYmd();
       const b = billing(c, today, cf);
@@ -1547,9 +1599,9 @@ function receiptMessage(c, cfg, link, owedAmount) {
       // Riwayat pembayaran dimuat belakangan supaya tagihan utama tampil dulu:
       // di v4 halaman tagihan hanya butuh 1x baca data, di v5 tadinya 2x berurutan
       // (pelanggan + riwayat), itu yang bikin terasa lama.
-      db.collection("ledger").where("customerId", "==", cDoc.id).limit(12).get()
-        .then(pays => {
-          const payments = pays.docs.map(d => d.data())
+      restQuery("ledger", "customerId", cDoc.id, 12)
+        .then(rows => {
+          const payments = rows.map(r => r.data)
             .filter(l => l.type === "in")
             .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 6)
             .map(l => ({ cycles: l.cycles || [], amount: l.amount || 0, date: l.date || "" }));
@@ -1659,11 +1711,12 @@ function receiptMessage(c, cfg, link, owedAmount) {
   /* ============================================================
      BOOT
      ============================================================ */
-  (function boot() {
+  (async function boot() {
     initTheme();
-    const ok = initFirebase();
     const inv = new URLSearchParams(location.search).get("inv");
     if (inv) { renderPublicInvoice(inv); return; }
+    let ok = false;
+    try { await loadFirebaseSdk(); ok = initFirebase(); } catch (e) { console.error(e); }
     if (!ok) { showLogin(); loginErr("Koneksi ke server gagal dimuat. Periksa internet lalu muat ulang."); return; }
     showLogin();
     auth.onAuthStateChanged(user => {
