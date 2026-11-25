@@ -76,11 +76,7 @@
     .brand-sub { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .top-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
-    .theme-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); padding: 5px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
-    .switch-track { width: 34px; height: 18px; border-radius: 999px; background: var(--surface-3); position: relative; transition: 0.2s; border: 1px solid var(--border); }
-    .theme-pill.is-dark .switch-track { background: var(--primary); border-color: var(--primary); }
-    .switch-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; position: absolute; top: 1px; left: 1px; transition: 0.2s; }
-    .theme-pill.is-dark .switch-thumb { left: 17px; }
+    .theme-pill { display: inline-flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); padding: 6px 9px; border-radius: 999px; font-size: 16px; line-height: 1; cursor: pointer; }
 
     .btn-primary { background: var(--primary); color: #fff; padding: 9px 13px; }
     .btn-primary:hover { background: var(--primary-hover); }
@@ -186,9 +182,8 @@
             <div style="font-size:11px;color:var(--text-muted);">NetWarga Manager</div>
           </div>
         </div>
-        <button class="theme-pill" id="loginThemePill" onclick="toggleTheme()">
-          <span id="loginThemeText">Dark</span>
-          <span class="switch-track"><span class="switch-thumb"></span></span>
+        <button class="theme-pill" id="loginThemePill" onclick="toggleTheme()" title="Ganti tema gelap / terang">
+          <span id="loginThemeIcon">☀️</span>
         </button>
       </div>
 
@@ -213,9 +208,8 @@
         </div>
       </div>
       <div class="top-actions">
-        <button class="theme-pill" id="headerThemePill" onclick="toggleTheme()">
-          <span id="headerThemeText">Dark</span>
-          <span class="switch-track"><span class="switch-thumb"></span></span>
+        <button class="theme-pill" id="headerThemePill" onclick="toggleTheme()" title="Ganti tema gelap / terang">
+          <span id="headerThemeIcon">☀️</span>
         </button>
         <button class="btn-primary btn-sm" onclick="openCustomerModal()">+ Pelanggan</button>
         <button class="btn-danger btn-sm" onclick="logoutAdmin()">Keluar</button>
@@ -794,13 +788,9 @@
       state.theme = t;
       document.documentElement.setAttribute("data-theme", t);
       const isDark = t === "dark";
-      ["loginThemePill", "headerThemePill"].forEach(id => {
+      ["loginThemeIcon", "headerThemeIcon"].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.classList.toggle("is-dark", isDark);
-      });
-      ["loginThemeText", "headerThemeText"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = isDark ? "ON" : "OFF";
+        if (el) el.textContent = isDark ? "☀️" : "🌙";
       });
       saveLocal();
     }
