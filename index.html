@@ -116,7 +116,8 @@
     /* Urgent / Customer Card */
     .urgent-card { background: var(--surface-2); border: 1px solid var(--border); border-left: 3.5px solid var(--danger); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .cust-top .badge { font-size: 10px; padding: 3px 8px; }
     .cust-name { font-weight: 800; font-size: 15.5px; }
     .cust-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 
@@ -986,7 +987,7 @@
               <div class="cust-meta">${c.address} • ${c.plan}</div>
               ${isSentThisCycle ? `<div style="margin-top:5px;"><span class="badge badge-sent">✓ WA Terkirim (${methodLabel})</span></div>` : ""}
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;white-space:nowrap;flex-shrink:0;">${badgeMap[c.status] || ""}${daysLate > 0 ? `<span class="badge badge-telat">⏰ Telat ${daysLate} hari</span>` : ""}</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center;white-space:nowrap;flex-shrink:0;">${badgeMap[c.status] || ""}${daysLate > 0 ? `<span class="badge badge-telat">⏰ Telat ${daysLate} hari</span>` : ""}</div>
           </div>
 
           <div class="info-box">
