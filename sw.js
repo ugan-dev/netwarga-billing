@@ -1,5 +1,5 @@
 /* NetWarga Manager service worker — cache-first untuk shell aplikasi. */
-const CACHE_NAME = "netwarga-v4-1";
+const CACHE_NAME = "netwarga-v4-2";
 const ASSETS = [
   "./",
   "./index.html",
