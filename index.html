@@ -328,9 +328,14 @@
             <textarea id="setWaTemplate" rows="5"></textarea>
           </div>
           <div class="form-group">
+            <label>Pengingat tagihan (H-berapa hari sebelum jatuh tempo)</label>
+            <input type="number" id="setReminderDays" min="0" max="30" value="5" />
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Contoh: H-5 berarti tagihan dibuka &amp; pengingat dikirim 5 hari sebelum jatuh tempo.</div>
+          </div>
+          <div class="form-group">
             <label>Masa tenggang sebelum putus (hari setelah jatuh tempo)</label>
-            <input type="number" id="setGraceDays" min="0" max="30" value="4" />
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Contoh: jatuh tempo tgl 1, tenggang 4 hari &rarr; diputus tgl 5 kalau belum bayar.</div>
+            <input type="number" id="setGraceDays" min="0" max="30" value="10" />
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Contoh: jatuh tempo tgl 1, tenggang 10 hari &rarr; diputus tgl 11 kalau belum bayar.</div>
           </div>
           <div class="form-group">
             <label>Upload Gambar QRIS (Otomatis Muncul di Link Pelanggan)</label>
@@ -406,9 +411,11 @@
       <div class="form-row">
         <div class="form-group">
           <label>No. WhatsApp (628xxx)</label>
-          <input type="text" id="custPhone" placeholder="628123456789" />
-          <button type="button" class="btn-outline btn-sm" style="margin-top:6px;width:100%;" onclick="pickContact()">📇 Pilih dari Kontak</button>
-          <div id="contactHint" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Bisa juga ketik manual seperti biasa.</div>
+          <div style="position:relative;">
+            <input type="text" id="custPhone" placeholder="628123456789" style="padding-right:42px;" />
+            <button type="button" onclick="pickContact()" title="Pilih dari Kontak" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;line-height:1;cursor:pointer;padding:8px;">📇</button>
+          </div>
+          <div id="contactHint" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Ketuk ikon 📇 di dalam kolom untuk pilih dari kontak, atau ketik manual seperti biasa.</div>
         </div>
         <div class="form-group">
           <label>Blok / Alamat Rumah</label>
@@ -510,7 +517,9 @@
         bankInfo: "BCA 1234567890 a.n. Admin NetWarga\nDANA / GoPay: 081234567890",
         waTemplate: DEFAULT_WA_TEMPLATE,
         qrisImage: "",
-        graceDays: 4,
+        reminderDays: 5,
+        graceDays: 10,
+        settingsVersion: 2,
         firebaseConfig: HARDCODED_FIREBASE_CONFIG
       },
       customers: [
@@ -576,16 +585,13 @@
       return due;
     }
 
-    // H-5 = 5 hari sebelum jatuh tempo berikutnya. Date menangani ganti bulan
-    // dengan jumlah hari asli (Jan 31, Feb 28/29, Apr 30, dst).
-    function getHMinus5Date(dueDay, now = new Date()) {
-      const h5 = getNextDueDate(dueDay, now);
-      h5.setDate(h5.getDate() - 5);
-      return h5;
-    }
-
-    function getHMinus5Day(dueDay, now = new Date()) {
-      return getHMinus5Date(dueDay, now).getDate();
+    // Tanggal pengingat = N hari sebelum jatuh tempo berikutnya (N dari
+    // pengaturan, default 5). Date menangani ganti bulan dengan jumlah
+    // hari asli (Jan 31, Feb 28/29, Apr 30, dst).
+    function getReminderDate(dueDay, now = new Date()) {
+      const r = getNextDueDate(dueDay, now);
+      r.setDate(r.getDate() - Number(state.settings.reminderDays ?? 5));
+      return r;
     }
 
     // Siklus tagihan yang sedang ditagih untuk pelanggan ini (YYYY-MM),
@@ -595,20 +601,23 @@
       return `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}`;
     }
 
-    // Auto-reset H-5: status kembali "belum", paidAt + penanda WA dikosongkan,
-    // invoice diperbarui, billingCycle dicatat supaya tidak reset berulang.
-    // Riwayat Buku Kas TIDAK dihapus. Mengembalikan true jika ada yang berubah.
-    function runAutoResetHMinus5() {
+    // Auto-reset siklus: mulai tanggal pengingat (H-reminderDays) status
+    // kembali "belum", paidAt + penanda WA dikosongkan, invoice diperbarui,
+    // billingCycle dicatat supaya tidak reset berulang. Pakai >= (bukan ==)
+    // supaya tetap jalan kalau aplikasi tidak dibuka tepat di hari H-nya.
+    // Pelanggan yang sudah bayar siklus itu dilewati. Riwayat Buku Kas
+    // TIDAK dihapus. Mengembalikan true jika ada yang berubah.
+    function runAutoResetCycle() {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let updated = false;
 
       state.customers.forEach((c, idx) => {
         const dueDay = Number(c.dueDay || 20);
-        const h5 = getHMinus5Date(dueDay, now);
+        const h5 = getReminderDate(dueDay, now);
         const cycle = getCustomerBillingCycle(dueDay, now);
 
-        if (today.getTime() === h5.getTime() && c.billingCycle !== cycle) {
+        if (today.getTime() >= h5.getTime() && c.billingCycle !== cycle) {
           const ym = cycle.replace("-", "");
           c.status = "belum";
           c.paidAt = "";
@@ -625,12 +634,24 @@
       return updated;
     }
 
+    // Migrasi sekali untuk data lama (belum ada settingsVersion): aturan
+    // tenggang lama default 4 hari -> H+10. Nilai 4 hanya pernah muncul
+    // sebagai default lama, bukan pilihan pengguna; kalau sudah versi 2
+    // (pengguna sudah mengatur sendiri), nilainya tidak disentuh.
+    function migrateSettingsObject(s) {
+      if (!s || s.settingsVersion != null) return s;
+      if (s.graceDays === 4) s.graceDays = 10;
+      if (s.reminderDays == null) s.reminderDays = 5;
+      s.settingsVersion = 2;
+      return s;
+    }
+
     function loadLocal() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          state = { ...state, ...parsed, settings: { ...state.settings, ...(parsed.settings || {}) } };
+          state = { ...state, ...parsed, settings: { ...state.settings, ...migrateSettingsObject(parsed.settings || {}) } };
         }
         if (HARDCODED_FIREBASE_CONFIG) state.settings.firebaseConfig = HARDCODED_FIREBASE_CONFIG;
       } catch (e) {}
@@ -701,13 +722,27 @@
       return getNextDueDate(c.dueDay, now);
     }
 
-    // Tanggal putus = jatuh tempo siklus + masa tenggang (default 4 hari).
-    // Contoh: jatuh tempo 1 Des + 4 hari -> diputus 5 Des kalau belum bayar.
+    // Tanggal putus = jatuh tempo siklus + masa tenggang (default 10 hari).
+    // Contoh: jatuh tempo 1 Des + 10 hari -> diputus 11 Des kalau belum bayar.
     function getDisconnectDate(c, now = new Date()) {
       const due = getCycleDueDate(c, now);
       const cut = new Date(due);
-      cut.setDate(cut.getDate() + Number(state.settings.graceDays ?? 4));
+      cut.setDate(cut.getDate() + Number(state.settings.graceDays ?? 10));
       return cut;
+    }
+
+    // Perlu Tindakan Segera: telat (wajib putus LAN), atau belum bayar yang
+    // sudah masuk masa pengingat (H-reminderDays) sampai tanggal putus.
+    // Yang jatuh temponya masih jauh tidak masuk sini.
+    function needsUrgentAction(c, now = new Date()) {
+      if (c.status === "telat") return true;
+      if (c.status !== "belum") return false;
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const due = getCycleDueDate(c, now);
+      const remindFrom = new Date(due);
+      remindFrom.setDate(remindFrom.getDate() - Number(state.settings.reminderDays ?? 5));
+      const cut = getDisconnectDate(c, now);
+      return today.getTime() >= remindFrom.getTime() && today.getTime() < cut.getTime();
     }
 
     // Auto-telat: pelanggan "belum" yang sudah lewat tanggal putus
@@ -755,7 +790,9 @@
           bankInfo: state.settings.bankInfo,
           waTemplate: state.settings.waTemplate || DEFAULT_WA_TEMPLATE,
           qrisImage: state.settings.qrisImage || "",
-          graceDays: state.settings.graceDays ?? 4
+          reminderDays: state.settings.reminderDays ?? 5,
+          graceDays: state.settings.graceDays ?? 10,
+          settingsVersion: 2
         }, { merge: true });
         for (const c of state.customers) {
           await db.collection("customers").doc(c.id).set(c, { merge: true });
@@ -772,7 +809,7 @@
       if (!db) return;
       try {
         const metaDoc = await db.collection("app_meta").doc("settings").get();
-        if (metaDoc.exists) state.settings = { ...state.settings, ...metaDoc.data() };
+        if (metaDoc.exists) state.settings = { ...state.settings, ...migrateSettingsObject(metaDoc.data()) };
         const snap = await db.collection("customers").get();
         if (!snap.empty) state.customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         const ledgerSnap = await db.collection("ledger").get();
@@ -865,11 +902,12 @@
       document.getElementById("statUnpaidCount").textContent = `${unpaidList.length} pelanggan belum bayar`;
       document.getElementById("statProfit").textContent = formatRp(totalIncome - totalOut);
 
+      const urgentList = state.customers.filter(c => needsUrgentAction(c));
       const urgentEl = document.getElementById("urgentList");
-      if (!unpaidList.length) {
-        urgentEl.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">Semua pelanggan sudah lunas bulan ini!</p>`;
+      if (!urgentList.length) {
+        urgentEl.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">Tidak ada pelanggan yang perlu tindakan saat ini.</p>`;
       } else {
-        urgentEl.innerHTML = unpaidList.map(c => renderCustomerCard(c, true)).join("");
+        urgentEl.innerHTML = urgentList.map(c => renderCustomerCard(c, true)).join("");
       }
 
       const q = (document.getElementById("searchInput").value || "").toLowerCase();
@@ -1228,7 +1266,8 @@ ${link}`;
       document.getElementById("setAdminWa").value = state.settings.adminWa;
       document.getElementById("setBankInfo").value = state.settings.bankInfo;
       document.getElementById("setWaTemplate").value = state.settings.waTemplate || DEFAULT_WA_TEMPLATE;
-      document.getElementById("setGraceDays").value = state.settings.graceDays ?? 4;
+      document.getElementById("setReminderDays").value = state.settings.reminderDays ?? 5;
+      document.getElementById("setGraceDays").value = state.settings.graceDays ?? 10;
       if (state.settings.firebaseConfig) {
         document.getElementById("setFirebaseJson").value = JSON.stringify(state.settings.firebaseConfig, null, 2);
       }
@@ -1275,7 +1314,8 @@ ${link}`;
       state.settings.adminWa = document.getElementById("setAdminWa").value.replace(/\D/g, "");
       state.settings.bankInfo = document.getElementById("setBankInfo").value.trim();
       state.settings.waTemplate = document.getElementById("setWaTemplate").value.trim() || DEFAULT_WA_TEMPLATE;
-      state.settings.graceDays = Math.min(30, Math.max(0, Number(document.getElementById("setGraceDays").value || 4)));
+      state.settings.reminderDays = Math.min(30, Math.max(0, Number(document.getElementById("setReminderDays").value || 5)));
+      state.settings.graceDays = Math.min(30, Math.max(0, Number(document.getElementById("setGraceDays").value || 10)));
       renderAll();
       await syncToCloud();
       alert("Pengaturan & QRIS berhasil disimpan!");
@@ -1443,7 +1483,7 @@ ${link}`;
     (async function boot() {
       loadLocal();
       const fbOk = initFirebase();
-      const autoChanged = runAutoResetHMinus5();
+      const autoChanged = runAutoResetCycle();
       const telatChanged = runAutoMarkTelat();
       setLoginStatus(fbOk ? "Status: Firebase terhubung." : "Status: Firebase TIDAK terhubung (cek internet, lalu reload).");
       const bootParams = new URLSearchParams(window.location.search);
@@ -1493,8 +1533,8 @@ ${link}`;
       } else if (localStorage.getItem(SESSION_KEY) === "true") {
         await enterAdminDashboard();
         // enterAdminDashboard menarik data Firestore (menimpa state lokal),
-        // jadi jalankan lagi reset H-5 pada data hasil pull lalu sinkronkan.
-        const postChanged = runAutoResetHMinus5();
+        // jadi jalankan lagi reset siklus pada data hasil pull lalu sinkronkan.
+        const postChanged = runAutoResetCycle();
         const postTelat = runAutoMarkTelat();
         if ((autoChanged || postChanged || telatChanged || postTelat) && db) await syncToCloud();
       } else {
