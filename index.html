@@ -248,7 +248,7 @@
               <span class="dot-danger"></span>
               <div>
                 <div class="sec-title">Perlu Tindakan Segera</div>
-                <div class="sec-sub">(Telat / Wajib Putus LAN)</div>
+                <div class="sec-sub">(Belum Lunas &amp; Lewat Jatuh Tempo)</div>
               </div>
             </div>
             <button class="btn-outline btn-sm" onclick="switchTab('customers')">Lihat Semua</button>
@@ -731,18 +731,15 @@
       return cut;
     }
 
-    // Perlu Tindakan Segera: telat (wajib putus LAN), atau belum bayar yang
-    // sudah masuk masa pengingat (H-reminderDays) sampai tanggal putus.
-    // Yang jatuh temponya masih jauh tidak masuk sini.
+    // Perlu Tindakan Segera: belum lunas DAN sudah lewat tanggal jatuh
+    // tempo siklusnya (mulai hari jatuh tempo). Yang jatuh temponya masih
+    // jauh tidak masuk sini, walau belum bayar.
     function needsUrgentAction(c, now = new Date()) {
+      if (c.status === "lunas") return false;
       if (c.status === "telat") return true;
-      if (c.status !== "belum") return false;
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const due = getCycleDueDate(c, now);
-      const remindFrom = new Date(due);
-      remindFrom.setDate(remindFrom.getDate() - Number(state.settings.reminderDays ?? 5));
-      const cut = getDisconnectDate(c, now);
-      return today.getTime() >= remindFrom.getTime() && today.getTime() < cut.getTime();
+      return today.getTime() >= due.getTime();
     }
 
     // Auto-telat: pelanggan "belum" yang sudah lewat tanggal putus
