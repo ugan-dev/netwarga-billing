@@ -194,6 +194,7 @@
 
       <p style="font-size:13px;color:var(--text-muted);text-align:center;margin:4px 0 14px;">Masuk dengan akun Google kamu untuk mengelola NetWarga.<br/>Hanya akun <b style="color:var(--text);">gagan.70700@gmail.com</b> yang diizinkan.</p>
       <button class="btn-outline" style="width:100%;padding:12px;background:#ffffff;color:#1f2937;border:1px solid #dadce0;font-size:15px;" onclick="handleGoogleLogin()"><span style="font-weight:800;color:#4285F4;">G</span>&nbsp; Lanjutkan dengan Google</button>
+      <div id="loginStatus" style="color:var(--text-muted);font-size:11px;margin-top:10px;text-align:center;">Memeriksa koneksi Firebase...</div>
 
       <div id="loginErrorMsg" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;font-weight:600;"></div>
     </div>
@@ -561,12 +562,19 @@
       }
     }
 
+    function setLoginStatus(msg) {
+      const el = document.getElementById("loginStatus");
+      if (el) el.textContent = msg;
+    }
+
     async function handleGoogleLogin() {
       const errEl = document.getElementById("loginErrorMsg");
       if (!auth) {
         errEl.textContent = "Firebase belum terhubung. Coba lagi sebentar lagi.";
+        setLoginStatus("Status: Firebase tidak terhubung.");
         return;
       }
+      setLoginStatus("Status: mengalihkan ke Google...");
       try {
         errEl.textContent = "Mengalihkan ke Google...";
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -1257,7 +1265,8 @@ ${link}`;
 
     (async function boot() {
       loadLocal();
-      initFirebase();
+      const fbOk = initFirebase();
+      setLoginStatus(fbOk ? "Status: Firebase terhubung." : "Status: Firebase TIDAK terhubung (cek internet, lalu reload).");
       const bootParams = new URLSearchParams(window.location.search);
       const bootInv = bootParams.get("inv");
       if (auth) {
@@ -1278,9 +1287,11 @@ ${link}`;
         try {
           const res = await auth.getRedirectResult();
           const u = (res && res.user) || auth.currentUser;
+          if (!u) setLoginStatus("Status: Google tidak mengembalikan sesi login. Coba tekan tombol Google sekali lagi.");
           if (u) {
             if ((u.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
               localStorage.setItem(SESSION_KEY, "true");
+              setLoginStatus("Status: login berhasil sebagai " + u.email + ", membuka dashboard...");
             } else {
               await auth.signOut();
               localStorage.removeItem(SESSION_KEY);
