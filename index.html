@@ -1482,17 +1482,11 @@ function receiptMessage(c, cfg, link, owedAmount) {
       }
       const cDoc = cq.docs[0];
       const c = cDoc.data();
-      const pays = await db.collection("ledger").where("customerId", "==", cDoc.id).limit(50).get();
-      c.payments = pays.docs.map(d => d.data())
-        .filter(l => l.type === "in")
-        .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 12)
-        .map(l => ({ cycles: l.cycles || [], amount: l.amount || 0, date: l.date || "" }));
       const s = { ...SETTINGS_DEFAULT, ...(st.exists ? st.data() : {}) };
       const cf = { ...s, reminderDays: Number(s.reminderDays ?? 5), graceDays: Number(s.graceDays ?? 10) };
       const today = todayYmd();
       const b = billing(c, today, cf);
       const hasQris = s.qrisImage && s.qrisImage.startsWith("data:image/");
-      const payments = (c.payments || []);
 
       let statusBox;
       if (b.status === "lunas") {
@@ -1543,13 +1537,27 @@ function receiptMessage(c, cfg, link, owedAmount) {
           <a class="btn wa block" style="margin-bottom:14px;" target="_blank" rel="noopener"
              href="https://wa.me/${esc(s.adminWa)}?text=${encodeURIComponent(`Halo Admin ${s.bizName}, saya ${c.name} sudah membayar tagihan WiFi ${b.unpaid.map(cycLabel).join(", ")} sebesar ${fmtRp(b.owed)}. Berikut bukti transfernya:`)}">
             📲 Konfirmasi sudah bayar ke admin</a>` : ""}
-        ${payments.length ? `
-          <div class="card">
-            <div class="card-title" style="margin-bottom:8px;">Riwayat pembayaran</div>
-            ${payments.slice(0, 6).map(p => `<div class="hist"><span>${esc((p.cycles || []).map(cycLabel).join(", "))}<br><span class="tiny muted">${esc(dateLong(p.date || today))}</span></span><b class="in num">${fmtRp(p.amount)}</b></div>`).join("")}
-          </div>` : ""}
+        <div id="invHist"></div>
         <div class="inv-foot">${esc(s.bizName)} · Terima kasih 🙏</div>`;
       box.dataset.bank = s.bankInfo || "";
+      // Riwayat pembayaran dimuat belakangan supaya tagihan utama tampil dulu:
+      // di v4 halaman tagihan hanya butuh 1x baca data, di v5 tadinya 2x berurutan
+      // (pelanggan + riwayat), itu yang bikin terasa lama.
+      db.collection("ledger").where("customerId", "==", cDoc.id).limit(12).get()
+        .then(pays => {
+          const payments = pays.docs.map(d => d.data())
+            .filter(l => l.type === "in")
+            .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 6)
+            .map(l => ({ cycles: l.cycles || [], amount: l.amount || 0, date: l.date || "" }));
+          const el = document.getElementById("invHist");
+          if (!el) return;
+          el.innerHTML = payments.length ? `
+            <div class="card">
+              <div class="card-title" style="margin-bottom:8px;">Riwayat pembayaran</div>
+              ${payments.map(p => `<div class="hist"><span>${esc((p.cycles || []).map(cycLabel).join(", "))}<br><span class="tiny muted">${esc(dateLong(p.date || today))}</span></span><b class="in num">${fmtRp(p.amount)}</b></div>`).join("")}
+            </div>` : "";
+        })
+        .catch(() => {});
     } catch (e) {
       console.error(e);
       box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Gagal memuat tagihan</b>Periksa koneksi lalu muat ulang halaman.</div>`;
