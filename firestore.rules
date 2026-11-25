@@ -2,8 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Data utama: tetap terbuka seperti sebelumnya, supaya link tagihan
-    // lama dan script cronjob (tanpa login) tetap bisa baca.
+    // Data utama: terbuka, supaya link tagihan publik (?inv=...) dan
+    // script cronjob (tanpa login) tetap bisa baca/tulis.
     match /customers/{docId} {
       allow read, write: if true;
     }
@@ -12,14 +12,6 @@ service cloud.firestore {
     }
     match /app_meta/{docId} {
       allow read, write: if true;
-    }
-
-    // v5: dokumen tagihan publik, dibaca lewat token acak (?inv=...).
-    // Baca publik, tapi tidak boleh di-list; tulis hanya saat login.
-    match /invoices/{token} {
-      allow get: if true;
-      allow list: if false;
-      allow write: if request.auth != null;
     }
 
     match /{document=**} {

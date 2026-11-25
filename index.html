@@ -704,23 +704,10 @@ function receiptMessage(c, cfg, link, owedAmount) {
       toast("Gagal menyimpan. Cek koneksi lalu coba lagi.", "err");
     }
   }
-  // Tampilan publik (halaman tagihan) hanya menyimpan data yang perlu ditampilkan.
-  function publicView(c) {
-    const pays = APP.ledger.filter(l => l.type === "in" && l.customerId === c.id)
-      .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 12)
-      .map(l => ({ cycles: l.cycles || [], amount: l.amount || 0, date: l.date || "" }));
-    return {
-      name: c.name || "", address: c.address || "", plan: c.plan || "",
-      amount: Number(c.amount) || 0, dueDay: Number(c.dueDay) || 20,
-      startCycle: c.startCycle || "", lastPaidCycle: c.lastPaidCycle || "",
-      paidAt: c.paidAt || "", active: c.active !== false, payments: pays
-    };
-  }
   function customerWrites(c) {
     if (!c.publicToken) c.publicToken = makeToken();
     return [
-      db.collection("customers").doc(c.id).set(clean(c), { merge: true }),
-      db.collection("invoices").doc(c.publicToken).set(clean(publicView(c)))
+      db.collection("customers").doc(c.id).set(clean(c), { merge: true })
     ];
   }
   function saveCustomer(c, msg) { return persist(customerWrites(c), msg); }
@@ -1186,7 +1173,6 @@ function receiptMessage(c, cfg, link, owedAmount) {
         APP.customers = APP.customers.filter(x => x.id !== id);
         renderAll();
         const writes = [db.collection("customers").doc(id).delete()];
-        if (c.publicToken) writes.push(db.collection("invoices").doc(c.publicToken).delete());
         await persist(writes, "Pelanggan dihapus");
       });
   }
@@ -1482,15 +1468,25 @@ function receiptMessage(c, cfg, link, owedAmount) {
       return;
     }
     try {
-      const [iv, st] = await Promise.all([
-        db.collection("invoices").doc(token).get(),
+      // Halaman tagihan membaca langsung dokumen pelanggan lewat token
+      // (bukan koleksi invoices terpisah), supaya tetap jalan dengan rules
+      // Firestore yang sudah terbit — rules itu hanya membuka
+      // customers/ledger/app_meta.
+      const [cq, st] = await Promise.all([
+        db.collection("customers").where("publicToken", "==", token).limit(1).get(),
         db.collection("app_meta").doc("settings").get()
       ]);
-      if (!iv.exists) {
+      if (cq.empty) {
         box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Tagihan tidak ditemukan</b>Link ini mungkin sudah tidak berlaku. Hubungi admin.</div>`;
         return;
       }
-      const c = iv.data();
+      const cDoc = cq.docs[0];
+      const c = cDoc.data();
+      const pays = await db.collection("ledger").where("customerId", "==", cDoc.id).limit(50).get();
+      c.payments = pays.docs.map(d => d.data())
+        .filter(l => l.type === "in")
+        .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 12)
+        .map(l => ({ cycles: l.cycles || [], amount: l.amount || 0, date: l.date || "" }));
       const s = { ...SETTINGS_DEFAULT, ...(st.exists ? st.data() : {}) };
       const cf = { ...s, reminderDays: Number(s.reminderDays ?? 5), graceDays: Number(s.graceDays ?? 10) };
       const today = todayYmd();
