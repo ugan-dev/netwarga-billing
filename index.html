@@ -330,6 +330,13 @@
       <!-- TAB: SETTINGS -->
       <section id="tab-settings" class="hidden">
         <div class="card">
+          <div class="sec-title" style="margin-bottom:6px;">📲 Instal Aplikasi</div>
+          <p id="installStatus" style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">Memeriksa apakah aplikasi bisa diinstal di HP ini…</p>
+          <button id="installBtn" class="btn-primary" style="display:none;" onclick="installApp()">⬇️ Instal NetWarga ke Layar Utama</button>
+          <p id="installHint" style="font-size:12px;color:var(--text-muted);margin-top:10px;">Kalau tombol di atas tidak muncul, pakai menu Chrome (titik tiga) → “Instal aplikasi”. Kalau menu itu juga tidak ada, hapus dulu data situs ini di Chrome → Setelan → Setelan situs → hapus data ugan-dev.github.io, lalu buka lagi aplikasinya.</p>
+        </div>
+
+        <div class="card">
           <div class="sec-title" style="margin-bottom:12px;">Keamanan Akun & PIN Admin</div>
           <div class="form-group">
             <label>Ubah PIN Admin (Untuk Login Cepat)</label>
@@ -713,6 +720,7 @@
     function switchTab(tabName) {
       currentTab = tabName;
       document.querySelectorAll(".bnav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
+      if (tabName === "settings") updateInstallUI();
       ["dashboard", "customers", "finance", "settings"].forEach(t => {
         document.getElementById("tab-" + t).classList.toggle("hidden", t !== tabName);
       });
@@ -1206,6 +1214,40 @@ ${link}`;
     function exitClientPreview() {
       document.getElementById("clientInvoiceView").classList.add("hidden");
       document.getElementById("adminApp").classList.remove("hidden");
+    }
+
+    // Tangkap sinyal instal PWA dari Chrome, tampilkan tombol Instal di Pengaturan
+    let deferredInstallPrompt = null;
+    function updateInstallUI() {
+      const btn = document.getElementById("installBtn");
+      const status = document.getElementById("installStatus");
+      if (!btn || !status) return;
+      if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+        status.textContent = "Aplikasi sudah terinstal dan sedang dibuka sebagai aplikasi.";
+        btn.style.display = "none";
+      } else if (deferredInstallPrompt) {
+        status.textContent = "Aplikasi bisa diinstal di HP ini. Tekan tombol di bawah.";
+        btn.style.display = "inline-flex";
+      } else {
+        status.textContent = "Chrome belum menawarkan instalasi saat ini. Coba tutup lalu buka lagi aplikasi ini, atau pakai menu Chrome (titik tiga) → “Instal aplikasi”.";
+        btn.style.display = "none";
+      }
+    }
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      updateInstallUI();
+    });
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      updateInstallUI();
+    });
+    async function installApp() {
+      if (!deferredInstallPrompt) { updateInstallUI(); return; }
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      updateInstallUI();
     }
 
     // Daftarkan service worker agar aplikasi bisa diinstal (PWA)
