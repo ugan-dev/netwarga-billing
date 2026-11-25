@@ -530,9 +530,16 @@
     };
 
     const MONTHS_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const MONTHS_ID_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
     // Jatuh tempo yang ditampilkan = jatuh tempo BERIKUTNYA (belum lewat).
-    // Misal hari ini 25 Nov dan dueDay 1 -> "1 Desember 2026".
+    // Misal hari ini 25 Nov dan dueDay 1 -> "1 Des 2026" (bulan 3 huruf).
     function formatDueDate(dueDay) {
+      const due = getNextDueDate(dueDay);
+      return `${due.getDate()} ${MONTHS_ID_SHORT[due.getMonth()]} ${due.getFullYear()}`;
+    }
+
+    // Versi bulan penuh, khusus untuk pesan WA: "1 Desember 2026".
+    function formatDueDateFull(dueDay) {
       const due = getNextDueDate(dueDay);
       return `${due.getDate()} ${MONTHS_ID[due.getMonth()]} ${due.getFullYear()}`;
     }
@@ -692,16 +699,6 @@
       const cut = new Date(due);
       cut.setDate(cut.getDate() + Number(state.settings.graceDays ?? 4));
       return cut;
-    }
-
-    // Internet aktif kalau: lunas, atau belum bayar tapi masih dalam masa tenggang.
-    // Telat = mati. Belum bayar tanpa siklus tercatat = mati (datanya belum beres).
-    function isInternetActive(c, now = new Date()) {
-      if (c.status === "lunas") return true;
-      if (c.status === "telat") return false;
-      if (!c.billingCycle) return false;
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return today.getTime() < getDisconnectDate(c, now).getTime();
     }
 
     // Auto-telat: pelanggan "belum" yang sudah lewat tanggal putus
@@ -919,7 +916,6 @@
               <div class="cust-name">${c.name}</div>
               <div class="cust-meta">${c.address} • ${c.plan}</div>
               ${isSentThisCycle ? `<div style="margin-top:5px;"><span class="badge badge-sent">✓ WA Terkirim (${methodLabel})</span></div>` : ""}
-              <div style="margin-top:5px;">${isInternetActive(c) ? `<span class="badge badge-lunas">🌐 Internet Aktif</span>` : `<span class="badge badge-telat">🌐 Internet Mati</span>`}</div>
             </div>
             <div>${badgeMap[c.status] || ""}</div>
           </div>
@@ -1132,7 +1128,7 @@ ${link}`;
         .replace(/\{wifi\}/g, state.settings.bizName)
         .replace(/\{paket\}/g, c.plan)
         .replace(/\{tagihan\}/g, formatRp(c.amount))
-        .replace(/\{tempo\}/g, formatDueDate(c.dueDay))
+        .replace(/\{tempo\}/g, formatDueDateFull(c.dueDay))
         .replace(/\{link\}/g, link);
     }
 
