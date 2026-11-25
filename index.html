@@ -471,8 +471,8 @@
       </p>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <a id="waDirectLink" target="_blank" class="btn-wa" style="padding:10px;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">📲 Buka WhatsApp & Tandai Terkirim</a>
-        <button class="btn-success" id="shareQrisBtn" style="padding:10px;border-radius:10px;">📷 Bagikan Gambar QRIS + Pesan via WhatsApp</button>
-        <p id="shareQrisNote" style="font-size:11.5px;color:var(--text-muted);margin:0;">Tombol ini membagikan gambar QRIS beserta teks tagihan langsung ke WhatsApp (pilih kontak pelanggan di layar berbagi). Link wa.me biasa tidak bisa melampirkan gambar, jadi ini jalurnya.</p>
+        <button class="btn-success" id="shareQrisBtn" style="padding:10px;border-radius:10px;">📷 Tagih WA dengan Gambar QRIS</button>
+        <p id="shareQrisNote" style="font-size:11.5px;color:var(--text-muted);margin:0;">Ketuk tombol ini: gambar QRIS tersimpan ke HP, lalu room chat pelanggan langsung terbuka dengan teks tagihan. Di WhatsApp, ketuk 📎 &rarr; Galeri &rarr; pilih gambar QRIS &rarr; Kirim.</p>
         <button class="btn-outline" id="copyLinkModalBtn">📋 Salin Link Tagihan Pelanggan</button>
         <button class="btn-outline" id="previewClientLinkBtn">👁️ Lihat Tampilan Link di HP Pelanggan</button>
       </div>
@@ -1247,7 +1247,7 @@ ${link}`;
       const shareNote = document.getElementById("shareQrisNote");
       if (state.settings.qrisImage) {
         shareBtn.style.display = "";
-        shareNote.textContent = "Tombol ini membagikan gambar QRIS beserta teks tagihan langsung ke WhatsApp (pilih kontak pelanggan di layar berbagi). Link wa.me biasa tidak bisa melampirkan gambar, jadi ini jalurnya.";
+        shareNote.textContent = "Ketuk tombol ini: gambar QRIS tersimpan ke HP, lalu room chat pelanggan langsung terbuka dengan teks tagihan. Di WhatsApp, ketuk 📎 → Galeri → pilih gambar QRIS → Kirim.";
         shareBtn.onclick = async () => { await shareQrisViaWa(c.id); };
       } else {
         shareBtn.style.display = "none";
@@ -1270,6 +1270,10 @@ ${link}`;
       return new File([arr], fileName, { type: mime });
     }
 
+    // Tagih WA + QRIS langsung ke room chat pelanggan: link wa.me tidak bisa
+    // melampirkan gambar otomatis, jadi gambar QRIS diunduh dulu ke HP, lalu
+    // room chat dibuka dengan teks tagihan (sama seperti tombol WA Tagih).
+    // Di WhatsApp tinggal ketuk 📎 -> Galeri -> pilih gambar QRIS -> Kirim.
     async function shareQrisViaWa(id) {
       const c = state.customers.find(x => x.id === id);
       if (!c) return;
@@ -1277,23 +1281,16 @@ ${link}`;
         alert("Belum ada gambar QRIS. Upload dulu di Pengaturan → Upload Gambar QRIS.");
         return;
       }
-      const file = dataUrlToFile(state.settings.qrisImage, "QRIS-NetWarga.jpg");
       const text = document.getElementById("waPreviewText").value || buildWaMessage(c);
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], text });
-          await markWaSentManual(c.id);
-          closeModal("waModal");
-          return;
-        } catch (e) {
-          if (e && e.name === "AbortError") return;
-        }
-      }
       const a = document.createElement("a");
       a.href = state.settings.qrisImage;
       a.download = "QRIS-NetWarga.jpg";
+      document.body.appendChild(a);
       a.click();
-      alert("HP ini tidak mendukung berbagi gambar langsung. Gambar QRIS sudah diunduh — buka WhatsApp pelanggan, lampirkan gambar itu, lalu tempel teks tagihannya.");
+      a.remove();
+      window.open(`https://wa.me/${c.phone}?text=${encodeURIComponent(text)}`, "_blank");
+      await markWaSentManual(c.id);
+      closeModal("waModal");
     }
 
     function fillSettingsForm() {
