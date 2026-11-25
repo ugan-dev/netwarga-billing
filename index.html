@@ -3,6 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#070b14" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NetWarga" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
   <title>NetWarga Manager - Billing RT/RW Net</title>
   <style>
     :root {
@@ -572,7 +580,7 @@
     async function handlePinLogin() {
       const input = document.getElementById("loginPinInput").value.trim();
       if (input === String(state.adminPin || "123456")) {
-        sessionStorage.setItem(SESSION_KEY, "true");
+        localStorage.setItem(SESSION_KEY, "true");
         document.getElementById("loginErrorMsg").textContent = "";
         await enterAdminDashboard();
       } else {
@@ -590,7 +598,7 @@
       }
       try {
         await auth.signInWithEmailAndPassword(email, pass);
-        sessionStorage.setItem(SESSION_KEY, "true");
+        localStorage.setItem(SESSION_KEY, "true");
         errEl.textContent = "";
         await enterAdminDashboard();
       } catch (e) {
@@ -606,7 +614,7 @@
     }
 
     async function logoutAdmin() {
-      sessionStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SESSION_KEY);
       if (auth && auth.currentUser) {
         try { await auth.signOut(); } catch (e) {}
       }
@@ -1200,6 +1208,13 @@ ${link}`;
       document.getElementById("adminApp").classList.remove("hidden");
     }
 
+    // Daftarkan service worker agar aplikasi bisa diinstal (PWA)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch((e) => console.warn("SW gagal:", e));
+      });
+    }
+
     (async function boot() {
       loadLocal();
       initFirebase();
@@ -1207,7 +1222,7 @@ ${link}`;
       const invParam = params.get("inv");
       if (invParam) {
         await previewClientInvoice(invParam, true);
-      } else if (sessionStorage.getItem(SESSION_KEY) === "true") {
+      } else if (localStorage.getItem(SESSION_KEY) === "true") {
         await enterAdminDashboard();
       } else {
         document.getElementById("loginView").classList.remove("hidden");
