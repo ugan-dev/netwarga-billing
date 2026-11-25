@@ -116,7 +116,7 @@
     /* Urgent / Customer Card */
     .urgent-card { background: var(--surface-2); border: 1px solid var(--border); border-left: 3.5px solid var(--danger); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
     .cust-top .badge { font-size: 10px; padding: 3px 8px; }
     .cust-name { font-weight: 800; font-size: 15.5px; }
     .cust-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
@@ -473,7 +473,7 @@
       <div style="display:flex;flex-direction:column;gap:8px;">
         <a id="waDirectLink" target="_blank" class="btn-wa" style="padding:10px;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">📲 Buka WhatsApp & Tandai Terkirim</a>
         <button class="btn-success" id="shareQrisBtn" style="padding:10px;border-radius:10px;">📷 Tagih WA dengan Gambar QRIS</button>
-        <p id="shareQrisNote" style="font-size:11.5px;color:var(--text-muted);margin:0;">Ketuk tombol ini: gambar QRIS tersimpan ke HP, lalu room chat pelanggan langsung terbuka dengan teks tagihan. Di WhatsApp, ketuk 📎 &rarr; Galeri &rarr; pilih gambar QRIS &rarr; Kirim.</p>
+        <p id="shareQrisNote" style="font-size:11.5px;color:var(--text-muted);margin:0;">Ketuk tombol ini: layar berbagi terbuka — pilih kontak pelanggan, gambar QRIS + teks tagihan terkirim bersamaan.</p>
         <button class="btn-outline" id="copyLinkModalBtn">📋 Salin Link Tagihan Pelanggan</button>
         <button class="btn-outline" id="previewClientLinkBtn">👁️ Lihat Tampilan Link di HP Pelanggan</button>
       </div>
@@ -1248,7 +1248,7 @@ ${link}`;
       const shareNote = document.getElementById("shareQrisNote");
       if (state.settings.qrisImage) {
         shareBtn.style.display = "";
-        shareNote.textContent = "Ketuk tombol ini: gambar QRIS tersimpan ke HP, lalu room chat pelanggan langsung terbuka dengan teks tagihan. Di WhatsApp, ketuk 📎 → Galeri → pilih gambar QRIS → Kirim.";
+        shareNote.textContent = "Ketuk tombol ini: layar berbagi terbuka — pilih kontak pelanggan, gambar QRIS + teks tagihan terkirim bersamaan.";
         shareBtn.onclick = async () => { await shareQrisViaWa(c.id); };
       } else {
         shareBtn.style.display = "none";
