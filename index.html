@@ -506,7 +506,14 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    const HARDCODED_FIREBASE_CONFIG = null;
+    const HARDCODED_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBPTrmC95iLfhP3VEMra70CPrexTQrwC8M",
+      authDomain: "netwarga-manager.firebaseapp.com",
+      projectId: "netwarga-manager",
+      storageBucket: "netwarga-manager.firebasestorage.app",
+      messagingSenderId: "957466403730",
+      appId: "1:957466403730:web:8f3af0b427f4af7e92974b"
+    };
     const STORAGE_KEY = "netwarga_state_v6";
     const SESSION_KEY = "netwarga_admin_logged_in";
     let db = null;
@@ -542,6 +549,12 @@
         { id: "l2", type: "out", desc: "Bayar Langganan ISP Pusat", amount: 95000, date: "2026-11-01" }
       ]
     };
+
+    const MONTHS_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    function formatDueDate(dueDay) {
+      const now = new Date();
+      return `${dueDay} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
+    }
 
     function getCurrentCycle() {
       const now = new Date();
@@ -810,7 +823,7 @@
       };
 
       const cardClass = isUrgent ? "urgent-card" : "cust-card";
-      const dueText = `${c.dueDay} Nov 2026`;
+      const dueText = formatDueDate(c.dueDay);
 
       return `
         <div class="${cardClass}">
@@ -1006,7 +1019,7 @@ ${link}`;
         .replace(/\{wifi\}/g, state.settings.bizName)
         .replace(/\{paket\}/g, c.plan)
         .replace(/\{tagihan\}/g, formatRp(c.amount))
-        .replace(/\{tempo\}/g, String(c.dueDay))
+        .replace(/\{tempo\}/g, formatDueDate(c.dueDay))
         .replace(/\{link\}/g, link);
     }
 
@@ -1230,7 +1243,7 @@ ${link}`;
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Nama Pelanggan</span><strong>${cust.name}</strong></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Alamat</span><strong>${cust.address}</strong></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Paket</span><strong>${cust.plan}</strong></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>${cust.dueDay} Nov 2026</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>${formatDueDate(cust.dueDay)}</strong></div>
         </div>
         ${!isPaid ? `
           ${state.settings.qrisImage ? `
