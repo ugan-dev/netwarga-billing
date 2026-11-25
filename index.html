@@ -534,6 +534,57 @@
       return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     }
 
+    // H-5 jatuh tempo (wrap-around kalender 28 hari): due 20 -> 15, due 3 -> 26
+    function getHMinus5Day(dueDay) {
+      const d = Math.min(28, Math.max(1, Number(dueDay || 20)));
+      return ((d - 5 - 1 + 28) % 28) + 1;
+    }
+
+    // Siklus tagihan yang sedang ditagih untuk pelanggan ini (YYYY-MM)
+    function getCustomerBillingCycle(dueDay, now = new Date()) {
+      const d = Math.min(28, Math.max(1, Number(dueDay || 20)));
+      const h5 = getHMinus5Day(d);
+      const year = now.getFullYear();
+      const month = now.getMonth(); // 0-11
+      const day = now.getDate();
+      // H-5 jatuh di akhir bulan sebelumnya (misal jatuh tempo tgl 3, H-5 tgl 26, hari ini >= 26)
+      let targetDate = new Date(year, month, 1);
+      if (h5 > d && day >= h5) {
+        targetDate = new Date(year, month + 1, 1);
+      }
+      return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    // Auto-reset H-5: status kembali "belum", paidAt + penanda WA dikosongkan,
+    // invoice diperbarui, billingCycle dicatat supaya tidak reset berulang.
+    // Riwayat Buku Kas TIDAK dihapus. Mengembalikan true jika ada yang berubah.
+    function runAutoResetHMinus5() {
+      const now = new Date();
+      const todayDay = now.getDate();
+      let updated = false;
+
+      state.customers.forEach((c, idx) => {
+        const dueDay = Number(c.dueDay || 20);
+        const h5Day = getHMinus5Day(dueDay);
+        const cycle = getCustomerBillingCycle(dueDay, now);
+
+        if (todayDay === h5Day && c.billingCycle !== cycle) {
+          const ym = cycle.replace("-", "");
+          c.status = "belum";
+          c.paidAt = "";
+          c.waSentCycle = "";
+          c.lastWaMethod = "";
+          c.lastWaSentAt = "";
+          c.billingCycle = cycle;
+          c.invoiceCode = `INV-${ym}-${String(idx + 1).padStart(3, "0")}`;
+          updated = true;
+        }
+      });
+
+      if (updated) saveLocal();
+      return updated;
+    }
+
     function loadLocal() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -1305,6 +1356,7 @@ ${link}`;
     (async function boot() {
       loadLocal();
       const fbOk = initFirebase();
+      const autoChanged = runAutoResetHMinus5();
       setLoginStatus(fbOk ? "Status: Firebase terhubung." : "Status: Firebase TIDAK terhubung (cek internet, lalu reload).");
       const bootParams = new URLSearchParams(window.location.search);
       const bootInv = bootParams.get("inv");
@@ -1352,6 +1404,10 @@ ${link}`;
         await previewClientInvoice(invParam, true);
       } else if (localStorage.getItem(SESSION_KEY) === "true") {
         await enterAdminDashboard();
+        // enterAdminDashboard menarik data Firestore (menimpa state lokal),
+        // jadi jalankan lagi reset H-5 pada data hasil pull lalu sinkronkan.
+        const postChanged = runAutoResetHMinus5();
+        if ((autoChanged || postChanged) && db) await syncToCloud();
       } else {
         document.getElementById("loginView").classList.remove("hidden");
         document.getElementById("adminApp").classList.add("hidden");
