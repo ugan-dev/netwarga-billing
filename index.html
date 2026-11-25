@@ -540,6 +540,24 @@
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
+    // Tanggal lengkap dari input kalender (YYYY-MM-DD -> Date lokal), atau null.
+    function getPickedDueDate() {
+      const v = document.getElementById("custDueDay").value;
+      if (!v) return null;
+      const p = v.split("-");
+      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    }
+
+    // Siklus dari tanggal yang dipilih di kalender; kalau beda dengan siklus
+    // jatuh tempo berikutnya, itulah siklus yang sedang ditagih (misal dipilih
+    // 20 Nov padahal jatuh tempo berikutnya 20 Des -> siklus 2026-11).
+    function computeCycleOverride(picked, dueDay, now = new Date()) {
+      if (!picked) return "";
+      const pickedCycle = `${picked.getFullYear()}-${String(picked.getMonth() + 1).padStart(2, "0")}`;
+      const nextCycle = getCustomerBillingCycle(dueDay, now);
+      return pickedCycle !== nextCycle ? pickedCycle : "";
+    }
+
     // Ambil tanggal (1-31) dari input kalender. Yang dipakai hanya tanggalnya,
     // karena jatuh tempo berulang tiap bulan.
     function getDueDayFromInput() {
@@ -549,17 +567,27 @@
       return Math.min(31, Math.max(1, day || 20));
     }
 
-    // Jatuh tempo yang ditampilkan = jatuh tempo BERIKUTNYA (belum lewat).
-    // Misal hari ini 25 Nov dan dueDay 1 -> "1 Des 2026" (bulan 3 huruf).
-    function formatDueDate(dueDay) {
-      const due = getNextDueDate(dueDay);
+    // Jatuh tempo yang ditampilkan = jatuh tempo SIKLUS YANG SEDANG DITAGIH
+    // (billingCycle kalau ada, kalau belum tercatat pakai jatuh tempo
+    // berikutnya). Misal Lala siklus Nov (due 20) -> "20 Nov 2026".
+    function formatDueDateFor(c) {
+      const due = getCycleDueDate(c);
       return `${due.getDate()} ${MONTHS_ID_SHORT[due.getMonth()]} ${due.getFullYear()}`;
     }
 
-    // Versi bulan penuh, khusus untuk pesan WA: "1 Desember 2026".
-    function formatDueDateFull(dueDay) {
-      const due = getNextDueDate(dueDay);
+    // Versi bulan penuh, khusus untuk pesan WA: "20 November 2026".
+    function formatDueDateFullFor(c) {
+      const due = getCycleDueDate(c);
       return `${due.getDate()} ${MONTHS_ID[due.getMonth()]} ${due.getFullYear()}`;
+    }
+
+    // Berapa hari pelanggan telat bayar (0 kalau belum lewat jatuh tempo / lunas).
+    function getDaysLate(c, now = new Date()) {
+      if (c.status === "lunas") return 0;
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const due = getCycleDueDate(c, now);
+      const d = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+      return Math.max(0, Math.round((today - d) / 86400000));
     }
 
     function getCurrentCycle() {
@@ -947,7 +975,8 @@
       };
 
       const cardClass = isUrgent ? "urgent-card" : "cust-card";
-      const dueText = formatDueDate(c.dueDay);
+      const dueText = formatDueDateFor(c);
+      const daysLate = getDaysLate(c);
 
       return `
         <div class="${cardClass}">
@@ -975,6 +1004,8 @@
             </div>
           </div>
 
+          ${daysLate > 0 ? `<div style="margin-top:8px;"><span class="badge badge-telat">⏰ Telat ${daysLate} hari</span></div>` : ""}
+
           <div class="action-grid-2">
             <button class="btn-wa btn-sm" onclick="openWaModal('${c.id}')">💬 WA Tagih</button>
             <button class="btn-outline btn-sm" onclick="previewClientInvoice('${c.invoiceCode}')">🔗 Link & QRIS</button>
@@ -1000,7 +1031,7 @@
         document.getElementById("custPhone").value = c.phone;
         document.getElementById("custAddress").value = c.address;
         document.getElementById("custPort").value = c.port || "";
-        document.getElementById("custDueDay").value = toDateInputValue(getNextDueDate(c.dueDay));
+        document.getElementById("custDueDay").value = toDateInputValue(getCycleDueDate(c));
         document.getElementById("custPlan").value = c.plan;
         document.getElementById("custAmount").value = c.amount;
         document.getElementById("custStatus").value = c.status;
@@ -1063,9 +1094,15 @@
         status: document.getElementById("custStatus").value
       };
 
+      // Kalau tanggal yang dipilih bulannya beda dengan siklus jatuh tempo
+      // berikutnya, catat siklus itu supaya tanggal yang dipilih benar-benar
+      // tampil (tidak "tidak berubah" saat disimpan).
+      const cycleOverride = computeCycleOverride(getPickedDueDate(), payload.dueDay);
+
       if (id) {
         const idx = state.customers.findIndex(x => x.id === id);
         state.customers[idx] = { ...state.customers[idx], ...payload };
+        if (cycleOverride) state.customers[idx].billingCycle = cycleOverride;
       } else {
         const ym = getCurrentCycle().replace("-", "");
         const invCode = "INV-" + ym + "-" + String(state.customers.length + 1).padStart(3, "0");
@@ -1076,7 +1113,8 @@
           waSentCycle: "",
           lastWaMethod: "",
           lastWaSentAt: "",
-          ...payload
+          ...payload,
+          ...(cycleOverride ? { billingCycle: cycleOverride } : {})
         });
       }
       closeModal("customerModal");
@@ -1102,9 +1140,11 @@
       const today = new Date().toISOString().slice(0, 10);
       c.status = "lunas";
       c.paidAt = today;
-      // Catat siklus yang dibayar (siklus jatuh tempo berikutnya), supaya
-      // reset H-5 tidak menghapus pembayaran yang dicatat sebelum H-5.
-      c.billingCycle = getCustomerBillingCycle(c.dueDay);
+      // Catat siklus yang dibayar: kalau siklus sudah tercatat (tagihan yang
+      // sedang ditagih, misal telat bayar November), bayar siklus itu; kalau
+      // belum tercatat, catat siklus jatuh tempo berikutnya, supaya reset
+      // tidak menghapus pembayaran yang dicatat sebelum H-5.
+      if (!c.billingCycle) c.billingCycle = getCustomerBillingCycle(c.dueDay);
       const ymPaid = c.billingCycle.replace("-", "");
       const idxPaid = state.customers.findIndex(x => x.id === id);
       c.invoiceCode = `INV-${ymPaid}-${String(idxPaid + 1).padStart(3, "0")}`;
@@ -1176,7 +1216,7 @@ ${link}`;
         .replace(/\{wifi\}/g, state.settings.bizName)
         .replace(/\{paket\}/g, c.plan)
         .replace(/\{tagihan\}/g, formatRp(c.amount))
-        .replace(/\{tempo\}/g, formatDueDateFull(c.dueDay))
+        .replace(/\{tempo\}/g, formatDueDateFullFor(c))
         .replace(/\{link\}/g, link);
     }
 
@@ -1403,7 +1443,7 @@ ${link}`;
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Nama Pelanggan</span><strong>${cust.name}</strong></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Alamat</span><strong>${cust.address}</strong></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Paket</span><strong>${cust.plan}</strong></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>${formatDueDate(cust.dueDay)}</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>${formatDueDateFor(cust)}</strong></div>
         </div>
         ${!isPaid ? `
           ${state.settings.qrisImage ? `
