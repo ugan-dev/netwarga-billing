@@ -192,32 +192,8 @@
         </button>
       </div>
 
-      <div class="login-tabs">
-        <button class="login-tab-btn active" id="modePinBtn" onclick="switchLoginMode('pin')">PIN Cepat</button>
-        <button class="login-tab-btn" id="modeFirebaseBtn" onclick="switchLoginMode('firebase')">Firebase Auth</button>
-      </div>
-
-      <div id="loginPinBox">
-        <div class="form-group">
-          <label>PIN / Password Admin (Default: 123456)</label>
-          <input type="password" id="loginPinInput" placeholder="Masukkan PIN Admin" onkeydown="if(event.key==='Enter') handlePinLogin()" />
-        </div>
-        <button class="btn-primary" style="width:100%;padding:11px;" onclick="handlePinLogin()">🔓 Masuk Dashboard</button>
-      </div>
-
-      <div id="loginFirebaseBox" class="hidden">
-        <div class="form-group">
-          <label>Email Admin Firebase</label>
-          <input type="email" id="loginEmailInput" placeholder="admin@netwarga.id" />
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="loginPassInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleFirebaseLogin()" />
-        </div>
-        <button class="btn-primary" style="width:100%;padding:11px;" onclick="handleFirebaseLogin()">🔐 Login dengan Firebase</button>
-        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--text-muted);font-size:12px;"><span style="flex:1;border-top:1px solid var(--border);"></span>atau<span style="flex:1;border-top:1px solid var(--border);"></span></div>
-        <button class="btn-outline" style="width:100%;padding:11px;background:#ffffff;color:#1f2937;border:1px solid #dadce0;" onclick="handleGoogleLogin()"><span style="font-weight:800;color:#4285F4;">G</span>&nbsp; Lanjutkan dengan Google</button>
-      </div>
+      <p style="font-size:13px;color:var(--text-muted);text-align:center;margin:4px 0 14px;">Masuk dengan akun Google kamu untuk mengelola NetWarga.<br/>Hanya akun <b style="color:var(--text);">gagan.70700@gmail.com</b> yang diizinkan.</p>
+      <button class="btn-outline" style="width:100%;padding:12px;background:#ffffff;color:#1f2937;border:1px solid #dadce0;font-size:15px;" onclick="handleGoogleLogin()"><span style="font-weight:800;color:#4285F4;">G</span>&nbsp; Lanjutkan dengan Google</button>
 
       <div id="loginErrorMsg" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;font-weight:600;"></div>
     </div>
@@ -336,15 +312,6 @@
           <p id="installStatus" style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">Memeriksa apakah aplikasi bisa diinstal di HP ini…</p>
           <button id="installBtn" class="btn-primary" style="display:none;" onclick="installApp()">⬇️ Instal NetWarga ke Layar Utama</button>
           <p id="installHint" style="font-size:12px;color:var(--text-muted);margin-top:10px;">Kalau tombol di atas tidak muncul, pakai menu Chrome (titik tiga) → “Instal aplikasi”. Kalau menu itu juga tidak ada, hapus dulu data situs ini di Chrome → Setelan → Setelan situs → hapus data ugan-dev.github.io, lalu buka lagi aplikasinya.</p>
-        </div>
-
-        <div class="card">
-          <div class="sec-title" style="margin-bottom:12px;">Keamanan Akun & PIN Admin</div>
-          <div class="form-group">
-            <label>Ubah PIN Admin (Untuk Login Cepat)</label>
-            <input type="text" id="setAdminPin" placeholder="123456" />
-          </div>
-          <button class="btn-outline btn-sm" onclick="saveAdminPin()">🔑 Update PIN Admin</button>
         </div>
 
         <div class="card">
@@ -517,7 +484,8 @@
       appId: "1:957466403730:web:8f3af0b427f4af7e92974b"
     };
     const STORAGE_KEY = "netwarga_state_v6";
-    const SESSION_KEY = "netwarga_admin_logged_in";
+    const SESSION_KEY = "netwarga_admin_google_v1";
+    const ALLOWED_ADMIN_EMAIL = "gagan.70700@gmail.com"; // hanya akun Google ini yang bisa login Firebase/Google
     let db = null;
     let auth = null;
     let currentFilter = "all";
@@ -593,18 +561,10 @@
       }
     }
 
-    function switchLoginMode(mode) {
-      document.getElementById("modePinBtn").classList.toggle("active", mode === "pin");
-      document.getElementById("modeFirebaseBtn").classList.toggle("active", mode === "firebase");
-      document.getElementById("loginPinBox").classList.toggle("hidden", mode !== "pin");
-      document.getElementById("loginFirebaseBox").classList.toggle("hidden", mode !== "firebase");
-      document.getElementById("loginErrorMsg").textContent = "";
-    }
-
     async function handleGoogleLogin() {
       const errEl = document.getElementById("loginErrorMsg");
       if (!auth) {
-        errEl.textContent = "Firebase belum terhubung. Masuk via PIN Cepat dulu lalu pasang Firebase Config di Pengaturan.";
+        errEl.textContent = "Firebase belum terhubung. Coba lagi sebentar lagi.";
         return;
       }
       try {
@@ -612,35 +572,6 @@
         await auth.signInWithRedirect(provider);
       } catch (e) {
         errEl.textContent = "Login Google gagal: " + (e && e.message ? e.message : e);
-      }
-    }
-
-    async function handlePinLogin() {
-      const input = document.getElementById("loginPinInput").value.trim();
-      if (input === String(state.adminPin || "123456")) {
-        localStorage.setItem(SESSION_KEY, "true");
-        document.getElementById("loginErrorMsg").textContent = "";
-        await enterAdminDashboard();
-      } else {
-        document.getElementById("loginErrorMsg").textContent = "PIN salah! Default awal adalah 123456.";
-      }
-    }
-
-    async function handleFirebaseLogin() {
-      const email = document.getElementById("loginEmailInput").value.trim();
-      const pass = document.getElementById("loginPassInput").value;
-      const errEl = document.getElementById("loginErrorMsg");
-      if (!auth) {
-        errEl.textContent = "Firebase belum terhubung. Masuk via PIN Cepat dulu lalu pasang Firebase Config di Pengaturan.";
-        return;
-      }
-      try {
-        await auth.signInWithEmailAndPassword(email, pass);
-        localStorage.setItem(SESSION_KEY, "true");
-        errEl.textContent = "";
-        await enterAdminDashboard();
-      } catch (e) {
-        errEl.textContent = "Login Firebase gagal: " + e.message;
       }
     }
 
@@ -658,15 +589,6 @@
       }
       document.getElementById("adminApp").classList.add("hidden");
       document.getElementById("loginView").classList.remove("hidden");
-      document.getElementById("loginPinInput").value = "";
-    }
-
-    function saveAdminPin() {
-      const newPin = document.getElementById("setAdminPin").value.trim();
-      if (newPin.length < 4) return alert("PIN minimal 4 karakter/angka.");
-      state.adminPin = newPin;
-      saveLocal();
-      alert("PIN Admin berhasil diperbarui!");
     }
 
     async function syncToCloud() {
@@ -1118,7 +1040,6 @@ ${link}`;
     }
 
     function fillSettingsForm() {
-      document.getElementById("setAdminPin").value = state.adminPin || "123456";
       document.getElementById("setBizName").value = state.settings.bizName;
       document.getElementById("setAdminWa").value = state.settings.adminWa;
       document.getElementById("setBankInfo").value = state.settings.bankInfo;
@@ -1340,7 +1261,15 @@ ${link}`;
         try {
           const res = await auth.getRedirectResult();
           if (res && res.user) {
-            localStorage.setItem(SESSION_KEY, "true");
+            if ((res.user.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
+              localStorage.setItem(SESSION_KEY, "true");
+            } else {
+              await auth.signOut();
+              localStorage.removeItem(SESSION_KEY);
+              setTimeout(() => {
+                document.getElementById("loginErrorMsg").textContent = "Hanya akun Google gagan.70700@gmail.com yang diizinkan.";
+              }, 0);
+            }
           }
         } catch (e) {
           console.warn("Google redirect gagal:", e);
