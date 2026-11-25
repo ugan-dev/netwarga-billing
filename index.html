@@ -1062,6 +1062,12 @@
       const today = new Date().toISOString().slice(0, 10);
       c.status = "lunas";
       c.paidAt = today;
+      // Catat siklus yang dibayar (siklus jatuh tempo berikutnya), supaya
+      // reset H-5 tidak menghapus pembayaran yang dicatat sebelum H-5.
+      c.billingCycle = getCustomerBillingCycle(c.dueDay);
+      const ymPaid = c.billingCycle.replace("-", "");
+      const idxPaid = state.customers.findIndex(x => x.id === id);
+      c.invoiceCode = `INV-${ymPaid}-${String(idxPaid + 1).padStart(3, "0")}`;
       state.ledger.push({ id: "l" + Date.now(), type: "in", desc: "Iuran WiFi - " + c.name, amount: c.amount, date: today });
       renderAll();
       await syncToCloud();
@@ -1072,6 +1078,7 @@
       if (!c) return;
       c.status = "belum";
       c.paidAt = "";
+      c.billingCycle = "";
       renderAll();
       await syncToCloud();
     }
@@ -1082,6 +1089,7 @@
       state.customers.forEach((c, i) => {
         c.status = "belum";
         c.paidAt = "";
+        c.billingCycle = "";
         c.waSentCycle = "";
         c.lastWaMethod = "";
         c.lastWaSentAt = "";
