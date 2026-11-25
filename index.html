@@ -422,8 +422,8 @@
           <input type="text" id="custPort" placeholder="Switch Utama - Port 2" />
         </div>
         <div class="form-group">
-          <label>Tanggal Jatuh Tempo (1-28)</label>
-          <input type="number" id="custDueDay" min="1" max="28" value="20" />
+          <label>Tanggal Jatuh Tempo (1-31)</label>
+          <input type="number" id="custDueDay" min="1" max="31" value="20" />
         </div>
       </div>
       <div class="form-row">
@@ -534,25 +534,41 @@
       return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     }
 
-    // H-5 jatuh tempo (wrap-around kalender 28 hari): due 20 -> 15, due 3 -> 26
-    function getHMinus5Day(dueDay) {
-      const d = Math.min(28, Math.max(1, Number(dueDay || 20)));
-      return ((d - 5 - 1 + 28) % 28) + 1;
+    function daysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
     }
 
-    // Siklus tagihan yang sedang ditagih untuk pelanggan ini (YYYY-MM)
-    function getCustomerBillingCycle(dueDay, now = new Date()) {
-      const d = Math.min(28, Math.max(1, Number(dueDay || 20)));
-      const h5 = getHMinus5Day(d);
-      const year = now.getFullYear();
-      const month = now.getMonth(); // 0-11
-      const day = now.getDate();
-      // H-5 jatuh di akhir bulan sebelumnya (misal jatuh tempo tgl 3, H-5 tgl 26, hari ini >= 26)
-      let targetDate = new Date(year, month, 1);
-      if (h5 > d && day >= h5) {
-        targetDate = new Date(year, month + 1, 1);
+    // Tanggal jatuh tempo BERIKUTNYA, dihitung dinamis dari kalender asli
+    // (bukan hardcode 28 hari). dueDay dijepit ke jumlah hari bulan itu,
+    // misal due 31 di Februari jadi tanggal 28.
+    function getNextDueDate(dueDay, now = new Date()) {
+      const d = Math.min(31, Math.max(1, Number(dueDay || 20)));
+      const y = now.getFullYear(), m = now.getMonth();
+      const today = new Date(y, m, now.getDate());
+      let due = new Date(y, m, Math.min(d, daysInMonth(y, m)));
+      if (due < today) {
+        due = new Date(y, m + 1, Math.min(d, daysInMonth(y, m + 1)));
       }
-      return `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}`;
+      return due;
+    }
+
+    // H-5 = 5 hari sebelum jatuh tempo berikutnya. Date menangani ganti bulan
+    // dengan jumlah hari asli (Jan 31, Feb 28/29, Apr 30, dst).
+    function getHMinus5Date(dueDay, now = new Date()) {
+      const h5 = getNextDueDate(dueDay, now);
+      h5.setDate(h5.getDate() - 5);
+      return h5;
+    }
+
+    function getHMinus5Day(dueDay, now = new Date()) {
+      return getHMinus5Date(dueDay, now).getDate();
+    }
+
+    // Siklus tagihan yang sedang ditagih untuk pelanggan ini (YYYY-MM),
+    // diambil dari bulan tanggal jatuh tempo berikutnya.
+    function getCustomerBillingCycle(dueDay, now = new Date()) {
+      const due = getNextDueDate(dueDay, now);
+      return `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}`;
     }
 
     // Auto-reset H-5: status kembali "belum", paidAt + penanda WA dikosongkan,
@@ -560,15 +576,15 @@
     // Riwayat Buku Kas TIDAK dihapus. Mengembalikan true jika ada yang berubah.
     function runAutoResetHMinus5() {
       const now = new Date();
-      const todayDay = now.getDate();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let updated = false;
 
       state.customers.forEach((c, idx) => {
         const dueDay = Number(c.dueDay || 20);
-        const h5Day = getHMinus5Day(dueDay);
+        const h5 = getHMinus5Date(dueDay, now);
         const cycle = getCustomerBillingCycle(dueDay, now);
 
-        if (todayDay === h5Day && c.billingCycle !== cycle) {
+        if (today.getTime() === h5.getTime() && c.billingCycle !== cycle) {
           const ym = cycle.replace("-", "");
           c.status = "belum";
           c.paidAt = "";
