@@ -1,123 +1,166 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>NetWarga Manager - Billing RT/RW Net</title>
   <style>
     :root {
-      --bg: #f1f5f9;
+      --bg: #eef2f7;
       --surface: #ffffff;
-      --surface-2: #f8fafc;
+      --surface-2: #f4f6fa;
+      --surface-3: #e9eef5;
       --text: #0f172a;
       --text-muted: #64748b;
-      --border: #e2e8f0;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --success: #16a34a;
-      --success-bg: #dcfce7;
-      --warning: #d97706;
-      --warning-bg: #fef3c7;
-      --danger: #dc2626;
-      --danger-bg: #fee2e2;
-      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-      --radius: 12px;
+      --border: #dde3ec;
+      --primary: #4f46e5;
+      --primary-soft: rgba(79, 70, 229, 0.12);
+      --primary-hover: #4338ca;
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.14);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.15);
+      --danger: #f43f5e;
+      --danger-bg: rgba(244, 63, 94, 0.16);
+      --info: #38bdf8;
+      --info-bg: rgba(56, 189, 248, 0.15);
+      --bottom-nav-bg: rgba(255, 255, 255, 0.94);
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --radius: 16px;
     }
 
     [data-theme="dark"] {
-      --bg: #0b1120;
-      --surface: #1e293b;
-      --surface-2: #0f172a;
-      --text: #f8fafc;
+      --bg: #070b14;
+      --surface: #111827;
+      --surface-2: #172033;
+      --surface-3: #1e293b;
+      --text: #f1f5f9;
       --text-muted: #94a3b8;
-      --border: #334155;
-      --primary: #3b82f6;
-      --primary-hover: #60a5fa;
-      --success: #4ade80;
-      --success-bg: rgba(22, 163, 74, 0.2);
+      --border: #233047;
+      --primary: #4f46e5;
+      --primary-soft: rgba(79, 70, 229, 0.22);
+      --primary-hover: #6366f1;
+      --success: #34d399;
+      --success-bg: rgba(16, 185, 129, 0.18);
       --warning: #fbbf24;
-      --warning-bg: rgba(217, 119, 6, 0.2);
-      --danger: #f87171;
-      --danger-bg: rgba(220, 38, 38, 0.2);
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      --warning-bg: rgba(245, 158, 11, 0.18);
+      --danger: #fb7185;
+      --danger-bg: rgba(244, 63, 94, 0.18);
+      --info: #38bdf8;
+      --info-bg: rgba(56, 189, 248, 0.18);
+      --bottom-nav-bg: rgba(11, 16, 29, 0.96);
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; transition: background 0.2s, color 0.2s; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.45; transition: background 0.2s, color 0.2s; overflow-x: hidden; }
     button, input, select, textarea { font-family: inherit; font-size: 14px; color: var(--text); }
-    button { cursor: pointer; border: none; border-radius: 8px; font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    input, select, textarea { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; width: 100%; outline: none; }
+    button { cursor: pointer; border: none; border-radius: 11px; font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    input, select, textarea { background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 10px 12px; width: 100%; outline: none; }
     input:focus, select:focus, textarea:focus { border-color: var(--primary); }
 
-    /* Layout */
-    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: var(--shadow); }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
-    .brand-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--primary); color: #fff; display: grid; place-items: center; }
-    .top-actions { display: flex; align-items: center; gap: 8px; }
+    /* Header */
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 14px; position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .brand-icon { width: 38px; height: 38px; border-radius: 12px; background: var(--primary); color: #fff; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35); }
+    .brand-text { min-width: 0; }
+    .brand-title { font-weight: 800; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-sub { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .container { max-width: 1080px; margin: 0 auto; padding: 16px 16px 88px; }
+    .top-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .theme-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); padding: 5px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+    .switch-track { width: 34px; height: 18px; border-radius: 999px; background: var(--surface-3); position: relative; transition: 0.2s; border: 1px solid var(--border); }
+    .theme-pill.is-dark .switch-track { background: var(--primary); border-color: var(--primary); }
+    .switch-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; position: absolute; top: 1px; left: 1px; transition: 0.2s; }
+    .theme-pill.is-dark .switch-thumb { left: 17px; }
 
-    /* Login Screen */
+    .btn-primary { background: var(--primary); color: #fff; padding: 9px 13px; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: #10b981; color: #052e16; padding: 9px 12px; font-weight: 700; }
+    .btn-wa { background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.28); padding: 9px 12px; }
+    [data-theme="light"] .btn-wa { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+    .btn-outline { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; }
+    .btn-danger { background: rgba(244, 63, 94, 0.16); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.28); padding: 8px 11px; }
+    .btn-sm { padding: 7px 10px; font-size: 12px; border-radius: 10px; white-space: nowrap; }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 14px 14px 96px; }
+
+    /* Login Card */
     .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 400px; padding: 24px; box-shadow: var(--shadow); }
-    .login-tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; }
-    .login-tab-btn { flex: 1; padding: 8px; font-size: 12px; background: transparent; color: var(--text-muted); border-radius: 7px; }
+    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 400px; padding: 22px; box-shadow: var(--shadow); }
+    .login-tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .login-tab-btn { flex: 1; padding: 8px; font-size: 12px; background: transparent; color: var(--text-muted); border-radius: 9px; }
     .login-tab-btn.active { background: var(--primary); color: #fff; }
 
-    /* Bottom/Top Nav */
-    .nav-tabs { display: flex; gap: 6px; background: var(--surface); padding: 6px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
-    .nav-btn { flex: 1; padding: 9px 12px; background: transparent; color: var(--text-muted); border-radius: 8px; white-space: nowrap; font-size: 13px; }
-    .nav-btn.active { background: var(--primary); color: #fff; }
+    /* Stats Grid */
+    .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow); margin-bottom: 14px; }
+    .stat-card { margin-bottom: 0; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; min-height: 112px; }
+    .stat-label { font-size: 12.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+    .stat-val { font-size: 21px; font-weight: 800; letter-spacing: -0.3px; }
+    .stat-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.35; }
+    .progress-track { width: 100%; height: 6px; border-radius: 999px; background: var(--surface-3); margin-top: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--success); border-radius: 999px; transition: width 0.25s; }
 
-    /* Cards & Grid */
-    .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
-    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
-    .stat-val { font-size: 20px; font-weight: 800; }
+    /* Section Header */
+    .sec-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-title-wrap { display: flex; align-items: center; gap: 8px; }
+    .dot-danger { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+    .sec-title { font-size: 15px; font-weight: 800; line-height: 1.25; }
+    .sec-sub { font-size: 12px; color: var(--text-muted); }
 
-    /* Buttons */
-    .btn-primary { background: var(--primary); color: #fff; padding: 9px 14px; }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-success { background: #16a34a; color: #fff; padding: 8px 12px; }
-    .btn-wa { background: #22c55e; color: #fff; padding: 8px 12px; }
-    .btn-outline { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; }
-    .btn-danger { background: #dc2626; color: #fff; padding: 8px 12px; }
-    .btn-sm { padding: 6px 10px; font-size: 12px; }
+    /* Urgent / Customer Card */
+    .urgent-card { background: var(--surface-2); border: 1px solid var(--border); border-left: 3.5px solid var(--danger); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .cust-name { font-weight: 800; font-size: 15.5px; }
+    .cust-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 
-    /* Badges */
-    .badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; display: inline-block; }
+    .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
+    .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .badge-lunas { background: var(--success-bg); color: var(--success); }
     .badge-belum { background: var(--warning-bg); color: var(--warning); }
     .badge-telat { background: var(--danger-bg); color: var(--danger); }
+    .badge-sent { background: var(--info-bg); color: var(--info); }
+    .badge-sent::before { display: none; }
 
-    /* Customer Item */
-    .cust-item { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
-    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-    .cust-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-    .cust-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    /* 3-Column Info Box inside Customer Card */
+    .info-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 10px; margin: 12px 0; }
+    [data-theme="dark"] .urgent-card .info-box { background: #0c1220; }
+    .info-col-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+    .info-col-val { font-size: 12.5px; font-weight: 700; line-height: 1.3; word-break: break-word; }
+
+    /* 2x2 Action Buttons */
+    .action-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
     /* Filter Pills */
-    .pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
-    .pill { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+    .pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
+    .pills::-webkit-scrollbar { display: none; }
+    .pill { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 999px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
     .pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-    /* Modal */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.72); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
-    .modal-backdrop.open { display: flex; }
-    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 18px; }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    /* Bottom Navigation Bar */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bottom-nav-bg); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); z-index: 35; }
+    .bnav-btn { background: transparent; color: var(--text-muted); flex-direction: column; gap: 3px; padding: 6px 4px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .bnav-btn.active { color: #818cf8; }
+    [data-theme="light"] .bnav-btn.active { color: var(--primary); background: var(--primary-soft); }
 
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: var(--text-muted); }
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.75); display: none; align-items: center; justify-content: center; padding: 14px; z-index: 50; }
+    .modal-backdrop.open { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 16px; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+    .form-group { margin-bottom: 11px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--text-muted); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     /* Client Invoice View */
-    .client-wrap { max-width: 440px; margin: 20px auto; padding: 0 14px 40px; }
+    .client-wrap { max-width: 440px; margin: 16px auto; padding: 0 14px 40px; }
     .qris-box { background: #ffffff; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; margin: 14px 0; color: #0f172a; }
     .qris-box img { max-width: 220px; width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto 8px; }
 
     .hidden { display: none !important; }
-    .sync-pill { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); display: inline-block; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -131,11 +174,14 @@
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
           </div>
           <div>
-            <div style="font-size:16px;">Admin Login</div>
-            <div style="font-size:11px;color:var(--text-muted);font-weight:500;">NetWarga Manager</div>
+            <div style="font-size:15.5px;font-weight:800;">Admin Login</div>
+            <div style="font-size:11px;color:var(--text-muted);">NetWarga Manager</div>
           </div>
         </div>
-        <button class="btn-outline btn-sm" id="loginThemeBtn" onclick="toggleTheme()">🌙 Dark</button>
+        <button class="theme-pill" id="loginThemePill" onclick="toggleTheme()">
+          <span id="loginThemeText">Dark</span>
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </button>
       </div>
 
       <div class="login-tabs">
@@ -143,7 +189,6 @@
         <button class="login-tab-btn" id="modeFirebaseBtn" onclick="switchLoginMode('firebase')">Firebase Auth</button>
       </div>
 
-      <!-- Mode 1: PIN / Password Admin -->
       <div id="loginPinBox">
         <div class="form-group">
           <label>PIN / Password Admin (Default: 123456)</label>
@@ -152,7 +197,6 @@
         <button class="btn-primary" style="width:100%;padding:11px;" onclick="handlePinLogin()">🔓 Masuk Dashboard</button>
       </div>
 
-      <!-- Mode 2: Firebase Email & Password -->
       <div id="loginFirebaseBox" class="hidden">
         <div class="form-group">
           <label>Email Admin Firebase</label>
@@ -163,7 +207,6 @@
           <input type="password" id="loginPassInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleFirebaseLogin()" />
         </div>
         <button class="btn-primary" style="width:100%;padding:11px;" onclick="handleFirebaseLogin()">🔐 Login dengan Firebase</button>
-        <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Pastikan Firebase Config sudah tertanam di kode atau tersimpan di browser, dan Authentication (Email/Password) aktif di Firebase Console.</p>
       </div>
 
       <div id="loginErrorMsg" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;font-weight:600;"></div>
@@ -177,51 +220,57 @@
         <div class="brand-icon">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
         </div>
-        <div>
-          <div id="headerBrandName">NetWarga RT/RW Net</div>
-          <div id="syncStatus" class="sync-pill">Mode Lokal (Siap Cloud Firebase)</div>
+        <div class="brand-text">
+          <div class="brand-title" id="headerPageTitle">Dashboard</div>
+          <div class="brand-sub" id="headerBrandSub">NetWarga • Mode Lokal</div>
         </div>
       </div>
       <div class="top-actions">
-        <button class="btn-outline btn-sm" id="themeToggleBtn" onclick="toggleTheme()">🌙 Dark</button>
+        <button class="theme-pill" id="headerThemePill" onclick="toggleTheme()">
+          <span id="headerThemeText">Dark</span>
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </button>
         <button class="btn-primary btn-sm" onclick="openCustomerModal()">+ Pelanggan</button>
-        <button class="btn-danger btn-sm" onclick="logoutAdmin()" title="Keluar Admin">Keluar</button>
+        <button class="btn-danger btn-sm" onclick="logoutAdmin()">Keluar</button>
       </div>
     </header>
 
     <main class="container">
-      <nav class="nav-tabs">
-        <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
-        <button class="nav-btn" data-tab="customers" onclick="switchTab('customers')">Pelanggan</button>
-        <button class="nav-btn" data-tab="finance" onclick="switchTab('finance')">Kas & Keuangan</button>
-        <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">Pengaturan & Firebase</button>
-      </nav>
-
       <!-- TAB: DASHBOARD -->
       <section id="tab-dashboard">
         <div class="grid-stats">
-          <div class="card">
+          <div class="card stat-card">
             <div class="stat-label">Pemasukan Bulan Ini</div>
             <div class="stat-val" style="color:var(--success)" id="statIncome">Rp0</div>
+            <div class="stat-sub" id="statPaidRatio">0 dari 0 pelanggan aktif lunas</div>
           </div>
-          <div class="card">
-            <div class="stat-label">Belum Tertagih</div>
+          <div class="card stat-card">
+            <div class="stat-label">Progres Pelunasan</div>
+            <div class="stat-val" id="statProgressPct">0%</div>
+            <div class="progress-track"><div class="progress-fill" id="statProgressBar" style="width:0%"></div></div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">Potensi Belum Tertagih</div>
             <div class="stat-val" style="color:var(--warning)" id="statUnpaid">Rp0</div>
+            <div class="stat-sub" id="statUnpaidCount">0 pelanggan belum bayar</div>
           </div>
-          <div class="card">
+          <div class="card stat-card">
             <div class="stat-label">Saldo Kas Bersih</div>
             <div class="stat-val" id="statProfit">Rp0</div>
-          </div>
-          <div class="card">
-            <div class="stat-label">Pelanggan Aktif</div>
-            <div class="stat-val" id="statCount">0 Warga</div>
+            <div class="stat-sub">Setelah dikurangi biaya ISP/alat</div>
           </div>
         </div>
 
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-            <h3 style="font-size:15px;">Perlu Tindakan Segera (Belum Lunas / Telat)</h3>
-            <button class="btn-outline btn-sm" onclick="generateNewCycle()">🔄 Reset Tagihan Bulan Baru</button>
+          <div class="sec-head">
+            <div class="sec-title-wrap">
+              <span class="dot-danger"></span>
+              <div>
+                <div class="sec-title">Perlu Tindakan Segera</div>
+                <div class="sec-sub">(Telat / Wajib Putus LAN)</div>
+              </div>
+            </div>
+            <button class="btn-outline btn-sm" onclick="switchTab('customers')">Lihat Semua</button>
           </div>
           <div id="urgentList"></div>
         </div>
@@ -230,12 +279,16 @@
       <!-- TAB: CUSTOMERS -->
       <section id="tab-customers" class="hidden">
         <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+            <div class="sec-title">Daftar Pelanggan LAN</div>
+            <button class="btn-outline btn-sm" onclick="generateNewCycle()">🔄 Reset Bulan Baru</button>
+          </div>
           <div style="margin-bottom:10px;">
             <input type="text" id="searchInput" placeholder="Cari nama warga, blok rumah, atau port switch..." oninput="renderAll()" />
           </div>
           <div class="pills" id="filterPills">
             <button class="pill active" onclick="setFilter('all', this)">Semua</button>
-            <button class="pill" onclick="setFilter('telat', this)">Wajib Putus / Telat</button>
+            <button class="pill" onclick="setFilter('telat', this)">Wajib Putus</button>
             <button class="pill" onclick="setFilter('belum', this)">Belum Bayar</button>
             <button class="pill" onclick="setFilter('lunas', this)">Lunas</button>
           </div>
@@ -246,11 +299,11 @@
       <!-- TAB: FINANCE -->
       <section id="tab-finance" class="hidden">
         <div class="card">
-          <h3 style="font-size:15px;margin-bottom:12px;">Catat Pengeluaran Operasional</h3>
+          <div class="sec-title" style="margin-bottom:12px;">Catat Pengeluaran Operasional</div>
           <div class="form-row">
             <div class="form-group">
               <label>Keterangan (misal: Bayar ISP Pusat, Kabel LAN)</label>
-              <input type="text" id="expDesc" placeholder="Tagihan Indihome/Biznet Pusat" />
+              <input type="text" id="expDesc" placeholder="Tagihan ISP Pusat" />
             </div>
             <div class="form-group">
               <label>Nominal (Rp)</label>
@@ -261,7 +314,7 @@
         </div>
 
         <div class="card">
-          <h3 style="font-size:15px;margin-bottom:12px;">Riwayat Mutasi Kas</h3>
+          <div class="sec-title" style="margin-bottom:12px;">Buku Kas & Riwayat Mutasi</div>
           <div id="ledgerList"></div>
         </div>
       </section>
@@ -269,7 +322,7 @@
       <!-- TAB: SETTINGS -->
       <section id="tab-settings" class="hidden">
         <div class="card">
-          <h3 style="font-size:15px;margin-bottom:12px;">Keamanan Akun & PIN Admin</h3>
+          <div class="sec-title" style="margin-bottom:12px;">Keamanan Akun & PIN Admin</div>
           <div class="form-group">
             <label>Ubah PIN Admin (Untuk Login Cepat)</label>
             <input type="text" id="setAdminPin" placeholder="123456" />
@@ -278,7 +331,7 @@
         </div>
 
         <div class="card">
-          <h3 style="font-size:15px;margin-bottom:12px;">Identitas & Pembayaran (QRIS / Rekening)</h3>
+          <div class="sec-title" style="margin-bottom:12px;">Identitas, QRIS & Template Pesan WA</div>
           <div class="form-group">
             <label>Nama RT/RW Net</label>
             <input type="text" id="setBizName" />
@@ -292,6 +345,10 @@
             <textarea id="setBankInfo" rows="2"></textarea>
           </div>
           <div class="form-group">
+            <label>Template Pesan Tagihan WA ({nama}, {wifi}, {paket}, {tagihan}, {tempo}, {link})</label>
+            <textarea id="setWaTemplate" rows="5"></textarea>
+          </div>
+          <div class="form-group">
             <label>Upload Gambar QRIS (Otomatis Muncul di Link Pelanggan)</label>
             <input type="file" accept="image/*" onchange="handleQrisUpload(event)" />
             <div id="qrisPreviewAdmin" style="margin-top:10px;"></div>
@@ -300,19 +357,43 @@
         </div>
 
         <div class="card">
-          <h3 style="font-size:15px;margin-bottom:6px;">Koneksi Cloud Firebase (Agar Link Tagihan Aktif Online)</h3>
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Tempelkan konfigurasi JSON dari Firebase Console (Project Settings → Web App) agar data tersinkronisasi dan link tagihan bisa dibuka di HP pelanggan.</p>
+          <div class="sec-title" style="margin-bottom:6px;">Koneksi Cloud Firebase & Backup</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Tempelkan konfigurasi JSON dari Firebase Console agar data pelanggan, kas, dan status anti-ganda WA tersinkronisasi dengan Cronjob.</p>
           <div class="form-group">
             <label>Firebase Config JSON</label>
             <textarea id="setFirebaseJson" rows="6" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-primary" onclick="saveFirebaseConfig()">🔗 Hubungkan & Sinkronkan Firebase</button>
-            <button class="btn-outline" onclick="exportBackup()">⬇️ Export Backup JSON</button>
+            <button class="btn-primary" onclick="saveFirebaseConfig()">🔗 Hubungkan & Sync Firebase</button>
+            <button class="btn-outline" onclick="exportBackup()">⬇️ Export JSON</button>
+            <label class="btn-outline" style="cursor:pointer;padding:9px 12px;border-radius:11px;font-weight:600;font-size:14px;">
+              ⬆️ Restore JSON
+              <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)" />
+            </label>
           </div>
         </div>
       </section>
     </main>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <nav class="bottom-nav">
+      <button class="bnav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="bnav-btn" data-tab="customers" onclick="switchTab('customers')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Pelanggan</span>
+      </button>
+      <button class="bnav-btn" data-tab="finance" onclick="switchTab('finance')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <span>Buku Kas</span>
+      </button>
+      <button class="bnav-btn" data-tab="settings" onclick="switchTab('settings')">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Pengaturan</span>
+      </button>
+    </nav>
   </div>
 
   <!-- PUBLIC CLIENT INVOICE VIEW (?inv=...) -->
@@ -330,7 +411,7 @@
   <div class="modal-backdrop" id="customerModal">
     <div class="modal-box">
       <div class="modal-head">
-        <h3 id="modalTitle">Tambah Pelanggan</h3>
+        <h3 id="modalTitle" style="font-size:15px;">Tambah Pelanggan</h3>
         <button class="btn-outline btn-sm" onclick="closeModal('customerModal')">✕</button>
       </div>
       <input type="hidden" id="editCustId" />
@@ -345,17 +426,17 @@
         </div>
         <div class="form-group">
           <label>Blok / Alamat Rumah</label>
-          <input type="text" id="custAddress" placeholder="Blok C4 No. 12" />
+          <input type="text" id="custAddress" placeholder="Blok A1 No. 04" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Port Switch / Jalur LAN</label>
-          <input type="text" id="custPort" placeholder="Switch-1 Port 4" />
+          <label>Jalur Kabel / Port Switch</label>
+          <input type="text" id="custPort" placeholder="Switch Utama - Port 2" />
         </div>
         <div class="form-group">
           <label>Tanggal Jatuh Tempo (1-28)</label>
-          <input type="number" id="custDueDay" min="1" max="28" value="10" />
+          <input type="number" id="custDueDay" min="1" max="28" value="20" />
         </div>
       </div>
       <div class="form-row">
@@ -384,15 +465,19 @@
   <div class="modal-backdrop" id="waModal">
     <div class="modal-box">
       <div class="modal-head">
-        <h3>Kirim Tagihan WhatsApp</h3>
+        <h3 style="font-size:15px;">Kirim Tagihan WhatsApp</h3>
         <button class="btn-outline btn-sm" onclick="closeModal('waModal')">✕</button>
       </div>
       <div class="form-group">
         <label>Pratinjau Pesan (Otomatis menyertakan Link Invoice & QRIS)</label>
         <textarea id="waPreviewText" rows="8"></textarea>
       </div>
+      <p style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;">
+        ℹ️ Saat Anda mengirim via WA, sistem menandai tagihan siklus ini sebagai <strong>Terkirim (Manual)</strong> sehingga Cronjob otomatis melewati pelanggan ini.
+      </p>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <a id="waDirectLink" target="_blank" class="btn-wa" style="padding:10px;border-radius:8px;text-decoration:none;text-align:center;font-weight:700;">📲 Buka WhatsApp & Kirim</a>
+        <a id="waDirectLink" target="_blank" class="btn-wa" style="padding:10px;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">📲 Buka WhatsApp & Tandai Terkirim</a>
+        <button class="btn-outline" id="copyLinkModalBtn">📋 Salin Link Tagihan Pelanggan</button>
         <button class="btn-outline" id="previewClientLinkBtn">👁️ Lihat Tampilan Link di HP Pelanggan</button>
       </div>
     </div>
@@ -404,35 +489,47 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // Opsional: Tempelkan config Firebase Anda langsung di sini agar permanen di GitHub Pages
     const HARDCODED_FIREBASE_CONFIG = null;
-
-    const STORAGE_KEY = "netwarga_state_v4";
+    const STORAGE_KEY = "netwarga_state_v6";
     const SESSION_KEY = "netwarga_admin_logged_in";
     let db = null;
     let auth = null;
     let currentFilter = "all";
+    let currentTab = "dashboard";
+
+    const DEFAULT_WA_TEMPLATE =
+      "Halo Kak *{nama}*,\n\n" +
+      "Mengingatkan tagihan WiFi *{wifi}* ({paket}) sebesar *{tagihan}* jatuh tempo tanggal *{tempo}*.\n\n" +
+      "Silakan klik link berikut untuk melihat rincian tagihan, salin rekening, atau scan QRIS:\n" +
+      "{link}\n\n" +
+      "Terima kasih 🙏";
 
     let state = {
-      theme: "light",
+      theme: "dark",
       adminPin: "123456",
       settings: {
         bizName: "NetWarga RT/RW Net",
         adminWa: "6281234567890",
         bankInfo: "BCA 1234567890 a.n. Admin NetWarga\nDANA / GoPay: 081234567890",
+        waTemplate: DEFAULT_WA_TEMPLATE,
         qrisImage: "",
         firebaseConfig: HARDCODED_FIREBASE_CONFIG
       },
       customers: [
-        { id: "c1", invoiceCode: "INV-202611-001", name: "Budi Santoso", phone: "628123456701", address: "Blok A2 No. 5", port: "Switch-Utama Port 2", plan: "Paket Hemat 10 Mbps", amount: 100000, dueDay: 10, status: "telat", paidAt: "" },
-        { id: "c2", invoiceCode: "INV-202611-002", name: "Siti Aminah", phone: "628123456702", address: "Blok B1 No. 8", port: "Switch-Utama Port 3", plan: "Paket Keluarga 15 Mbps", amount: 130000, dueDay: 20, status: "belum", paidAt: "" },
-        { id: "c3", invoiceCode: "INV-202611-003", name: "Hendra Wijaya", phone: "628123456703", address: "Blok C3 No. 1", port: "Switch-Gang Port 1", plan: "Paket Keluarga 15 Mbps", amount: 130000, dueDay: 5, status: "lunas", paidAt: "2026-11-04" }
+        { id: "c1", invoiceCode: "INV-202611-001", name: "Budi Santoso", phone: "628123456701", address: "Blok A1 No. 04", port: "Switch Utama - Port 2", plan: "Paket Keluarga 10 Mbps", amount: 100000, dueDay: 20, status: "telat", paidAt: "", waSentCycle: "", lastWaMethod: "", lastWaSentAt: "" },
+        { id: "c2", invoiceCode: "INV-202611-002", name: "Siti Aminah", phone: "628123456702", address: "Blok B1 No. 08", port: "Switch Utama - Port 3", plan: "Paket Keluarga 15 Mbps", amount: 130000, dueDay: 25, status: "belum", paidAt: "", waSentCycle: "", lastWaMethod: "", lastWaSentAt: "" },
+        { id: "c3", invoiceCode: "INV-202611-003", name: "Hendra Wijaya", phone: "628123456703", address: "Blok C3 No. 01", port: "Switch Gang - Port 1", plan: "Paket Hemat 10 Mbps", amount: 100000, dueDay: 10, status: "lunas", paidAt: "2026-11-04", waSentCycle: "2026-11", lastWaMethod: "manual", lastWaSentAt: "2026-11-03" }
       ],
       ledger: [
-        { id: "l1", type: "in", desc: "Iuran WiFi - Hendra Wijaya", amount: 130000, date: "2026-11-04" },
-        { id: "l2", type: "out", desc: "Bayar Langganan ISP Pusat", amount: 350000, date: "2026-11-01" }
+        { id: "l1", type: "in", desc: "Iuran WiFi - Hendra Wijaya", amount: 100000, date: "2026-11-04" },
+        { id: "l2", type: "out", desc: "Bayar Langganan ISP Pusat", amount: 95000, date: "2026-11-01" }
       ]
     };
+
+    function getCurrentCycle() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    }
 
     function loadLocal() {
       try {
@@ -443,7 +540,7 @@
         }
         if (HARDCODED_FIREBASE_CONFIG) state.settings.firebaseConfig = HARDCODED_FIREBASE_CONFIG;
       } catch (e) {}
-      applyTheme(state.theme || "light");
+      applyTheme(state.theme || "dark");
     }
 
     function saveLocal() {
@@ -457,11 +554,6 @@
         if (!firebase.apps.length) firebase.initializeApp(cfg);
         db = firebase.firestore();
         if (firebase.auth) auth = firebase.auth();
-        const badge = document.getElementById("syncStatus");
-        if (badge) {
-          badge.textContent = "🟢 Terhubung Firebase (" + cfg.projectId + ")";
-          badge.style.color = "var(--success)";
-        }
         return true;
       } catch (err) {
         console.error(err);
@@ -469,7 +561,6 @@
       }
     }
 
-    // AUTH / LOGIN FUNCTIONS
     function switchLoginMode(mode) {
       document.getElementById("modePinBtn").classList.toggle("active", mode === "pin");
       document.getElementById("modeFirebaseBtn").classList.toggle("active", mode === "firebase");
@@ -480,8 +571,7 @@
 
     async function handlePinLogin() {
       const input = document.getElementById("loginPinInput").value.trim();
-      const validPin = String(state.adminPin || "123456");
-      if (input === validPin) {
+      if (input === String(state.adminPin || "123456")) {
         sessionStorage.setItem(SESSION_KEY, "true");
         document.getElementById("loginErrorMsg").textContent = "";
         await enterAdminDashboard();
@@ -495,7 +585,7 @@
       const pass = document.getElementById("loginPassInput").value;
       const errEl = document.getElementById("loginErrorMsg");
       if (!auth) {
-        errEl.textContent = "Firebase belum terhubung. Masuk via PIN Cepat dulu lalu pasang Firebase Config di menu Pengaturan.";
+        errEl.textContent = "Firebase belum terhubung. Masuk via PIN Cepat dulu lalu pasang Firebase Config di Pengaturan.";
         return;
       }
       try {
@@ -541,11 +631,14 @@
           bizName: state.settings.bizName,
           adminWa: state.settings.adminWa,
           bankInfo: state.settings.bankInfo,
+          waTemplate: state.settings.waTemplate || DEFAULT_WA_TEMPLATE,
           qrisImage: state.settings.qrisImage || ""
         }, { merge: true });
-
         for (const c of state.customers) {
           await db.collection("customers").doc(c.id).set(c, { merge: true });
+        }
+        for (const l of state.ledger) {
+          await db.collection("ledger").doc(l.id).set(l, { merge: true });
         }
       } catch (e) {
         console.warn("Gagal sync ke Firestore:", e);
@@ -556,13 +649,11 @@
       if (!db) return;
       try {
         const metaDoc = await db.collection("app_meta").doc("settings").get();
-        if (metaDoc.exists) {
-          state.settings = { ...state.settings, ...metaDoc.data() };
-        }
+        if (metaDoc.exists) state.settings = { ...state.settings, ...metaDoc.data() };
         const snap = await db.collection("customers").get();
-        if (!snap.empty) {
-          state.customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        }
+        if (!snap.empty) state.customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const ledgerSnap = await db.collection("ledger").get();
+        if (!ledgerSnap.empty) state.ledger = ledgerSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         saveLocal();
         renderAll();
       } catch (e) {
@@ -573,11 +664,15 @@
     function applyTheme(t) {
       state.theme = t;
       document.documentElement.setAttribute("data-theme", t);
-      const label = t === "dark" ? "☀️ Light" : "🌙 Dark";
-      const btn = document.getElementById("themeToggleBtn");
-      const loginBtn = document.getElementById("loginThemeBtn");
-      if (btn) btn.textContent = label;
-      if (loginBtn) loginBtn.textContent = label;
+      const isDark = t === "dark";
+      ["loginThemePill", "headerThemePill"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle("is-dark", isDark);
+      });
+      ["loginThemeText", "headerThemeText"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = isDark ? "ON" : "OFF";
+      });
       saveLocal();
     }
 
@@ -589,19 +684,37 @@
       return "Rp" + Number(n || 0).toLocaleString("id-ID");
     }
 
-    function getBaseUrl() {
-      return window.location.origin + window.location.pathname;
+    function getInvoiceLink(invCode) {
+      return `${window.location.origin + window.location.pathname}?inv=${encodeURIComponent(invCode)}`;
     }
 
-    function getInvoiceLink(invCode) {
-      return `${getBaseUrl()}?inv=${encodeURIComponent(invCode)}`;
+    function copyText(text, label = "Teks") {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => alert(label + " berhasil disalin!"));
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        alert(label + " berhasil disalin!");
+      }
     }
 
     function switchTab(tabName) {
-      document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
+      currentTab = tabName;
+      document.querySelectorAll(".bnav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
       ["dashboard", "customers", "finance", "settings"].forEach(t => {
         document.getElementById("tab-" + t).classList.toggle("hidden", t !== tabName);
       });
+      const titles = {
+        dashboard: "Dashboard",
+        customers: "Pelanggan",
+        finance: "Buku Kas",
+        settings: "Pengaturan"
+      };
+      document.getElementById("headerPageTitle").textContent = titles[tabName] || "Dashboard";
       if (tabName === "settings") fillSettingsForm();
     }
 
@@ -613,22 +726,30 @@
     }
 
     function renderAll() {
-      document.getElementById("headerBrandName").textContent = state.settings.bizName;
+      const cloudLabel = db ? `Firebase (${state.settings.firebaseConfig.projectId})` : "Mode Lokal";
+      document.getElementById("headerBrandSub").textContent = `${state.settings.bizName} • ${cloudLabel}`;
+
+      const totalCust = state.customers.length;
+      const paidList = state.customers.filter(c => c.status === "lunas");
       const unpaidList = state.customers.filter(c => c.status !== "lunas");
       const totalIncome = state.ledger.filter(l => l.type === "in").reduce((a, b) => a + Number(b.amount), 0);
       const totalOut = state.ledger.filter(l => l.type === "out").reduce((a, b) => a + Number(b.amount), 0);
       const totalUnpaid = unpaidList.reduce((a, b) => a + Number(b.amount), 0);
+      const pct = totalCust > 0 ? Math.round((paidList.length / totalCust) * 100) : 0;
 
       document.getElementById("statIncome").textContent = formatRp(totalIncome);
+      document.getElementById("statPaidRatio").textContent = `${paidList.length} dari ${totalCust} pelanggan aktif lunas`;
+      document.getElementById("statProgressPct").textContent = `${pct}%`;
+      document.getElementById("statProgressBar").style.width = `${pct}%`;
       document.getElementById("statUnpaid").textContent = formatRp(totalUnpaid);
+      document.getElementById("statUnpaidCount").textContent = `${unpaidList.length} pelanggan belum bayar`;
       document.getElementById("statProfit").textContent = formatRp(totalIncome - totalOut);
-      document.getElementById("statCount").textContent = state.customers.length + " Warga";
 
       const urgentEl = document.getElementById("urgentList");
       if (!unpaidList.length) {
         urgentEl.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">Semua pelanggan sudah lunas bulan ini!</p>`;
       } else {
-        urgentEl.innerHTML = unpaidList.map(c => renderCustomerCard(c)).join("");
+        urgentEl.innerHTML = unpaidList.map(c => renderCustomerCard(c, true)).join("");
       }
 
       const q = (document.getElementById("searchInput").value || "").toLowerCase();
@@ -638,46 +759,78 @@
         return matchFilter && matchQuery;
       });
       document.getElementById("customerList").innerHTML = filtered.length
-        ? filtered.map(c => renderCustomerCard(c)).join("")
+        ? filtered.map(c => renderCustomerCard(c, false)).join("")
         : `<p style="color:var(--text-muted);font-size:13px;">Tidak ada data pelanggan yang cocok.</p>`;
 
-      document.getElementById("ledgerList").innerHTML = state.ledger.slice().reverse().map(l => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-          <div>
-            <div style="font-weight:600;font-size:13px;">${l.desc}</div>
-            <div style="font-size:11px;color:var(--text-muted);">${l.date}</div>
+      document.getElementById("ledgerList").innerHTML = state.ledger.length
+        ? state.ledger.slice().reverse().map(l => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--border);">
+            <div style="min-width:0;flex:1;">
+              <div style="font-weight:700;font-size:13.5px;">${l.desc}</div>
+              <div style="font-size:11.5px;color:var(--text-muted);">${l.date}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <div style="font-weight:800;font-size:13.5px;color:${l.type === 'in' ? 'var(--success)' : 'var(--danger)'};">
+                ${l.type === 'in' ? '+' : '-'} ${formatRp(l.amount)}
+              </div>
+              <button class="btn-outline btn-sm" onclick="deleteLedger('${l.id}')">🗑️</button>
+            </div>
           </div>
-          <div style="font-weight:700;color:${l.type === 'in' ? 'var(--success)' : 'var(--danger)'};">
-            ${l.type === 'in' ? '+' : '-'} ${formatRp(l.amount)}
-          </div>
-        </div>
-      `).join("");
+        `).join("")
+        : `<p style="color:var(--text-muted);font-size:13px;">Belum ada riwayat mutasi kas.</p>`;
     }
 
-    function renderCustomerCard(c) {
+    function renderCustomerCard(c, isUrgent) {
+      const currentCycle = getCurrentCycle();
+      const isSentThisCycle = c.waSentCycle === currentCycle;
+      const methodLabel = c.lastWaMethod === "cronjob" ? "Cronjob" : "Manual";
+
       const badgeMap = {
-        lunas: `<span class="badge badge-lunas">LUNAS</span>`,
-        belum: `<span class="badge badge-belum">BELUM BAYAR</span>`,
-        telat: `<span class="badge badge-telat">WAJIB PUTUS / TELAT</span>`
+        lunas: `<span class="badge badge-lunas">Lunas</span>`,
+        belum: `<span class="badge badge-belum">Belum Bayar</span>`,
+        telat: `<span class="badge badge-telat">Wajib Putus</span>`
       };
+
+      const cardClass = isUrgent ? "urgent-card" : "cust-card";
+      const dueText = `${c.dueDay} Nov 2026`;
+
       return `
-        <div class="cust-item">
+        <div class="${cardClass}">
           <div class="cust-top">
             <div>
-              <div style="font-weight:700;font-size:15px;">${c.name}</div>
-              <div class="cust-meta">${c.address} • Jalur: <strong>${c.port || '-'}</strong></div>
-              <div class="cust-meta">${c.plan} • <strong>${formatRp(c.amount)}</strong> (Jatuh tempo tgl ${c.dueDay})</div>
+              <div class="cust-name">${c.name}</div>
+              <div class="cust-meta">${c.address} • ${c.plan}</div>
+              ${isSentThisCycle ? `<div style="margin-top:5px;"><span class="badge badge-sent">✓ WA Terkirim (${methodLabel})</span></div>` : ""}
             </div>
             <div>${badgeMap[c.status] || ""}</div>
           </div>
-          <div class="cust-actions">
+
+          <div class="info-box">
+            <div>
+              <div class="info-col-label">Iuran</div>
+              <div class="info-col-val">${formatRp(c.amount)}</div>
+            </div>
+            <div>
+              <div class="info-col-label">Jatuh Tempo</div>
+              <div class="info-col-val">${dueText}</div>
+            </div>
+            <div>
+              <div class="info-col-label">Jalur Kabel</div>
+              <div class="info-col-val">${c.port || "-"}</div>
+            </div>
+          </div>
+
+          <div class="action-grid-2">
             <button class="btn-wa btn-sm" onclick="openWaModal('${c.id}')">💬 WA Tagih</button>
             <button class="btn-outline btn-sm" onclick="previewClientInvoice('${c.invoiceCode}')">🔗 Link & QRIS</button>
             ${c.status !== "lunas"
-              ? `<button class="btn-success btn-sm" onclick="markAsPaid('${c.id}')">✔ Konfirmasi Lunas</button>`
-              : `<button class="btn-outline btn-sm" onclick="markAsUnpaid('${c.id}')">↺ Batal Lunas</button>`
+              ? `<button class="btn-success btn-sm" onclick="markAsPaid('${c.id}')">✔ Lunas</button>`
+              : `<button class="btn-outline btn-sm" onclick="markAsUnpaid('${c.id}')">↺ Batal</button>`
             }
-            <button class="btn-outline btn-sm" onclick="openCustomerModal('${c.id}')">✏️ Edit</button>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-outline btn-sm" style="flex:1;" onclick="openCustomerModal('${c.id}')">Edit</button>
+              <button class="btn-danger btn-sm" onclick="deleteCustomer('${c.id}')">🗑️</button>
+            </div>
           </div>
         </div>
       `;
@@ -692,7 +845,7 @@
         document.getElementById("custPhone").value = c.phone;
         document.getElementById("custAddress").value = c.address;
         document.getElementById("custPort").value = c.port || "";
-        document.getElementById("custDueDay").value = c.dueDay || 10;
+        document.getElementById("custDueDay").value = c.dueDay || 20;
         document.getElementById("custPlan").value = c.plan;
         document.getElementById("custAmount").value = c.amount;
         document.getElementById("custStatus").value = c.status;
@@ -702,7 +855,7 @@
         document.getElementById("custPhone").value = "628";
         document.getElementById("custAddress").value = "";
         document.getElementById("custPort").value = "";
-        document.getElementById("custDueDay").value = 10;
+        document.getElementById("custDueDay").value = 20;
         document.getElementById("custPlan").value = "Paket Keluarga 10 Mbps";
         document.getElementById("custAmount").value = 100000;
         document.getElementById("custStatus").value = "belum";
@@ -724,7 +877,7 @@
         phone: phone.startsWith("0") ? "62" + phone.slice(1) : phone,
         address: document.getElementById("custAddress").value.trim(),
         port: document.getElementById("custPort").value.trim(),
-        dueDay: Number(document.getElementById("custDueDay").value || 10),
+        dueDay: Number(document.getElementById("custDueDay").value || 20),
         plan: document.getElementById("custPlan").value.trim(),
         amount: Number(document.getElementById("custAmount").value || 0),
         status: document.getElementById("custStatus").value
@@ -734,13 +887,33 @@
         const idx = state.customers.findIndex(x => x.id === id);
         state.customers[idx] = { ...state.customers[idx], ...payload };
       } else {
-        const newId = "c" + Date.now();
-        const invCode = "INV-" + new Date().toISOString().slice(0, 7).replace("-", "") + "-" + String(state.customers.length + 1).padStart(3, "0");
-        state.customers.push({ id: newId, invoiceCode: invCode, paidAt: "", ...payload });
+        const ym = getCurrentCycle().replace("-", "");
+        const invCode = "INV-" + ym + "-" + String(state.customers.length + 1).padStart(3, "0");
+        state.customers.push({
+          id: "c" + Date.now(),
+          invoiceCode: invCode,
+          paidAt: "",
+          waSentCycle: "",
+          lastWaMethod: "",
+          lastWaSentAt: "",
+          ...payload
+        });
       }
       closeModal("customerModal");
       renderAll();
       await syncToCloud();
+    }
+
+    async function deleteCustomer(id) {
+      const cust = state.customers.find(x => x.id === id);
+      if (!cust) return;
+      if (!confirm(`Hapus pelanggan "${cust.name}" secara permanen?`)) return;
+      state.customers = state.customers.filter(x => x.id !== id);
+      saveLocal();
+      renderAll();
+      if (db) {
+        try { await db.collection("customers").doc(id).delete(); } catch (e) {}
+      }
     }
 
     async function markAsPaid(id) {
@@ -764,56 +937,87 @@
     }
 
     async function generateNewCycle() {
-      if (!confirm("Reset semua status pelanggan menjadi 'Belum Bayar' dan buat kode invoice bulan baru?")) return;
-      const ym = new Date().toISOString().slice(0, 7).replace("-", "");
+      if (!confirm("Reset semua status pelanggan menjadi 'Belum Bayar', reset tanda kirim WA, dan buat kode invoice bulan baru?")) return;
+      const ym = getCurrentCycle().replace("-", "");
       state.customers.forEach((c, i) => {
         c.status = "belum";
         c.paidAt = "";
+        c.waSentCycle = "";
+        c.lastWaMethod = "";
+        c.lastWaSentAt = "";
         c.invoiceCode = `INV-${ym}-${String(i + 1).padStart(3, "0")}`;
       });
       renderAll();
       await syncToCloud();
     }
 
-    function addExpense() {
+    async function addExpense() {
       const desc = document.getElementById("expDesc").value.trim();
       const amount = Number(document.getElementById("expAmount").value || 0);
       if (!desc || amount <= 0) return alert("Isi keterangan dan nominal pengeluaran dengan benar.");
       state.ledger.push({ id: "l" + Date.now(), type: "out", desc, amount, date: new Date().toISOString().slice(0, 10) });
       document.getElementById("expDesc").value = "";
       document.getElementById("expAmount").value = "";
+      renderAll();
+      await syncToCloud();
+    }
+
+    async function deleteLedger(id) {
+      if (!confirm("Hapus catatan mutasi kas ini?")) return;
+      state.ledger = state.ledger.filter(x => x.id !== id);
       saveLocal();
       renderAll();
+      if (db) {
+        try { await db.collection("ledger").doc(id).delete(); } catch (e) {}
+      }
+    }
+
+    function buildWaMessage(c) {
+      const link = getInvoiceLink(c.invoiceCode);
+      if (c.status === "lunas") {
+        return `Halo Kak *${c.name}*,
+
+Terima kasih! Pembayaran WiFi *${state.settings.bizName}* sebesar *${formatRp(c.amount)}* telah kami terima (*LUNAS*).
+
+Lihat struk digital Anda di sini:
+${link}`;
+      }
+      const tpl = state.settings.waTemplate || DEFAULT_WA_TEMPLATE;
+      return tpl
+        .replace(/\{nama\}/g, c.name)
+        .replace(/\{wifi\}/g, state.settings.bizName)
+        .replace(/\{paket\}/g, c.plan)
+        .replace(/\{tagihan\}/g, formatRp(c.amount))
+        .replace(/\{tempo\}/g, String(c.dueDay))
+        .replace(/\{link\}/g, link);
+    }
+
+    async function markWaSentManual(id) {
+      const c = state.customers.find(x => x.id === id);
+      if (!c) return;
+      c.waSentCycle = getCurrentCycle();
+      c.lastWaMethod = "manual";
+      c.lastWaSentAt = new Date().toISOString().slice(0, 10);
+      renderAll();
+      await syncToCloud();
     }
 
     function openWaModal(id) {
       const c = state.customers.find(x => x.id === id);
       if (!c) return;
       const link = getInvoiceLink(c.invoiceCode);
-      const msg = c.status === "lunas"
-        ? `Halo Kak *${c.name}*,
-
-Terima kasih! Pembayaran WiFi *${state.settings.bizName}* sebesar *${formatRp(c.amount)}* telah kami terima (*LUNAS*).
-
-Lihat struk digital Anda di sini:
-${link}`
-        : `Halo Kak *${c.name}*,
-
-Mengingatkan tagihan WiFi *${state.settings.bizName}* (${c.plan}) sebesar *${formatRp(c.amount)}* jatuh tempo tanggal *${c.dueDay}*.
-
-Silakan klik link berikut untuk melihat rincian tagihan, nomor rekening, atau scan QRIS:
-${link}
-
-Terima kasih 🙏`;
-
       const txtEl = document.getElementById("waPreviewText");
-      txtEl.value = msg;
+      txtEl.value = buildWaMessage(c);
+
+      const waLinkEl = document.getElementById("waDirectLink");
       const updateHref = () => {
-        document.getElementById("waDirectLink").href = `https://wa.me/${c.phone}?text=${encodeURIComponent(txtEl.value)}`;
+        waLinkEl.href = `https://wa.me/${c.phone}?text=${encodeURIComponent(txtEl.value)}`;
       };
       txtEl.oninput = updateHref;
       updateHref();
 
+      waLinkEl.onclick = async () => { await markWaSentManual(c.id); };
+      document.getElementById("copyLinkModalBtn").onclick = () => copyText(link, "Link tagihan");
       document.getElementById("previewClientLinkBtn").onclick = () => {
         closeModal("waModal");
         previewClientInvoice(c.invoiceCode);
@@ -826,6 +1030,7 @@ Terima kasih 🙏`;
       document.getElementById("setBizName").value = state.settings.bizName;
       document.getElementById("setAdminWa").value = state.settings.adminWa;
       document.getElementById("setBankInfo").value = state.settings.bankInfo;
+      document.getElementById("setWaTemplate").value = state.settings.waTemplate || DEFAULT_WA_TEMPLATE;
       if (state.settings.firebaseConfig) {
         document.getElementById("setFirebaseJson").value = JSON.stringify(state.settings.firebaseConfig, null, 2);
       }
@@ -853,8 +1058,7 @@ Terima kasih 🙏`;
           const scale = Math.min(1, maxW / img.width);
           canvas.width = img.width * scale;
           canvas.height = img.height * scale;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
           state.settings.qrisImage = canvas.toDataURL("image/jpeg", 0.78);
           renderQrisPreviewAdmin();
         };
@@ -872,6 +1076,7 @@ Terima kasih 🙏`;
       state.settings.bizName = document.getElementById("setBizName").value.trim() || "NetWarga RT/RW Net";
       state.settings.adminWa = document.getElementById("setAdminWa").value.replace(/\D/g, "");
       state.settings.bankInfo = document.getElementById("setBankInfo").value.trim();
+      state.settings.waTemplate = document.getElementById("setWaTemplate").value.trim() || DEFAULT_WA_TEMPLATE;
       renderAll();
       await syncToCloud();
       alert("Pengaturan & QRIS berhasil disimpan!");
@@ -879,12 +1084,12 @@ Terima kasih 🙏`;
 
     async function saveFirebaseConfig() {
       try {
-        const raw = document.getElementById("setFirebaseJson").value.trim();
-        const cfg = JSON.parse(raw);
+        const cfg = JSON.parse(document.getElementById("setFirebaseJson").value.trim());
         if (!cfg.projectId) throw new Error("projectId tidak ditemukan");
         state.settings.firebaseConfig = cfg;
         saveLocal();
         if (initFirebase()) {
+          renderAll();
           await syncToCloud();
           alert("Berhasil terhubung ke Firebase & data tersinkronisasi!");
         }
@@ -897,11 +1102,30 @@ Terima kasih 🙏`;
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "backup-netwarga.json";
+      a.download = "backup-netwarga-v4.json";
       a.click();
     }
 
-    // CLIENT INVOICE PUBLIC PAGE
+    function importBackup(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(ev) {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (!parsed.customers || !Array.isArray(parsed.customers)) throw new Error("File backup tidak valid");
+          state = { ...state, ...parsed, settings: { ...state.settings, ...(parsed.settings || {}) } };
+          saveLocal();
+          renderAll();
+          await syncToCloud();
+          alert("Data backup berhasil dipulihkan!");
+        } catch (err) {
+          alert("Gagal memulihkan backup: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
     async function previewClientInvoice(invCode, isDirectUrl = false) {
       document.getElementById("loginView").classList.add("hidden");
       document.getElementById("adminApp").classList.add("hidden");
@@ -929,37 +1153,38 @@ Terima kasih 🙏`;
 
       card.innerHTML = `
         <div style="text-align:center;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px;">
-          <div style="font-size:12px;color:var(--text-muted);font-weight:700;">TAGIHAN INTERNET WIFI</div>
-          <h2 style="font-size:19px;margin:2px 0;">${state.settings.bizName}</h2>
+          <div style="font-size:11px;color:var(--text-muted);font-weight:700;">TAGIHAN INTERNET WIFI</div>
+          <h2 style="font-size:18px;margin:2px 0;">${state.settings.bizName}</h2>
           <div style="font-size:12px;color:var(--text-muted);">${cust.invoiceCode}</div>
         </div>
-
         <div style="text-align:center;margin-bottom:14px;">
-          <span class="badge ${isPaid ? 'badge-lunas' : 'badge-telat'}" style="font-size:13px;padding:5px 14px;">
-            ${isPaid ? '✔ SUDAH LUNAS' : '⏳ MENUNGGU PEMBAYARAN'}
+          <span class="badge ${isPaid ? 'badge-lunas' : 'badge-telat'}" style="font-size:12.5px;padding:5px 14px;">
+            ${isPaid ? 'Sudah Lunas' : 'Menunggu Pembayaran'}
           </span>
-          <div style="font-size:28px;font-weight:800;margin-top:8px;">${formatRp(cust.amount)}</div>
+          <div style="font-size:26px;font-weight:800;margin-top:8px;">${formatRp(cust.amount)}</div>
         </div>
-
         <div style="background:var(--surface-2);padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Nama Pelanggan</span><strong>${cust.name}</strong></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Alamat</span><strong>${cust.address}</strong></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Paket</span><strong>${cust.plan}</strong></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>Tanggal ${cust.dueDay}</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>${cust.dueDay} Nov 2026</strong></div>
         </div>
-
         ${!isPaid ? `
           ${state.settings.qrisImage ? `
             <div class="qris-box">
               <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Scan QRIS untuk Bayar</div>
               <img src="${state.settings.qrisImage}" alt="QRIS Pembayaran" />
-              <a href="${state.settings.qrisImage}" download="QRIS-${state.settings.bizName}.jpg" style="display:inline-block;margin-top:6px;font-size:12px;color:#2563eb;font-weight:700;text-decoration:none;">⬇️ Simpan Gambar QRIS ke Galeri</a>
+              <a href="${state.settings.qrisImage}" download="QRIS-${state.settings.bizName}.jpg" style="display:inline-block;margin-top:6px;font-size:12px;color:#4f46e5;font-weight:700;text-decoration:none;">⬇️ Simpan Gambar QRIS ke Galeri</a>
             </div>
           ` : ""}
-          <div style="background:var(--surface-2);padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;white-space:pre-line;">
-            <strong style="display:block;margin-bottom:4px;color:var(--text-muted);">Transfer Bank / E-Wallet:</strong>${state.settings.bankInfo}
+          <div style="background:var(--surface-2);padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong style="color:var(--text-muted);">Transfer Bank / E-Wallet:</strong>
+              <button class="btn-outline btn-sm" onclick="copyText(state.settings.bankInfo, 'Info rekening')">📋 Salin</button>
+            </div>
+            <div style="white-space:pre-line;">${state.settings.bankInfo}</div>
           </div>
-          <a href="https://wa.me/${state.settings.adminWa}?text=${confirmWaText}" target="_blank" class="btn-wa" style="width:100%;padding:12px;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">
+          <a href="https://wa.me/${state.settings.adminWa}?text=${confirmWaText}" target="_blank" class="btn-wa" style="width:100%;padding:12px;border-radius:11px;text-decoration:none;text-align:center;font-weight:700;">
             📲 Konfirmasi Sudah Bayar ke Admin
           </a>
         ` : `
@@ -975,13 +1200,11 @@ Terima kasih 🙏`;
       document.getElementById("adminApp").classList.remove("hidden");
     }
 
-    // Boot
     (async function boot() {
       loadLocal();
       initFirebase();
       const params = new URLSearchParams(window.location.search);
       const invParam = params.get("inv");
-
       if (invParam) {
         await previewClientInvoice(invParam, true);
       } else if (sessionStorage.getItem(SESSION_KEY) === "true") {

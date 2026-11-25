@@ -1,9 +1,5 @@
 /**
- * CRONJOB OTOMATIS PENGINGAT TAGIHAN WHATSAPP (GOOGLE APPS SCRIPT)
- * Cara pakai:
- * 1. Buka https://script.google.com -> Buat Proyek Baru
- * 2. Tempel seluruh kode ini lalu isi bagian KONFIGURASI di bawah
- * 3. Pasang Trigger: Triggers (ikon jam) -> Add Trigger -> pilih kirimPengingatTagihanOtomatis -> Time-driven -> Day timer (08:00 - 09:00)
+ * CRONJOB OTOMATIS PENGINGAT TAGIHAN WHATSAPP ANTI-GANDA (GOOGLE APPS SCRIPT)
  */
 
 const CONFIG = {
@@ -20,28 +16,30 @@ function kirimPengingatTagihanOtomatis() {
   const response = UrlFetchApp.fetch(firestoreUrl, { muteHttpExceptions: true });
   const json = JSON.parse(response.getContentText());
 
-  if (!json.documents || json.documents.length === 0) {
-    Logger.log("Tidak ada data pelanggan di Firestore.");
-    return;
-  }
+  if (!json.documents || json.documents.length === 0) return;
 
   const today = new Date();
   const currentDay = today.getDate();
+  const currentCycle = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
+  const todayStr = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM-dd");
 
   json.documents.forEach((doc) => {
     const f = doc.fields || {};
     const status = f.status ? f.status.stringValue : "";
-    const dueDay = parseInt((f.dueDay && (f.dueDay.integerValue || f.dueDay.stringValue)) || "10", 10);
+    const waSentCycle = f.waSentCycle ? f.waSentCycle.stringValue : "";
+    const dueDay = parseInt((f.dueDay && (f.dueDay.integerValue || f.dueDay.stringValue)) || "20", 10);
     const name = f.name ? f.name.stringValue : "Pelanggan";
     const rawPhone = f.phone ? f.phone.stringValue : "";
     const phone = rawPhone.replace(/\D/g, "");
     const amount = parseInt((f.amount && (f.amount.integerValue || f.amount.stringValue)) || "0", 10);
     const invCode = f.invoiceCode ? f.invoiceCode.stringValue : "";
 
+    if (status === "lunas" || waSentCycle === currentCycle) return;
+
     const isDueToday = dueDay === currentDay;
     const isHMinus2 = ((dueDay - 2 + 28) % 28 || 28) === currentDay;
 
-    if (status !== "lunas" && phone && (isDueToday || isHMinus2)) {
+    if (phone && (isDueToday || isHMinus2)) {
       const targetPhone = phone.startsWith("0") ? "62" + phone.slice(1) : phone;
       const linkTagihan = `${CONFIG.GITHUB_PAGES_URL}?inv=${encodeURIComponent(invCode)}`;
       const keteranganTempo = isDueToday ? "jatuh tempo HARI INI" : "jatuh tempo 2 hari lagi";
@@ -49,16 +47,37 @@ function kirimPengingatTagihanOtomatis() {
       const pesan =
         `Halo Kak *${name}*,\n\n` +
         `Mengingatkan tagihan WiFi *${CONFIG.NAMA_WIFI}* sebesar *Rp${amount.toLocaleString("id-ID")}* (${keteranganTempo}).\n\n` +
-        `Klik link berikut untuk rincian tagihan, transfer bank, atau scan QRIS:\n` +
+        `Klik link berikut untuk rincian tagihan, salin rekening, atau scan QRIS:\n` +
         `${linkTagihan}\n\n` +
         `Terima kasih 🙏`;
 
-      kirimKeGateway(targetPhone, pesan);
-      Logger.log(`Terkirim ke ${name} (${targetPhone})`);
+      const ok = kirimKeGateway(targetPhone, pesan);
+      if (ok) markSentInFirestore(doc.name, currentCycle, todayStr, "cronjob");
 
       const delayMs = (6 + Math.floor(Math.random() * 9)) * 1000;
       Utilities.sleep(delayMs);
     }
+  });
+}
+
+function markSentInFirestore(fullDocName, cycle, dateStr, method) {
+  const patchUrl =
+    `https://firestore.googleapis.com/v1/${fullDocName}` +
+    `?updateMask.fieldPaths=waSentCycle&updateMask.fieldPaths=lastWaMethod&updateMask.fieldPaths=lastWaSentAt`;
+
+  const body = {
+    fields: {
+      waSentCycle: { stringValue: cycle },
+      lastWaMethod: { stringValue: method },
+      lastWaSentAt: { stringValue: dateStr }
+    }
+  };
+
+  UrlFetchApp.fetch(patchUrl, {
+    method: "patch",
+    contentType: "application/json",
+    payload: JSON.stringify(body),
+    muteHttpExceptions: true
   });
 }
 
@@ -75,18 +94,16 @@ function kirimKeGateway(phone, text) {
       "X-Api-Key": CONFIG.WA_API_TOKEN,
       Authorization: `Bearer ${CONFIG.WA_API_TOKEN}`
     };
-    payload = {
-      session: "default",
-      chatId: `${phone}@c.us`,
-      text: text
-    };
+    payload = { session: "default", chatId: `${phone}@c.us`, text: text };
   }
 
-  UrlFetchApp.fetch(CONFIG.WA_API_URL, {
+  const res = UrlFetchApp.fetch(CONFIG.WA_API_URL, {
     method: "post",
     contentType: "application/json",
     headers: headers,
     payload: JSON.stringify(payload),
     muteHttpExceptions: true
   });
+
+  return res.getResponseCode() >= 200 && res.getResponseCode() < 300;
 }
