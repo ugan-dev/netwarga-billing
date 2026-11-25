@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NetWarga Manager - Billing RT/RW Net</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+      --radius: 12px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #1e293b;
+      --surface-2: #0f172a;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --success: #4ade80;
+      --success-bg: rgba(22, 163, 74, 0.2);
+      --warning: #fbbf24;
+      --warning-bg: rgba(217, 119, 6, 0.2);
+      --danger: #f87171;
+      --danger-bg: rgba(220, 38, 38, 0.2);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; transition: background 0.2s, color 0.2s; }
+    button, input, select, textarea { font-family: inherit; font-size: 14px; color: var(--text); }
+    button { cursor: pointer; border: none; border-radius: 8px; font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    input, select, textarea { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; width: 100%; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+
+    /* Layout */
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: var(--shadow); }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
+    .brand-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--primary); color: #fff; display: grid; place-items: center; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+
+    .container { max-width: 1080px; margin: 0 auto; padding: 16px 16px 88px; }
+
+    /* Login Screen */
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 400px; padding: 24px; box-shadow: var(--shadow); }
+    .login-tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .login-tab-btn { flex: 1; padding: 8px; font-size: 12px; background: transparent; color: var(--text-muted); border-radius: 7px; }
+    .login-tab-btn.active { background: var(--primary); color: #fff; }
+
+    /* Bottom/Top Nav */
+    .nav-tabs { display: flex; gap: 6px; background: var(--surface); padding: 6px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
+    .nav-btn { flex: 1; padding: 9px 12px; background: transparent; color: var(--text-muted); border-radius: 8px; white-space: nowrap; font-size: 13px; }
+    .nav-btn.active { background: var(--primary); color: #fff; }
+
+    /* Cards & Grid */
+    .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .stat-val { font-size: 20px; font-weight: 800; }
+
+    /* Buttons */
+    .btn-primary { background: var(--primary); color: #fff; padding: 9px 14px; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: #16a34a; color: #fff; padding: 8px 12px; }
+    .btn-wa { background: #22c55e; color: #fff; padding: 8px 12px; }
+    .btn-outline { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; }
+    .btn-danger { background: #dc2626; color: #fff; padding: 8px 12px; }
+    .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+    /* Badges */
+    .badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; display: inline-block; }
+    .badge-lunas { background: var(--success-bg); color: var(--success); }
+    .badge-belum { background: var(--warning-bg); color: var(--warning); }
+    .badge-telat { background: var(--danger-bg); color: var(--danger); }
+
+    /* Customer Item */
+    .cust-item { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
+    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .cust-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .cust-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    /* Filter Pills */
+    .pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
+    .pill { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+    .pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.72); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+    .modal-backdrop.open { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 18px; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: var(--text-muted); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Client Invoice View */
+    .client-wrap { max-width: 440px; margin: 20px auto; padding: 0 14px 40px; }
+    .qris-box { background: #ffffff; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; margin: 14px 0; color: #0f172a; }
+    .qris-box img { max-width: 220px; width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto 8px; }
+
+    .hidden { display: none !important; }
+    .sync-pill { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); display: inline-block; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN LOGIN VIEW -->
+  <div id="loginView" class="login-wrap">
+    <div class="login-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          </div>
+          <div>
+            <div style="font-size:16px;">Admin Login</div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:500;">NetWarga Manager</div>
+          </div>
+        </div>
+        <button class="btn-outline btn-sm" id="loginThemeBtn" onclick="toggleTheme()">🌙 Dark</button>
+      </div>
+
+      <div class="login-tabs">
+        <button class="login-tab-btn active" id="modePinBtn" onclick="switchLoginMode('pin')">PIN Cepat</button>
+        <button class="login-tab-btn" id="modeFirebaseBtn" onclick="switchLoginMode('firebase')">Firebase Auth</button>
+      </div>
+
+      <!-- Mode 1: PIN / Password Admin -->
+      <div id="loginPinBox">
+        <div class="form-group">
+          <label>PIN / Password Admin (Default: 123456)</label>
+          <input type="password" id="loginPinInput" placeholder="Masukkan PIN Admin" onkeydown="if(event.key==='Enter') handlePinLogin()" />
+        </div>
+        <button class="btn-primary" style="width:100%;padding:11px;" onclick="handlePinLogin()">🔓 Masuk Dashboard</button>
+      </div>
+
+      <!-- Mode 2: Firebase Email & Password -->
+      <div id="loginFirebaseBox" class="hidden">
+        <div class="form-group">
+          <label>Email Admin Firebase</label>
+          <input type="email" id="loginEmailInput" placeholder="admin@netwarga.id" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleFirebaseLogin()" />
+        </div>
+        <button class="btn-primary" style="width:100%;padding:11px;" onclick="handleFirebaseLogin()">🔐 Login dengan Firebase</button>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Pastikan Firebase Config sudah tertanam di kode atau tersimpan di browser, dan Authentication (Email/Password) aktif di Firebase Console.</p>
+      </div>
+
+      <div id="loginErrorMsg" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;font-weight:600;"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN APP VIEW -->
+  <div id="adminApp" class="hidden">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </div>
+        <div>
+          <div id="headerBrandName">NetWarga RT/RW Net</div>
+          <div id="syncStatus" class="sync-pill">Mode Lokal (Siap Cloud Firebase)</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn-outline btn-sm" id="themeToggleBtn" onclick="toggleTheme()">🌙 Dark</button>
+        <button class="btn-primary btn-sm" onclick="openCustomerModal()">+ Pelanggan</button>
+        <button class="btn-danger btn-sm" onclick="logoutAdmin()" title="Keluar Admin">Keluar</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <nav class="nav-tabs">
+        <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+        <button class="nav-btn" data-tab="customers" onclick="switchTab('customers')">Pelanggan</button>
+        <button class="nav-btn" data-tab="finance" onclick="switchTab('finance')">Kas & Keuangan</button>
+        <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">Pengaturan & Firebase</button>
+      </nav>
+
+      <!-- TAB: DASHBOARD -->
+      <section id="tab-dashboard">
+        <div class="grid-stats">
+          <div class="card">
+            <div class="stat-label">Pemasukan Bulan Ini</div>
+            <div class="stat-val" style="color:var(--success)" id="statIncome">Rp0</div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Belum Tertagih</div>
+            <div class="stat-val" style="color:var(--warning)" id="statUnpaid">Rp0</div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Saldo Kas Bersih</div>
+            <div class="stat-val" id="statProfit">Rp0</div>
+          </div>
+          <div class="card">
+            <div class="stat-label">Pelanggan Aktif</div>
+            <div class="stat-val" id="statCount">0 Warga</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <h3 style="font-size:15px;">Perlu Tindakan Segera (Belum Lunas / Telat)</h3>
+            <button class="btn-outline btn-sm" onclick="generateNewCycle()">🔄 Reset Tagihan Bulan Baru</button>
+          </div>
+          <div id="urgentList"></div>
+        </div>
+      </section>
+
+      <!-- TAB: CUSTOMERS -->
+      <section id="tab-customers" class="hidden">
+        <div class="card">
+          <div style="margin-bottom:10px;">
+            <input type="text" id="searchInput" placeholder="Cari nama warga, blok rumah, atau port switch..." oninput="renderAll()" />
+          </div>
+          <div class="pills" id="filterPills">
+            <button class="pill active" onclick="setFilter('all', this)">Semua</button>
+            <button class="pill" onclick="setFilter('telat', this)">Wajib Putus / Telat</button>
+            <button class="pill" onclick="setFilter('belum', this)">Belum Bayar</button>
+            <button class="pill" onclick="setFilter('lunas', this)">Lunas</button>
+          </div>
+          <div id="customerList"></div>
+        </div>
+      </section>
+
+      <!-- TAB: FINANCE -->
+      <section id="tab-finance" class="hidden">
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px;">Catat Pengeluaran Operasional</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Keterangan (misal: Bayar ISP Pusat, Kabel LAN)</label>
+              <input type="text" id="expDesc" placeholder="Tagihan Indihome/Biznet Pusat" />
+            </div>
+            <div class="form-group">
+              <label>Nominal (Rp)</label>
+              <input type="number" id="expAmount" placeholder="350000" />
+            </div>
+          </div>
+          <button class="btn-primary" onclick="addExpense()">+ Simpan Pengeluaran</button>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px;">Riwayat Mutasi Kas</h3>
+          <div id="ledgerList"></div>
+        </div>
+      </section>
+
+      <!-- TAB: SETTINGS -->
+      <section id="tab-settings" class="hidden">
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px;">Keamanan Akun & PIN Admin</h3>
+          <div class="form-group">
+            <label>Ubah PIN Admin (Untuk Login Cepat)</label>
+            <input type="text" id="setAdminPin" placeholder="123456" />
+          </div>
+          <button class="btn-outline btn-sm" onclick="saveAdminPin()">🔑 Update PIN Admin</button>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px;">Identitas & Pembayaran (QRIS / Rekening)</h3>
+          <div class="form-group">
+            <label>Nama RT/RW Net</label>
+            <input type="text" id="setBizName" />
+          </div>
+          <div class="form-group">
+            <label>Nomor WhatsApp Admin (Format 628xxx)</label>
+            <input type="text" id="setAdminWa" placeholder="6281234567890" />
+          </div>
+          <div class="form-group">
+            <label>Info Rekening Bank / E-Wallet</label>
+            <textarea id="setBankInfo" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Upload Gambar QRIS (Otomatis Muncul di Link Pelanggan)</label>
+            <input type="file" accept="image/*" onchange="handleQrisUpload(event)" />
+            <div id="qrisPreviewAdmin" style="margin-top:10px;"></div>
+          </div>
+          <button class="btn-primary" onclick="saveSettings()">💾 Simpan Pengaturan</button>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:6px;">Koneksi Cloud Firebase (Agar Link Tagihan Aktif Online)</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Tempelkan konfigurasi JSON dari Firebase Console (Project Settings → Web App) agar data tersinkronisasi dan link tagihan bisa dibuka di HP pelanggan.</p>
+          <div class="form-group">
+            <label>Firebase Config JSON</label>
+            <textarea id="setFirebaseJson" rows="6" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-primary" onclick="saveFirebaseConfig()">🔗 Hubungkan & Sinkronkan Firebase</button>
+            <button class="btn-outline" onclick="exportBackup()">⬇️ Export Backup JSON</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- PUBLIC CLIENT INVOICE VIEW (?inv=...) -->
+  <div id="clientInvoiceView" class="client-wrap hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <button id="backToAdminBtn" class="btn-outline btn-sm" onclick="exitClientPreview()">← Kembali ke Admin</button>
+      <button class="btn-outline btn-sm" onclick="toggleTheme()">🌓 Tema</button>
+    </div>
+    <div class="card" id="clientInvoiceCard">
+      <p style="text-align:center;color:var(--text-muted);">Memuat tagihan...</p>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH / EDIT PELANGGAN -->
+  <div class="modal-backdrop" id="customerModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="modalTitle">Tambah Pelanggan</h3>
+        <button class="btn-outline btn-sm" onclick="closeModal('customerModal')">✕</button>
+      </div>
+      <input type="hidden" id="editCustId" />
+      <div class="form-group">
+        <label>Nama Pelanggan</label>
+        <input type="text" id="custName" placeholder="Budi Santoso" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>No. WhatsApp (628xxx)</label>
+          <input type="text" id="custPhone" placeholder="628123456789" />
+        </div>
+        <div class="form-group">
+          <label>Blok / Alamat Rumah</label>
+          <input type="text" id="custAddress" placeholder="Blok C4 No. 12" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Port Switch / Jalur LAN</label>
+          <input type="text" id="custPort" placeholder="Switch-1 Port 4" />
+        </div>
+        <div class="form-group">
+          <label>Tanggal Jatuh Tempo (1-28)</label>
+          <input type="number" id="custDueDay" min="1" max="28" value="10" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Paket</label>
+          <input type="text" id="custPlan" value="Paket Keluarga 10 Mbps" />
+        </div>
+        <div class="form-group">
+          <label>Iuran Bulanan (Rp)</label>
+          <input type="number" id="custAmount" value="100000" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status Pembayaran Bulan Ini</label>
+        <select id="custStatus">
+          <option value="belum">Belum Bayar</option>
+          <option value="telat">Wajib Putus / Telat</option>
+          <option value="lunas">Lunas</option>
+        </select>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="saveCustomer()">Simpan Data Pelanggan</button>
+    </div>
+  </div>
+
+  <!-- MODAL KIRIM WA TAGIHAN -->
+  <div class="modal-backdrop" id="waModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Kirim Tagihan WhatsApp</h3>
+        <button class="btn-outline btn-sm" onclick="closeModal('waModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Pratinjau Pesan (Otomatis menyertakan Link Invoice & QRIS)</label>
+        <textarea id="waPreviewText" rows="8"></textarea>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a id="waDirectLink" target="_blank" class="btn-wa" style="padding:10px;border-radius:8px;text-decoration:none;text-align:center;font-weight:700;">📲 Buka WhatsApp & Kirim</a>
+        <button class="btn-outline" id="previewClientLinkBtn">👁️ Lihat Tampilan Link di HP Pelanggan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Opsional: Tempelkan config Firebase Anda langsung di sini agar permanen di GitHub Pages
+    const HARDCODED_FIREBASE_CONFIG = null;
+
+    const STORAGE_KEY = "netwarga_state_v4";
+    const SESSION_KEY = "netwarga_admin_logged_in";
+    let db = null;
+    let auth = null;
+    let currentFilter = "all";
+
+    let state = {
+      theme: "light",
+      adminPin: "123456",
+      settings: {
+        bizName: "NetWarga RT/RW Net",
+        adminWa: "6281234567890",
+        bankInfo: "BCA 1234567890 a.n. Admin NetWarga
+DANA / GoPay: 081234567890",
+        qrisImage: "",
+        firebaseConfig: HARDCODED_FIREBASE_CONFIG
+      },
+      customers: [
+        { id: "c1", invoiceCode: "INV-202611-001", name: "Budi Santoso", phone: "628123456701", address: "Blok A2 No. 5", port: "Switch-Utama Port 2", plan: "Paket Hemat 10 Mbps", amount: 100000, dueDay: 10, status: "telat", paidAt: "" },
+        { id: "c2", invoiceCode: "INV-202611-002", name: "Siti Aminah", phone: "628123456702", address: "Blok B1 No. 8", port: "Switch-Utama Port 3", plan: "Paket Keluarga 15 Mbps", amount: 130000, dueDay: 20, status: "belum", paidAt: "" },
+        { id: "c3", invoiceCode: "INV-202611-003", name: "Hendra Wijaya", phone: "628123456703", address: "Blok C3 No. 1", port: "Switch-Gang Port 1", plan: "Paket Keluarga 15 Mbps", amount: 130000, dueDay: 5, status: "lunas", paidAt: "2026-11-04" }
+      ],
+      ledger: [
+        { id: "l1", type: "in", desc: "Iuran WiFi - Hendra Wijaya", amount: 130000, date: "2026-11-04" },
+        { id: "l2", type: "out", desc: "Bayar Langganan ISP Pusat", amount: 350000, date: "2026-11-01" }
+      ]
+    };
+
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = { ...state, ...parsed, settings: { ...state.settings, ...(parsed.settings || {}) } };
+        }
+        if (HARDCODED_FIREBASE_CONFIG) state.settings.firebaseConfig = HARDCODED_FIREBASE_CONFIG;
+      } catch (e) {}
+      applyTheme(state.theme || "light");
+    }
+
+    function saveLocal() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    function initFirebase() {
+      const cfg = state.settings.firebaseConfig;
+      if (!cfg || !cfg.projectId || typeof firebase === "undefined") return false;
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(cfg);
+        db = firebase.firestore();
+        if (firebase.auth) auth = firebase.auth();
+        const badge = document.getElementById("syncStatus");
+        if (badge) {
+          badge.textContent = "🟢 Terhubung Firebase (" + cfg.projectId + ")";
+          badge.style.color = "var(--success)";
+        }
+        return true;
+      } catch (err) {
+        console.error(err);
+        return false;
+      }
+    }
+
+    // AUTH / LOGIN FUNCTIONS
+    function switchLoginMode(mode) {
+      document.getElementById("modePinBtn").classList.toggle("active", mode === "pin");
+      document.getElementById("modeFirebaseBtn").classList.toggle("active", mode === "firebase");
+      document.getElementById("loginPinBox").classList.toggle("hidden", mode !== "pin");
+      document.getElementById("loginFirebaseBox").classList.toggle("hidden", mode !== "firebase");
+      document.getElementById("loginErrorMsg").textContent = "";
+    }
+
+    async function handlePinLogin() {
+      const input = document.getElementById("loginPinInput").value.trim();
+      const validPin = String(state.adminPin || "123456");
+      if (input === validPin) {
+        sessionStorage.setItem(SESSION_KEY, "true");
+        document.getElementById("loginErrorMsg").textContent = "";
+        await enterAdminDashboard();
+      } else {
+        document.getElementById("loginErrorMsg").textContent = "PIN salah! Default awal adalah 123456.";
+      }
+    }
+
+    async function handleFirebaseLogin() {
+      const email = document.getElementById("loginEmailInput").value.trim();
+      const pass = document.getElementById("loginPassInput").value;
+      const errEl = document.getElementById("loginErrorMsg");
+      if (!auth) {
+        errEl.textContent = "Firebase belum terhubung. Masuk via PIN Cepat dulu lalu pasang Firebase Config di menu Pengaturan.";
+        return;
+      }
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+        sessionStorage.setItem(SESSION_KEY, "true");
+        errEl.textContent = "";
+        await enterAdminDashboard();
+      } catch (e) {
+        errEl.textContent = "Login Firebase gagal: " + e.message;
+      }
+    }
+
+    async function enterAdminDashboard() {
+      document.getElementById("loginView").classList.add("hidden");
+      document.getElementById("adminApp").classList.remove("hidden");
+      renderAll();
+      if (db) await pullFromCloud();
+    }
+
+    async function logoutAdmin() {
+      sessionStorage.removeItem(SESSION_KEY);
+      if (auth && auth.currentUser) {
+        try { await auth.signOut(); } catch (e) {}
+      }
+      document.getElementById("adminApp").classList.add("hidden");
+      document.getElementById("loginView").classList.remove("hidden");
+      document.getElementById("loginPinInput").value = "";
+    }
+
+    function saveAdminPin() {
+      const newPin = document.getElementById("setAdminPin").value.trim();
+      if (newPin.length < 4) return alert("PIN minimal 4 karakter/angka.");
+      state.adminPin = newPin;
+      saveLocal();
+      alert("PIN Admin berhasil diperbarui!");
+    }
+
+    async function syncToCloud() {
+      saveLocal();
+      if (!db) return;
+      try {
+        await db.collection("app_meta").doc("settings").set({
+          bizName: state.settings.bizName,
+          adminWa: state.settings.adminWa,
+          bankInfo: state.settings.bankInfo,
+          qrisImage: state.settings.qrisImage || ""
+        }, { merge: true });
+
+        for (const c of state.customers) {
+          await db.collection("customers").doc(c.id).set(c, { merge: true });
+        }
+      } catch (e) {
+        console.warn("Gagal sync ke Firestore:", e);
+      }
+    }
+
+    async function pullFromCloud() {
+      if (!db) return;
+      try {
+        const metaDoc = await db.collection("app_meta").doc("settings").get();
+        if (metaDoc.exists) {
+          state.settings = { ...state.settings, ...metaDoc.data() };
+        }
+        const snap = await db.collection("customers").get();
+        if (!snap.empty) {
+          state.customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+        saveLocal();
+        renderAll();
+      } catch (e) {
+        console.warn("Gagal tarik data Firestore:", e);
+      }
+    }
+
+    function applyTheme(t) {
+      state.theme = t;
+      document.documentElement.setAttribute("data-theme", t);
+      const label = t === "dark" ? "☀️ Light" : "🌙 Dark";
+      const btn = document.getElementById("themeToggleBtn");
+      const loginBtn = document.getElementById("loginThemeBtn");
+      if (btn) btn.textContent = label;
+      if (loginBtn) loginBtn.textContent = label;
+      saveLocal();
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === "dark" ? "light" : "dark");
+    }
+
+    function formatRp(n) {
+      return "Rp" + Number(n || 0).toLocaleString("id-ID");
+    }
+
+    function getBaseUrl() {
+      return window.location.origin + window.location.pathname;
+    }
+
+    function getInvoiceLink(invCode) {
+      return `${getBaseUrl()}?inv=${encodeURIComponent(invCode)}`;
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
+      ["dashboard", "customers", "finance", "settings"].forEach(t => {
+        document.getElementById("tab-" + t).classList.toggle("hidden", t !== tabName);
+      });
+      if (tabName === "settings") fillSettingsForm();
+    }
+
+    function setFilter(f, el) {
+      currentFilter = f;
+      document.querySelectorAll("#filterPills .pill").forEach(p => p.classList.remove("active"));
+      el.classList.add("active");
+      renderAll();
+    }
+
+    function renderAll() {
+      document.getElementById("headerBrandName").textContent = state.settings.bizName;
+      const unpaidList = state.customers.filter(c => c.status !== "lunas");
+      const totalIncome = state.ledger.filter(l => l.type === "in").reduce((a, b) => a + Number(b.amount), 0);
+      const totalOut = state.ledger.filter(l => l.type === "out").reduce((a, b) => a + Number(b.amount), 0);
+      const totalUnpaid = unpaidList.reduce((a, b) => a + Number(b.amount), 0);
+
+      document.getElementById("statIncome").textContent = formatRp(totalIncome);
+      document.getElementById("statUnpaid").textContent = formatRp(totalUnpaid);
+      document.getElementById("statProfit").textContent = formatRp(totalIncome - totalOut);
+      document.getElementById("statCount").textContent = state.customers.length + " Warga";
+
+      const urgentEl = document.getElementById("urgentList");
+      if (!unpaidList.length) {
+        urgentEl.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">Semua pelanggan sudah lunas bulan ini!</p>`;
+      } else {
+        urgentEl.innerHTML = unpaidList.map(c => renderCustomerCard(c)).join("");
+      }
+
+      const q = (document.getElementById("searchInput").value || "").toLowerCase();
+      const filtered = state.customers.filter(c => {
+        const matchFilter = currentFilter === "all" || c.status === currentFilter;
+        const matchQuery = c.name.toLowerCase().includes(q) || c.address.toLowerCase().includes(q) || (c.port || "").toLowerCase().includes(q);
+        return matchFilter && matchQuery;
+      });
+      document.getElementById("customerList").innerHTML = filtered.length
+        ? filtered.map(c => renderCustomerCard(c)).join("")
+        : `<p style="color:var(--text-muted);font-size:13px;">Tidak ada data pelanggan yang cocok.</p>`;
+
+      document.getElementById("ledgerList").innerHTML = state.ledger.slice().reverse().map(l => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;font-size:13px;">${l.desc}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${l.date}</div>
+          </div>
+          <div style="font-weight:700;color:${l.type === 'in' ? 'var(--success)' : 'var(--danger)'};">
+            ${l.type === 'in' ? '+' : '-'} ${formatRp(l.amount)}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderCustomerCard(c) {
+      const badgeMap = {
+        lunas: `<span class="badge badge-lunas">LUNAS</span>`,
+        belum: `<span class="badge badge-belum">BELUM BAYAR</span>`,
+        telat: `<span class="badge badge-telat">WAJIB PUTUS / TELAT</span>`
+      };
+      return `
+        <div class="cust-item">
+          <div class="cust-top">
+            <div>
+              <div style="font-weight:700;font-size:15px;">${c.name}</div>
+              <div class="cust-meta">${c.address} • Jalur: <strong>${c.port || '-'}</strong></div>
+              <div class="cust-meta">${c.plan} • <strong>${formatRp(c.amount)}</strong> (Jatuh tempo tgl ${c.dueDay})</div>
+            </div>
+            <div>${badgeMap[c.status] || ""}</div>
+          </div>
+          <div class="cust-actions">
+            <button class="btn-wa btn-sm" onclick="openWaModal('${c.id}')">💬 WA Tagih</button>
+            <button class="btn-outline btn-sm" onclick="previewClientInvoice('${c.invoiceCode}')">🔗 Link & QRIS</button>
+            ${c.status !== "lunas"
+              ? `<button class="btn-success btn-sm" onclick="markAsPaid('${c.id}')">✔ Konfirmasi Lunas</button>`
+              : `<button class="btn-outline btn-sm" onclick="markAsUnpaid('${c.id}')">↺ Batal Lunas</button>`
+            }
+            <button class="btn-outline btn-sm" onclick="openCustomerModal('${c.id}')">✏️ Edit</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function openCustomerModal(id = "") {
+      document.getElementById("editCustId").value = id;
+      if (id) {
+        const c = state.customers.find(x => x.id === id);
+        document.getElementById("modalTitle").textContent = "Edit Pelanggan";
+        document.getElementById("custName").value = c.name;
+        document.getElementById("custPhone").value = c.phone;
+        document.getElementById("custAddress").value = c.address;
+        document.getElementById("custPort").value = c.port || "";
+        document.getElementById("custDueDay").value = c.dueDay || 10;
+        document.getElementById("custPlan").value = c.plan;
+        document.getElementById("custAmount").value = c.amount;
+        document.getElementById("custStatus").value = c.status;
+      } else {
+        document.getElementById("modalTitle").textContent = "Tambah Pelanggan Baru";
+        document.getElementById("custName").value = "";
+        document.getElementById("custPhone").value = "628";
+        document.getElementById("custAddress").value = "";
+        document.getElementById("custPort").value = "";
+        document.getElementById("custDueDay").value = 10;
+        document.getElementById("custPlan").value = "Paket Keluarga 10 Mbps";
+        document.getElementById("custAmount").value = 100000;
+        document.getElementById("custStatus").value = "belum";
+      }
+      document.getElementById("customerModal").classList.add("open");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+
+    async function saveCustomer() {
+      const id = document.getElementById("editCustId").value;
+      const name = document.getElementById("custName").value.trim();
+      if (!name) return alert("Nama pelanggan wajib diisi");
+      const phone = document.getElementById("custPhone").value.replace(/\D/g, "");
+      const payload = {
+        name,
+        phone: phone.startsWith("0") ? "62" + phone.slice(1) : phone,
+        address: document.getElementById("custAddress").value.trim(),
+        port: document.getElementById("custPort").value.trim(),
+        dueDay: Number(document.getElementById("custDueDay").value || 10),
+        plan: document.getElementById("custPlan").value.trim(),
+        amount: Number(document.getElementById("custAmount").value || 0),
+        status: document.getElementById("custStatus").value
+      };
+
+      if (id) {
+        const idx = state.customers.findIndex(x => x.id === id);
+        state.customers[idx] = { ...state.customers[idx], ...payload };
+      } else {
+        const newId = "c" + Date.now();
+        const invCode = "INV-" + new Date().toISOString().slice(0, 7).replace("-", "") + "-" + String(state.customers.length + 1).padStart(3, "0");
+        state.customers.push({ id: newId, invoiceCode: invCode, paidAt: "", ...payload });
+      }
+      closeModal("customerModal");
+      renderAll();
+      await syncToCloud();
+    }
+
+    async function markAsPaid(id) {
+      const c = state.customers.find(x => x.id === id);
+      if (!c) return;
+      const today = new Date().toISOString().slice(0, 10);
+      c.status = "lunas";
+      c.paidAt = today;
+      state.ledger.push({ id: "l" + Date.now(), type: "in", desc: "Iuran WiFi - " + c.name, amount: c.amount, date: today });
+      renderAll();
+      await syncToCloud();
+    }
+
+    async function markAsUnpaid(id) {
+      const c = state.customers.find(x => x.id === id);
+      if (!c) return;
+      c.status = "belum";
+      c.paidAt = "";
+      renderAll();
+      await syncToCloud();
+    }
+
+    async function generateNewCycle() {
+      if (!confirm("Reset semua status pelanggan menjadi 'Belum Bayar' dan buat kode invoice bulan baru?")) return;
+      const ym = new Date().toISOString().slice(0, 7).replace("-", "");
+      state.customers.forEach((c, i) => {
+        c.status = "belum";
+        c.paidAt = "";
+        c.invoiceCode = `INV-${ym}-${String(i + 1).padStart(3, "0")}`;
+      });
+      renderAll();
+      await syncToCloud();
+    }
+
+    function addExpense() {
+      const desc = document.getElementById("expDesc").value.trim();
+      const amount = Number(document.getElementById("expAmount").value || 0);
+      if (!desc || amount <= 0) return alert("Isi keterangan dan nominal pengeluaran dengan benar.");
+      state.ledger.push({ id: "l" + Date.now(), type: "out", desc, amount, date: new Date().toISOString().slice(0, 10) });
+      document.getElementById("expDesc").value = "";
+      document.getElementById("expAmount").value = "";
+      saveLocal();
+      renderAll();
+    }
+
+    function openWaModal(id) {
+      const c = state.customers.find(x => x.id === id);
+      if (!c) return;
+      const link = getInvoiceLink(c.invoiceCode);
+      const msg = c.status === "lunas"
+        ? `Halo Kak *${c.name}*,
+
+Terima kasih! Pembayaran WiFi *${state.settings.bizName}* sebesar *${formatRp(c.amount)}* telah kami terima (*LUNAS*).
+
+Lihat struk digital Anda di sini:
+${link}`
+        : `Halo Kak *${c.name}*,
+
+Mengingatkan tagihan WiFi *${state.settings.bizName}* (${c.plan}) sebesar *${formatRp(c.amount)}* jatuh tempo tanggal *${c.dueDay}*.
+
+Silakan klik link berikut untuk melihat rincian tagihan, nomor rekening, atau scan QRIS:
+${link}
+
+Terima kasih 🙏`;
+
+      const txtEl = document.getElementById("waPreviewText");
+      txtEl.value = msg;
+      const updateHref = () => {
+        document.getElementById("waDirectLink").href = `https://wa.me/${c.phone}?text=${encodeURIComponent(txtEl.value)}`;
+      };
+      txtEl.oninput = updateHref;
+      updateHref();
+
+      document.getElementById("previewClientLinkBtn").onclick = () => {
+        closeModal("waModal");
+        previewClientInvoice(c.invoiceCode);
+      };
+      document.getElementById("waModal").classList.add("open");
+    }
+
+    function fillSettingsForm() {
+      document.getElementById("setAdminPin").value = state.adminPin || "123456";
+      document.getElementById("setBizName").value = state.settings.bizName;
+      document.getElementById("setAdminWa").value = state.settings.adminWa;
+      document.getElementById("setBankInfo").value = state.settings.bankInfo;
+      if (state.settings.firebaseConfig) {
+        document.getElementById("setFirebaseJson").value = JSON.stringify(state.settings.firebaseConfig, null, 2);
+      }
+      renderQrisPreviewAdmin();
+    }
+
+    function renderQrisPreviewAdmin() {
+      const box = document.getElementById("qrisPreviewAdmin");
+      if (state.settings.qrisImage) {
+        box.innerHTML = `<img src="${state.settings.qrisImage}" style="max-width:180px;border-radius:8px;border:1px solid var(--border);" /><br><button class="btn-danger btn-sm" style="margin-top:6px;" onclick="removeQris()">Hapus QRIS</button>`;
+      } else {
+        box.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">Belum ada gambar QRIS diunggah.</span>`;
+      }
+    }
+
+    function handleQrisUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const maxW = 420;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          state.settings.qrisImage = canvas.toDataURL("image/jpeg", 0.78);
+          renderQrisPreviewAdmin();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeQris() {
+      state.settings.qrisImage = "";
+      renderQrisPreviewAdmin();
+    }
+
+    async function saveSettings() {
+      state.settings.bizName = document.getElementById("setBizName").value.trim() || "NetWarga RT/RW Net";
+      state.settings.adminWa = document.getElementById("setAdminWa").value.replace(/\D/g, "");
+      state.settings.bankInfo = document.getElementById("setBankInfo").value.trim();
+      renderAll();
+      await syncToCloud();
+      alert("Pengaturan & QRIS berhasil disimpan!");
+    }
+
+    async function saveFirebaseConfig() {
+      try {
+        const raw = document.getElementById("setFirebaseJson").value.trim();
+        const cfg = JSON.parse(raw);
+        if (!cfg.projectId) throw new Error("projectId tidak ditemukan");
+        state.settings.firebaseConfig = cfg;
+        saveLocal();
+        if (initFirebase()) {
+          await syncToCloud();
+          alert("Berhasil terhubung ke Firebase & data tersinkronisasi!");
+        }
+      } catch (e) {
+        alert("Format JSON Firebase tidak valid: " + e.message);
+      }
+    }
+
+    function exportBackup() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "backup-netwarga.json";
+      a.click();
+    }
+
+    // CLIENT INVOICE PUBLIC PAGE
+    async function previewClientInvoice(invCode, isDirectUrl = false) {
+      document.getElementById("loginView").classList.add("hidden");
+      document.getElementById("adminApp").classList.add("hidden");
+      document.getElementById("clientInvoiceView").classList.remove("hidden");
+      document.getElementById("backToAdminBtn").classList.toggle("hidden", isDirectUrl);
+
+      let cust = state.customers.find(c => c.invoiceCode === invCode);
+      if (!cust && db) {
+        try {
+          const snap = await db.collection("customers").where("invoiceCode", "==", invCode).limit(1).get();
+          if (!snap.empty) cust = snap.docs[0].data();
+          const meta = await db.collection("app_meta").doc("settings").get();
+          if (meta.exists) state.settings = { ...state.settings, ...meta.data() };
+        } catch (e) {}
+      }
+
+      const card = document.getElementById("clientInvoiceCard");
+      if (!cust) {
+        card.innerHTML = `<h3 style="text-align:center;">Invoice Tidak Ditemukan</h3><p style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:6px;">Kode tagihan ${invCode} tidak terdaftar atau belum disinkronkan ke server.</p>`;
+        return;
+      }
+
+      const isPaid = cust.status === "lunas";
+      const confirmWaText = encodeURIComponent(`Halo Admin ${state.settings.bizName}, saya *${cust.name}* (${cust.address}) sudah melakukan pembayaran tagihan WiFi *${cust.invoiceCode}* sebesar *${formatRp(cust.amount)}*. Berikut bukti transfernya:`);
+
+      card.innerHTML = `
+        <div style="text-align:center;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px;">
+          <div style="font-size:12px;color:var(--text-muted);font-weight:700;">TAGIHAN INTERNET WIFI</div>
+          <h2 style="font-size:19px;margin:2px 0;">${state.settings.bizName}</h2>
+          <div style="font-size:12px;color:var(--text-muted);">${cust.invoiceCode}</div>
+        </div>
+
+        <div style="text-align:center;margin-bottom:14px;">
+          <span class="badge ${isPaid ? 'badge-lunas' : 'badge-telat'}" style="font-size:13px;padding:5px 14px;">
+            ${isPaid ? '✔ SUDAH LUNAS' : '⏳ MENUNGGU PEMBAYARAN'}
+          </span>
+          <div style="font-size:28px;font-weight:800;margin-top:8px;">${formatRp(cust.amount)}</div>
+        </div>
+
+        <div style="background:var(--surface-2);padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Nama Pelanggan</span><strong>${cust.name}</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Alamat</span><strong>${cust.address}</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Paket</span><strong>${cust.plan}</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>Tanggal ${cust.dueDay}</strong></div>
+        </div>
+
+        ${!isPaid ? `
+          ${state.settings.qrisImage ? `
+            <div class="qris-box">
+              <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Scan QRIS untuk Bayar</div>
+              <img src="${state.settings.qrisImage}" alt="QRIS Pembayaran" />
+              <a href="${state.settings.qrisImage}" download="QRIS-${state.settings.bizName}.jpg" style="display:inline-block;margin-top:6px;font-size:12px;color:#2563eb;font-weight:700;text-decoration:none;">⬇️ Simpan Gambar QRIS ke Galeri</a>
+            </div>
+          ` : ""}
+          <div style="background:var(--surface-2);padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;white-space:pre-line;">
+            <strong style="display:block;margin-bottom:4px;color:var(--text-muted);">Transfer Bank / E-Wallet:</strong>${state.settings.bankInfo}
+          </div>
+          <a href="https://wa.me/${state.settings.adminWa}?text=${confirmWaText}" target="_blank" class="btn-wa" style="width:100%;padding:12px;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">
+            📲 Konfirmasi Sudah Bayar ke Admin
+          </a>
+        ` : `
+          <div style="text-align:center;font-size:13px;color:var(--success);font-weight:600;">
+            Terima kasih! Pembayaran tercatat pada ${cust.paidAt || "bulan ini"}.
+          </div>
+        `}
+      `;
+    }
+
+    function exitClientPreview() {
+      document.getElementById("clientInvoiceView").classList.add("hidden");
+      document.getElementById("adminApp").classList.remove("hidden");
+    }
+
+    // Boot
+    (async function boot() {
+      loadLocal();
+      initFirebase();
+      const params = new URLSearchParams(window.location.search);
+      const invParam = params.get("inv");
+
+      if (invParam) {
+        await previewClientInvoice(invParam, true);
+      } else if (sessionStorage.getItem(SESSION_KEY) === "true") {
+        await enterAdminDashboard();
+      } else {
+        document.getElementById("loginView").classList.remove("hidden");
+        document.getElementById("adminApp").classList.add("hidden");
+      }
+    })();
+  </script>
+</body>
+</html>
