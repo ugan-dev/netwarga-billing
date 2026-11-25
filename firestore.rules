@@ -1,24 +1,37 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // NetWarga: link tagihan ?inv=... dibaca publik tanpa login,
-    // dan script Apps Script membaca koleksi customers tanpa Auth.
-    // Karena itu baca customers harus publik. Tulis dibatasi:
-    // aplikasi admin menulis dari browser (tanpa Auth) jadi write
-    // masih terbuka di versi ini — JANGAN simpan data sensitif lain
-    // di project Firebase yang sama. Kunci dengan Firebase Auth
-    // sebelum dipakai untuk pelanggan sungguhan.
+
+    // Hanya akun admin (Google, email terverifikasi) yang boleh baca/tulis data.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "gagan.70700@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+
+    // Pengaturan toko (nama, rekening, QRIS, aturan tagihan) boleh dibaca publik
+    // karena dipakai halaman tagihan pelanggan. Hanya admin yang bisa mengubah.
+    match /app_meta/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Halaman tagihan pelanggan: dokumen diambil lewat token acak (get),
+    // TIDAK boleh di-list supaya tidak bisa dicari satu per satu.
+    match /invoices/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
+    }
+
     match /customers/{docId} {
-      allow read: if true;
-      allow write: if true;
+      allow read, write: if isAdmin();
     }
-    match /expenses/{docId} {
-      allow read, write: if true;
+
+    match /ledger/{docId} {
+      allow read, write: if isAdmin();
     }
-    match /settings/{docId} {
-      allow read: if true;
-      allow write: if true;
-    }
+
     match /{document=**} {
       allow read, write: if false;
     }

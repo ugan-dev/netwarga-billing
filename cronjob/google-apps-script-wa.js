@@ -1,109 +1,286 @@
 /**
- * CRONJOB OTOMATIS PENGINGAT TAGIHAN WHATSAPP ANTI-GANDA (GOOGLE APPS SCRIPT)
+ * NetWarga — Pengingat tagihan WhatsApp otomatis (Google Apps Script).
+ *
+ * Cara pasang (ringkas, detail di DEPLOY-CHECKLIST.md):
+ *  1. script.google.com → Proyek baru → tempel file ini.
+ *  2. Ganti isi CONFIG di bawah.
+ *  3. Project Settings → centang "Show appsscript.json" → isi sesuai appsscript.json di folder ini.
+ *  4. Jalankan sekali fungsi pasangTrigger() (akan minta izin akses) lalu cek log dengan
+ *     kirimPengingatTagihanOtomatis(true) = mode uji coba tanpa kirim pesan.
+ *
+ * Akun yang menjalankan script HARUS akun admin (gagan.70700@gmail.com),
+ * karena Firestore hanya mengizinkan admin menulis dan membaca data pelanggan.
  */
-
 const CONFIG = {
-  FIREBASE_PROJECT_ID: "GANTI_DENGAN_PROJECT_ID_FIREBASE",
-  GITHUB_PAGES_URL: "https://GANTI_USERNAME.github.io/netwarga-billing/",
-  WA_GATEWAY_TYPE: "WAHA", // Pilihan: "WAHA" atau "FONNTE"
-  WA_API_URL: "https://GANTI_ENDPOINT_WA_ANDA/api/sendText",
-  WA_API_TOKEN: "GANTI_TOKEN_API_ANDA",
-  NAMA_WIFI: "NetWarga RT/RW Net"
+  FIREBASE_PROJECT_ID: "netwarga-manager",
+  APP_URL: "https://GANTI_USERNAME.github.io/netwarga-billing/",
+  WA_GATEWAY: "WAHA",                // "WAHA" atau "FONNTE"
+  WA_API_URL: "https://GANTI_DOMAIN_WAHA/api/sendText",   // untuk FONNTE: https://api.fonnte.com/send
+  WA_API_KEY: "GANTI_API_KEY",
+  WA_SESSION: "default",
+  TIMEZONE: "Asia/Jakarta",
+  JAM_JALAN: 8,                      // pemicu harian jam 08:00-09:00
+  MAX_RUN_MS: 5 * 60 * 1000,         // berhenti sebelum batas 6 menit Apps Script
+  JEDA_MIN_DETIK: 6,
+  JEDA_MAX_DETIK: 12,
+  NAMA_WIFI_CADANGAN: "NetWarga RT/RW Net"
 };
 
-function kirimPengingatTagihanOtomatis() {
-  const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${CONFIG.FIREBASE_PROJECT_ID}/databases/(default)/documents/customers`;
-  const response = UrlFetchApp.fetch(firestoreUrl, { muteHttpExceptions: true });
-  const json = JSON.parse(response.getContentText());
+/*LOGIC-START*/
+// Logika tagihan bersama (app + cronjob pakai blok yang sama persis).
+// Semua perhitungan pakai string "YYYY-MM-DD" dan angka hari, jadi tidak
+// tergantung timezone perangkat.
+const MONTHS_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const DEFAULT_TPL = "Halo Kak *{nama}*,\n\nMengingatkan tagihan WiFi *{wifi}* ({paket}) untuk periode {periode} sebesar *{tagihan}*. Status: {keterangan}.\n\nSilakan buka link berikut untuk rincian, transfer, atau scan QRIS:\n{link}\n\nTerima kasih 🙏";
+const DEFAULT_TPL_LUNAS = "Halo Kak *{nama}*,\n\nTerima kasih! Pembayaran WiFi *{wifi}* sebesar *{tagihan}* sudah kami terima.\n\nLihat rincian pembayaran di sini:\n{link}";
 
-  if (!json.documents || json.documents.length === 0) return;
-
-  const today = new Date();
-  const currentDay = today.getDate();
-  const currentCycle = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
-  const todayStr = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM-dd");
-
-  json.documents.forEach((doc) => {
-    const f = doc.fields || {};
-    const status = f.status ? f.status.stringValue : "";
-    const waSentCycle = f.waSentCycle ? f.waSentCycle.stringValue : "";
-    const dueDay = parseInt((f.dueDay && (f.dueDay.integerValue || f.dueDay.stringValue)) || "20", 10);
-    const name = f.name ? f.name.stringValue : "Pelanggan";
-    const rawPhone = f.phone ? f.phone.stringValue : "";
-    const phone = rawPhone.replace(/\D/g, "");
-    const amount = parseInt((f.amount && (f.amount.integerValue || f.amount.stringValue)) || "0", 10);
-    const invCode = f.invoiceCode ? f.invoiceCode.stringValue : "";
-
-    if (status === "lunas" || waSentCycle === currentCycle) return;
-
-    const isDueToday = dueDay === currentDay;
-    const isHMinus2 = ((dueDay - 2 + 28) % 28 || 28) === currentDay;
-
-    if (phone && (isDueToday || isHMinus2)) {
-      const targetPhone = phone.startsWith("0") ? "62" + phone.slice(1) : phone;
-      const linkTagihan = `${CONFIG.GITHUB_PAGES_URL}?inv=${encodeURIComponent(invCode)}`;
-      const keteranganTempo = isDueToday ? "jatuh tempo HARI INI" : "jatuh tempo 2 hari lagi";
-
-      const pesan =
-        `Halo Kak *${name}*,\n\n` +
-        `Mengingatkan tagihan WiFi *${CONFIG.NAMA_WIFI}* sebesar *Rp${amount.toLocaleString("id-ID")}* (${keteranganTempo}).\n\n` +
-        `Klik link berikut untuk rincian tagihan, salin rekening, atau scan QRIS:\n` +
-        `${linkTagihan}\n\n` +
-        `Terima kasih 🙏`;
-
-      const ok = kirimKeGateway(targetPhone, pesan);
-      if (ok) markSentInFirestore(doc.name, currentCycle, todayStr, "cronjob");
-
-      const delayMs = (6 + Math.floor(Math.random() * 9)) * 1000;
-      Utilities.sleep(delayMs);
-    }
-  });
+function pad2(n) { return String(n).padStart(2, "0"); }
+function dnum(ymdStr) { const p = ymdStr.split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000; }
+function dnumToYmd(n) { const d = new Date(n * 86400000); return d.getUTCFullYear() + "-" + pad2(d.getUTCMonth() + 1) + "-" + pad2(d.getUTCDate()); }
+function cycAdd(cyc, k) { const p = cyc.split("-"); const t = (+p[0]) * 12 + (+p[1] - 1) + k; return Math.floor(t / 12) + "-" + pad2(t % 12 + 1); }
+function cycleOf(ymdStr) { return ymdStr.slice(0, 7); }
+function daysInMonth(y, m1) { return new Date(Date.UTC(y, m1, 0)).getUTCDate(); }
+// Tanggal jatuh tempo untuk satu siklus (YYYY-MM). Tanggal 31 dipasang ke tanggal terakhir bulan pendek.
+function dueYmd(cyc, dueDay) {
+  const p = cyc.split("-");
+  const d = Math.min(Math.max(1, +dueDay || 20), daysInMonth(+p[0], +p[1]));
+  return cyc + "-" + pad2(d);
 }
-
-function markSentInFirestore(fullDocName, cycle, dateStr, method) {
-  const patchUrl =
-    `https://firestore.googleapis.com/v1/${fullDocName}` +
-    `?updateMask.fieldPaths=waSentCycle&updateMask.fieldPaths=lastWaMethod&updateMask.fieldPaths=lastWaSentAt`;
-
-  const body = {
-    fields: {
-      waSentCycle: { stringValue: cycle },
-      lastWaMethod: { stringValue: method },
-      lastWaSentAt: { stringValue: dateStr }
-    }
-  };
-
-  UrlFetchApp.fetch(patchUrl, {
-    method: "patch",
-    contentType: "application/json",
-    payload: JSON.stringify(body),
-    muteHttpExceptions: true
-  });
+function cycLabel(cyc) { const p = cyc.split("-"); return MONTHS_SHORT[+p[1] - 1] + " " + p[0]; }
+function dateLong(ymdStr) { const p = ymdStr.split("-"); return (+p[2]) + " " + MONTHS_ID[+p[1] - 1] + " " + p[0]; }
+function fmtRp(n) {
+  const v = Math.round(Number(n) || 0);
+  return (v < 0 ? "-" : "") + "Rp" + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
-
-function kirimKeGateway(phone, text) {
-  let payload = {};
-  let headers = {};
-
-  if (CONFIG.WA_GATEWAY_TYPE === "FONNTE") {
-    headers = { Authorization: CONFIG.WA_API_TOKEN };
-    payload = { target: phone, message: text };
-  } else {
-    headers = {
-      "Content-Type": "application/json",
-      "X-Api-Key": CONFIG.WA_API_TOKEN,
-      Authorization: `Bearer ${CONFIG.WA_API_TOKEN}`
-    };
-    payload = { session: "default", chatId: `${phone}@c.us`, text: text };
+// Dipakai hanya untuk data lama (sebelum schema v3) yang belum punya lastPaidCycle.
+function legacyLast(c, today) {
+  const cur = cycleOf(today);
+  if (c.billingCycle) return c.status === "lunas" ? c.billingCycle : cycAdd(c.billingCycle, -1);
+  return c.status === "lunas" ? cur : cycAdd(cur, -1);
+}
+// Siklus terakhir yang sudah dibayar ("" = belum pernah bayar).
+function effLast(c, today) {
+  return (c.lastPaidCycle !== undefined && c.lastPaidCycle !== null) ? c.lastPaidCycle : legacyLast(c, today);
+}
+// Hitung status tagihan. Semua turunan dari data mentah, jadi tidak
+// bergantung pada apakah app sempat dibuka hari itu.
+function billing(c, today, cfg) {
+  const R = Number(cfg.reminderDays ?? 5), G = Number(cfg.graceDays ?? 10);
+  const last = effLast(c, today);
+  const out = { active: c.active !== false, last: last, unpaid: [], owed: 0, dueYmd: "", late: 0, status: "lunas", stage: 0 };
+  if (!out.active) { out.status = "nonaktif"; return out; }
+  const t = dnum(today);
+  const start = last ? cycAdd(last, 1) : (c.startCycle || cycleOf(today));
+  // Siklus dianggap "tagihan terbuka" mulai H-R sebelum jatuh tempo.
+  for (let cyc = start, i = 0; i < 36; cyc = cycAdd(cyc, 1), i++) {
+    if (t < dnum(dueYmd(cyc, c.dueDay)) - R) break;
+    out.unpaid.push(cyc);
   }
+  out.owed = out.unpaid.length * (Number(c.amount) || 0);
+  if (!out.unpaid.length) { out.status = c.paidAt ? "lunas" : "belum-tagih"; return out; }
+  out.dueYmd = dueYmd(out.unpaid[0], c.dueDay);
+  out.late = t - dnum(out.dueYmd);
+  out.status = out.late <= 0 ? "belum" : (out.late >= G ? "putus" : "terlambat");
+  out.stage = stageOf(out, today, cfg);
+  return out;
+}
+// Tahap pengingat otomatis. 0 = tidak kirim otomatis hari ini.
+// 1 = H-R, 2 = hari H, 3 = H+(G-1) sebelum layanan dinonaktifkan.
+function stageOf(b, today, cfg) {
+  if (!b.unpaid || !b.unpaid.length) return 0;
+  const R = Number(cfg.reminderDays ?? 5), G = Number(cfg.graceDays ?? 10);
+  const t = dnum(today), due = dnum(b.dueYmd);
+  if (t === due) return 2;
+  if (G >= 2 && t === due + G - 1) return 3;
+  if (R > 0 && t === due - R) return 1;
+  return 0;
+}
+// Tahap untuk pesan manual (kapan saja): sebelum hari H = 1, sesudahnya = 2.
+function manualStage(b, today) {
+  if (!b.unpaid || !b.unpaid.length) return 0;
+  return dnum(today) < dnum(b.dueYmd) ? 1 : 2;
+}
+function keterangan(b, today, stage) {
+  const t = dnum(today), due = dnum(b.dueYmd);
+  let s;
+  if (t < due) s = "jatuh tempo " + (due - t) + " hari lagi (" + dateLong(b.dueYmd) + ")";
+  else if (t === due) s = "jatuh tempo HARI INI";
+  else s = "sudah lewat jatuh tempo " + (t - due) + " hari";
+  if (stage === 3) s += "; layanan akan dinonaktifkan besok jika belum dibayar";
+  return s;
+}
+// Siklus yang akan tercakup kalau pelanggan bayar n bulan sekarang.
+function payCycles(c, today, n) {
+  const last = effLast(c, today);
+  const start = last ? cycAdd(last, 1) : (c.startCycle || cycleOf(today));
+  const arr = [];
+  for (let i = 0; i < n; i++) arr.push(cycAdd(start, i));
+  return arr;
+}
+function buildMessage(c, b, cfg, today, link, stage) {
+  const vals = {
+    nama: c.name || "",
+    wifi: cfg.bizName || "",
+    paket: c.plan || "",
+    tagihan: fmtRp(b.owed),
+    tempo: b.dueYmd ? dateLong(b.dueYmd) : "",
+    periode: b.unpaid.map(cycLabel).join(", "),
+    bulan: b.unpaid.length + " bulan",
+    keterangan: keterangan(b, today, stage),
+    link: link
+  };
+  const tpl = (cfg.waTemplate && String(cfg.waTemplate).trim()) ? cfg.waTemplate : DEFAULT_TPL;
+  let out = tpl;
+  Object.keys(vals).forEach(k => { out = out.split("{" + k + "}").join(vals[k]); });
+  return out;
+}
+function receiptMessage(c, cfg, link, owedAmount) {
+  let out = DEFAULT_TPL_LUNAS;
+  const vals = { nama: c.name || "", wifi: cfg.bizName || "", tagihan: fmtRp(owedAmount || c.amount), link: link };
+  Object.keys(vals).forEach(k => { out = out.split("{" + k + "}").join(vals[k]); });
+  return out;
+}
+/*LOGIC-END*/
 
-  const res = UrlFetchApp.fetch(CONFIG.WA_API_URL, {
-    method: "post",
-    contentType: "application/json",
-    headers: headers,
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
+// ---------------------------------------------------------------
+// Akses Firestore (REST) memakai OAuth akun pemilik script (admin).
+// ---------------------------------------------------------------
+function fsUrl(path) {
+  return "https://firestore.googleapis.com/v1/projects/" + CONFIG.FIREBASE_PROJECT_ID + "/databases/(default)/documents/" + path;
+}
+function fsHeaders() {
+  return { Authorization: "Bearer " + ScriptApp.getOAuthToken() };
+}
+function nilaiFs(v) {
+  if (v === null || v === undefined) return null;
+  if ("stringValue" in v) return v.stringValue;
+  if ("integerValue" in v) return Number(v.integerValue);
+  if ("doubleValue" in v) return Number(v.doubleValue);
+  if ("booleanValue" in v) return v.booleanValue;
+  if ("nullValue" in v) return null;
+  if ("arrayValue" in v) return (v.arrayValue.values || []).map(nilaiFs);
+  if ("mapValue" in v) {
+    const o = {}, f = v.mapValue.fields || {};
+    Object.keys(f).forEach(k => { o[k] = nilaiFs(f[k]); });
+    return o;
+  }
+  return null;
+}
+function dokumenKeObjek(doc) {
+  const o = {}, f = doc.fields || {};
+  Object.keys(f).forEach(k => { o[k] = nilaiFs(f[k]); });
+  o.id = doc.name.split("/").pop();
+  return o;
+}
+// Ambil SEMUA dokumen dalam satu koleksi (mengikuti nextPageToken).
+function fsListAll(koleksi) {
+  let out = [], token = "";
+  do {
+    const url = fsUrl(koleksi) + "?pageSize=300" + (token ? "&pageToken=" + encodeURIComponent(token) : "");
+    const r = UrlFetchApp.fetch(url, { headers: fsHeaders(), muteHttpExceptions: true });
+    if (r.getResponseCode() !== 200) throw new Error("Gagal baca " + koleksi + ": " + r.getContentText());
+    const j = JSON.parse(r.getContentText());
+    out = out.concat(j.documents || []);
+    token = j.nextPageToken || "";
+  } while (token);
+  return out;
+}
+function bacaPengaturan() {
+  const cfg = { reminderDays: 5, graceDays: 10, bizName: CONFIG.NAMA_WIFI_CADANGAN, waTemplate: DEFAULT_TPL };
+  const r = UrlFetchApp.fetch(fsUrl("app_meta/settings"), { headers: fsHeaders(), muteHttpExceptions: true });
+  if (r.getResponseCode() === 200) {
+    const s = dokumenKeObjek(JSON.parse(r.getContentText()));
+    Object.keys(s).forEach(k => { if (s[k] !== null && s[k] !== "" && s[k] !== undefined) cfg[k] = s[k]; });
+  }
+  cfg.reminderDays = Number(cfg.reminderDays ?? 5);
+  cfg.graceDays = Number(cfg.graceDays ?? 10);
+  return cfg;
+}
+function tandaiTerkirim(docId, cycle, stage, today) {
+  const mask = "updateMask.fieldPaths=waCycle&updateMask.fieldPaths=waStage&updateMask.fieldPaths=waAt";
+  const body = { fields: {
+    waCycle: { stringValue: cycle },
+    waStage: { integerValue: String(stage) },
+    waAt: { stringValue: today }
+  } };
+  UrlFetchApp.fetch(fsUrl("customers/" + docId) + "?" + mask, {
+    method: "patch", contentType: "application/json",
+    headers: fsHeaders(), payload: JSON.stringify(body), muteHttpExceptions: true
   });
+}
 
-  return res.getResponseCode() >= 200 && res.getResponseCode() < 300;
+// ---------------------------------------------------------------
+// WhatsApp
+// ---------------------------------------------------------------
+function normalisasiNomor(raw) {
+  let d = String(raw || "").replace(/\D/g, "");
+  if (d.indexOf("0") === 0) d = "62" + d.slice(1);
+  return /^62\d{8,13}$/.test(d) ? d : "";
+}
+function kirimWa(nomor, teks) {
+  let headers, payload;
+  if (CONFIG.WA_GATEWAY === "FONNTE") {
+    headers = { Authorization: CONFIG.WA_API_KEY };
+    payload = { target: nomor, message: teks };
+  } else {
+    headers = { "X-Api-Key": CONFIG.WA_API_KEY, Authorization: "Bearer " + CONFIG.WA_API_KEY };
+    payload = { session: CONFIG.WA_SESSION, chatId: nomor + "@c.us", text: teks };
+  }
+  const r = UrlFetchApp.fetch(CONFIG.WA_API_URL, {
+    method: "post", contentType: "application/json",
+    headers: headers, payload: JSON.stringify(payload), muteHttpExceptions: true
+  });
+  const code = r.getResponseCode();
+  if (code < 200 || code >= 300) Logger.log("HTTP " + code + ": " + r.getContentText());
+  return code >= 200 && code < 300;
+}
+
+// ---------------------------------------------------------------
+// Fungsi utama — dipasang trigger harian.
+// ---------------------------------------------------------------
+function kirimPengingatTagihanOtomatis(dryRun) {
+  const mulai = Date.now();
+  const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd");
+  const cfg = bacaPengaturan();
+  const docs = fsListAll("customers");
+  let terkirim = 0, gagal = 0, lewati = 0, sisa = 0;
+
+  for (let i = 0; i < docs.length; i++) {
+    if (Date.now() - mulai > CONFIG.MAX_RUN_MS) { sisa = docs.length - i; break; }
+    const c = dokumenKeObjek(docs[i]);
+    if (!c.publicToken) { lewati++; continue; }
+    const b = billing(c, today, cfg);
+    const tahap = stageOf(b, today, cfg);
+    if (!tahap) continue;
+    // Anti-ganda: tahap yang sama untuk siklus yang sama tidak dikirim dua kali.
+    if (c.waCycle === b.unpaid[0] && Number(c.waStage || 0) >= tahap) continue;
+    const nomor = normalisasiNomor(c.phone);
+    if (!nomor) { Logger.log("Nomor tidak valid, dilewati: " + c.name); lewati++; continue; }
+
+    const link = CONFIG.APP_URL + "?inv=" + encodeURIComponent(c.publicToken);
+    const pesan = buildMessage(c, b, cfg, today, link, tahap);
+    if (dryRun) {
+      Logger.log("[UJI] " + c.name + " (" + nomor + ") tahap " + tahap + ":\n" + pesan);
+      continue;
+    }
+    if (kirimWa(nomor, pesan)) {
+      tandaiTerkirim(c.id, b.unpaid[0], tahap, today);
+      terkirim++;
+    } else {
+      gagal++;
+      Logger.log("Gagal kirim ke " + c.name + " (" + nomor + ")");
+    }
+    Utilities.sleep((CONFIG.JEDA_MIN_DETIK + Math.floor(Math.random() * (CONFIG.JEDA_MAX_DETIK - CONFIG.JEDA_MIN_DETIK + 1))) * 1000);
+  }
+  Logger.log("Selesai " + today + ": terkirim " + terkirim + ", gagal " + gagal + ", dilewati " + lewati +
+    (sisa ? ", belum diproses " + sisa + " (dilanjut besok)" : "") + (dryRun ? " [mode uji]" : ""));
+}
+
+function pasangTrigger() {
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === "kirimPengingatTagihanOtomatis") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("kirimPengingatTagihanOtomatis").timeBased().everyDays(1).atHour(CONFIG.JAM_JALAN).create();
+  Logger.log("Trigger harian dipasang jam " + CONFIG.JAM_JALAN + ":00 (" + CONFIG.TIMEZONE + ").");
 }

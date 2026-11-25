@@ -2,7 +2,7 @@
 <html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#070b14" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,1586 +11,1660 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="icon" type="image/png" href="icons/icon-192.png" />
-  <title>NetWarga Manager - Billing RT/RW Net</title>
+  <title>NetWarga Billing</title>
   <style>
     :root {
-      --bg: #eef2f7;
-      --surface: #ffffff;
-      --surface-2: #f4f6fa;
-      --surface-3: #e9eef5;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #dde3ec;
-      --primary: #4f46e5;
-      --primary-soft: rgba(79, 70, 229, 0.12);
-      --primary-hover: #4338ca;
-      --success: #10b981;
-      --success-bg: rgba(16, 185, 129, 0.14);
-      --warning: #f59e0b;
-      --warning-bg: rgba(245, 158, 11, 0.15);
-      --danger: #f43f5e;
-      --danger-bg: rgba(244, 63, 94, 0.16);
-      --info: #38bdf8;
-      --info-bg: rgba(56, 189, 248, 0.15);
-      --bottom-nav-bg: rgba(255, 255, 255, 0.94);
-      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-      --radius: 16px;
+      --bg: #eef2f7; --surface: #ffffff; --surface-2: #f5f7fb; --surface-3: #e8edf5;
+      --text: #0f172a; --muted: #5b6678; --border: #dfe5ee;
+      --primary: #4f46e5; --primary-hover: #4338ca; --primary-soft: rgba(79, 70, 229, 0.12);
+      --ok: #047857; --ok-bg: rgba(16, 185, 129, 0.14);
+      --warn: #b45309; --warn-bg: rgba(245, 158, 11, 0.16);
+      --late: #c2410c; --late-bg: rgba(234, 88, 12, 0.14);
+      --danger: #be123c; --danger-bg: rgba(244, 63, 94, 0.14);
+      --wa: #15803d; --wa-bg: rgba(22, 163, 74, 0.12);
+      --shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+      --r: 16px;
     }
-
     [data-theme="dark"] {
-      --bg: #070b14;
-      --surface: #111827;
-      --surface-2: #172033;
-      --surface-3: #1e293b;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --border: #233047;
-      --primary: #4f46e5;
-      --primary-soft: rgba(79, 70, 229, 0.22);
-      --primary-hover: #6366f1;
-      --success: #34d399;
-      --success-bg: rgba(16, 185, 129, 0.18);
-      --warning: #fbbf24;
-      --warning-bg: rgba(245, 158, 11, 0.18);
-      --danger: #fb7185;
-      --danger-bg: rgba(244, 63, 94, 0.18);
-      --info: #38bdf8;
-      --info-bg: rgba(56, 189, 248, 0.18);
-      --bottom-nav-bg: rgba(11, 16, 29, 0.96);
-      --shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      --bg: #070b14; --surface: #111827; --surface-2: #172033; --surface-3: #1e293b;
+      --text: #f1f5f9; --muted: #9aa8bd; --border: #233047;
+      --primary: #6366f1; --primary-hover: #818cf8; --primary-soft: rgba(99, 102, 241, 0.22);
+      --ok: #34d399; --ok-bg: rgba(16, 185, 129, 0.18);
+      --warn: #fbbf24; --warn-bg: rgba(245, 158, 11, 0.18);
+      --late: #fb923c; --late-bg: rgba(251, 146, 60, 0.18);
+      --danger: #fb7185; --danger-bg: rgba(244, 63, 94, 0.18);
+      --wa: #4ade80; --wa-bg: rgba(74, 222, 128, 0.14);
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.45; transition: background 0.2s, color 0.2s; overflow-x: hidden; }
-    button, input, select, textarea { font-family: inherit; font-size: 14px; color: var(--text); }
-    button { cursor: pointer; border: none; border-radius: 11px; font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    input, select, textarea { background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 10px 12px; width: 100%; outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); color: var(--text); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px; line-height: 1.45; min-height: 100vh; overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select, textarea { font: inherit; color: var(--text); }
+    input, select, textarea {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 11px 12px; min-height: 46px; font-size: 16px; outline: none;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    a { color: var(--primary); }
+    [hidden] { display: none !important; }
+    .muted { color: var(--muted); }
+    .small { font-size: 12.5px; }
+    .tiny { font-size: 11.5px; }
+    .hint { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; }
+    .num { font-variant-numeric: tabular-nums; }
 
-    /* Header */
-    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 14px; position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-    .brand-icon { width: 38px; height: 38px; border-radius: 12px; background: var(--primary); color: #fff; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35); }
-    .brand-text { min-width: 0; }
-    .brand-title { font-weight: 800; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .brand-sub { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* ---------- Tombol ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      min-height: 44px; padding: 10px 16px; border: 1px solid transparent; border-radius: 12px;
+      font-weight: 700; font-size: 14.5px; cursor: pointer; text-decoration: none;
+      background: var(--surface-2); color: var(--text); border-color: var(--border);
+      transition: transform 0.08s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn.primary:hover { background: var(--primary-hover); }
+    .btn.success { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .btn.wa { background: var(--wa-bg); color: var(--wa); border-color: transparent; }
+    .btn.danger { background: var(--danger-bg); color: var(--danger); border-color: transparent; }
+    .btn.ghost { background: transparent; border-color: var(--border); }
+    .btn.sm { min-height: 38px; padding: 7px 12px; font-size: 13.5px; border-radius: 10px; }
+    .btn.block { width: 100%; }
+    .btn:disabled { opacity: 0.55; pointer-events: none; }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface-2); display: inline-grid; place-items: center; cursor: pointer; font-size: 16px;
+    }
 
-    .top-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
-    .theme-pill { display: inline-flex; align-items: center; justify-content: center; background: var(--surface-2); border: 1px solid var(--border); padding: 6px 9px; border-radius: 999px; font-size: 16px; line-height: 1; cursor: pointer; }
+    /* ---------- Layout ---------- */
+    .top {
+      position: sticky; top: 0; z-index: 30; background: var(--surface);
+      border-bottom: 1px solid var(--border); padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .top-title { font-size: 17px; font-weight: 800; }
+    .top-sub { font-size: 12px; color: var(--muted); }
+    .top-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .sync {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+      padding: 5px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap;
+    }
+    .sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .sync.ok { color: var(--ok); }
+    .sync.pending { color: var(--warn); }
+    .sync.offline { color: var(--muted); }
+    .sync.error { color: var(--danger); }
 
-    .btn-primary { background: var(--primary); color: #fff; padding: 9px 13px; }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-success { background: #10b981; color: #052e16; padding: 9px 12px; font-weight: 700; }
-    .btn-wa { background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.28); padding: 9px 12px; }
-    [data-theme="light"] .btn-wa { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
-    .btn-outline { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 9px 12px; }
-    .btn-danger { background: rgba(244, 63, 94, 0.16); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.28); padding: 8px 11px; }
-    .btn-sm { padding: 7px 10px; font-size: 12px; border-radius: 10px; white-space: nowrap; }
+    main { max-width: 760px; margin: 0 auto; padding: 14px 14px calc(96px + env(safe-area-inset-bottom)); }
+    .view { display: none; }
+    .view.on { display: block; }
 
-    .container { max-width: 980px; margin: 0 auto; padding: 14px 14px 96px; }
+    .tabbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 35;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    }
+    .tab {
+      background: none; border: none; border-radius: 12px; min-height: 52px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .tab svg { width: 22px; height: 22px; }
+    .tab.on { color: var(--primary); background: var(--primary-soft); }
 
-    /* Login Card */
-    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 400px; padding: 22px; box-shadow: var(--shadow); }
-    .login-tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; }
-    .login-tab-btn { flex: 1; padding: 8px; font-size: 12px; background: transparent; color: var(--text-muted); border-radius: 9px; }
-    .login-tab-btn.active { background: var(--primary); color: #fff; }
+    .fab {
+      position: fixed; right: 16px; bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 34;
+      width: 56px; height: 56px; border-radius: 18px; border: none; background: var(--primary); color: #fff;
+      font-size: 28px; line-height: 1; box-shadow: 0 10px 24px rgba(79, 70, 229, 0.4); cursor: pointer;
+      display: none; place-items: center;
+    }
+    .fab.on { display: grid; }
 
-    /* Stats Grid */
-    .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow); margin-bottom: 14px; }
-    .stat-card { margin-bottom: 0; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; min-height: 112px; }
-    .stat-label { font-size: 12.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
-    .stat-val { font-size: 21px; font-weight: 800; letter-spacing: -0.3px; }
-    .stat-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.35; }
-    .progress-track { width: 100%; height: 6px; border-radius: 999px; background: var(--surface-3); margin-top: 8px; overflow: hidden; }
-    .progress-fill { height: 100%; background: var(--success); border-radius: 999px; transition: width 0.25s; }
+    /* ---------- Kartu & komponen ---------- */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .card-title { font-weight: 800; font-size: 15.5px; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); min-width: 0; }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 700; }
+    .stat-val { font-size: 19px; font-weight: 800; margin-top: 4px; letter-spacing: -0.2px; overflow-wrap: anywhere; }
+    .stat-sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+    .bar { height: 7px; border-radius: 999px; background: var(--surface-3); margin-top: 9px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; background: var(--ok); border-radius: 999px; transition: width 0.3s; }
 
-    /* Section Header */
-    .sec-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .sec-title-wrap { display: flex; align-items: center; gap: 8px; }
-    .dot-danger { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
-    .sec-title { font-size: 15px; font-weight: 800; line-height: 1.25; }
-    .sec-sub { font-size: 12px; color: var(--text-muted); }
-
-    /* Urgent / Customer Card */
-    .urgent-card { background: var(--surface-2); border: 1px solid var(--border); border-left: 3.5px solid var(--danger); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-    .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
-    .cust-top .badge { font-size: 10px; padding: 3px 8px; }
-    .cust-name { font-weight: 800; font-size: 15.5px; }
-    .cust-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
-
-    .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px;
+      font-size: 11.5px; font-weight: 800; white-space: nowrap; flex-shrink: 0;
+    }
     .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-    .badge-lunas { background: var(--success-bg); color: var(--success); }
-    .badge-belum { background: var(--warning-bg); color: var(--warning); }
-    .badge-telat { background: var(--danger-bg); color: var(--danger); }
-    .badge-sent { background: var(--info-bg); color: var(--info); }
-    .badge-sent::before { display: none; }
+    .b-lunas { background: var(--ok-bg); color: var(--ok); }
+    .b-belum { background: var(--warn-bg); color: var(--warn); }
+    .b-terlambat { background: var(--late-bg); color: var(--late); }
+    .b-putus { background: var(--danger-bg); color: var(--danger); }
+    .b-baru, .b-off { background: var(--surface-3); color: var(--muted); }
 
-    /* 3-Column Info Box inside Customer Card */
-    .info-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 10px; margin: 12px 0; }
-    [data-theme="dark"] .urgent-card .info-box { background: #0c1220; }
-    .info-col-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
-    .info-col-val { font-size: 12.5px; font-weight: 700; line-height: 1.3; word-break: break-word; }
-
-    /* 2x2 Action Buttons */
-    .action-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-    /* Filter Pills */
-    .pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
+    .pills { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
     .pills::-webkit-scrollbar { display: none; }
-    .pill { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 999px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
-    .pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .pill {
+      flex-shrink: 0; min-height: 36px; padding: 6px 13px; border-radius: 999px; cursor: pointer;
+      background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 700;
+    }
+    .pill.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .pill .n { opacity: 0.75; margin-left: 4px; }
 
-    /* Bottom Navigation Bar */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bottom-nav-bg); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); z-index: 35; }
-    .bnav-btn { background: transparent; color: var(--text-muted); flex-direction: column; gap: 3px; padding: 6px 4px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-    .bnav-btn.active { color: #818cf8; }
-    [data-theme="light"] .bnav-btn.active { color: var(--primary); background: var(--primary-soft); }
+    .toolbar { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 10px; }
+    .list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+    .row {
+      display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-bottom: 1px solid var(--border);
+      cursor: pointer; min-width: 0;
+    }
+    .row:last-child { border-bottom: none; }
+    .row:active { background: var(--surface-2); }
+    .row-main { flex: 1; min-width: 0; }
+    .row-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .row-name { font-weight: 800; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .row-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-foot { font-size: 12.5px; margin-top: 4px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 13px; flex-shrink: 0; display: grid; place-items: center;
+      background: var(--primary-soft); color: var(--primary); font-weight: 800; font-size: 16px;
+    }
+    .row-amt { font-weight: 800; font-size: 14.5px; text-align: right; white-space: nowrap; }
+    .in { color: var(--ok); } .out { color: var(--danger); }
 
-    /* Modal */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.75); display: none; align-items: center; justify-content: center; padding: 14px; z-index: 50; }
-    .modal-backdrop.open { display: flex; }
-    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 16px; }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 14px; }
+    .empty b { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
 
-    .form-group { margin-bottom: 11px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--text-muted); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .section-label { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 18px 4px 8px; }
 
-    /* Client Invoice View */
-    .client-wrap { max-width: 440px; margin: 16px auto; padding: 0 14px 40px; }
-    .qris-box { background: #ffffff; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; margin: 14px 0; color: #0f172a; }
-    .qris-box img { max-width: 220px; width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto 8px; }
+    .segs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); padding: 4px; border-radius: 12px; margin-bottom: 12px; }
+    .seg { min-height: 36px; border: none; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 700; font-size: 13.5px; cursor: pointer; }
+    .seg.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
 
-    .hidden { display: none !important; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .summary > div { background: var(--surface-2); border-radius: 12px; padding: 10px; min-width: 0; }
+    .summary b { display: block; font-size: 15px; margin-top: 2px; overflow-wrap: anywhere; }
+
+    .recap-row { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; padding: 7px 0; font-size: 12.5px; }
+    .recap-bars { display: grid; gap: 4px; }
+    .recap-bars i { display: block; height: 8px; border-radius: 999px; min-width: 2px; }
+
+    /* ---------- Form ---------- */
+    .field { margin-bottom: 12px; min-width: 0; }
+    .field > label { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .inline { display: flex; gap: 8px; align-items: center; }
+    .inline > input { flex: 1; }
+    .check { display: flex; align-items: center; gap: 10px; font-size: 14px; margin: 4px 0 14px; cursor: pointer; }
+    .check input { width: 20px; height: 20px; min-height: 0; flex-shrink: 0; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .actions .wide { grid-column: 1 / -1; }
+    .stepper { display: flex; align-items: center; gap: 10px; }
+    .stepper input { text-align: center; font-size: 22px; font-weight: 800; width: 90px; flex: none; }
+    .stepper .btn { min-width: 52px; font-size: 22px; padding: 0; }
+    .sumbox { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin: 14px 0; }
+    .sumbox .big { font-size: 22px; font-weight: 800; }
+    .kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; font-size: 14px; margin-bottom: 12px; }
+    .kv dt { color: var(--muted); }
+    .kv dd { font-weight: 700; overflow-wrap: anywhere; }
+    .hist { border-top: 1px solid var(--border); padding: 10px 0; display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; }
+    .hist:last-child { border-bottom: 1px solid var(--border); }
+
+    /* ---------- Sheet (bottom sheet) ---------- */
+    .sheet-bg {
+      position: fixed; inset: 0; z-index: 60; background: rgba(2, 6, 23, 0.55);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 92vh; overflow: hidden;
+      background: var(--surface); border-radius: 22px 22px 0 0; border: 1px solid var(--border);
+      box-shadow: var(--shadow); display: flex; flex-direction: column;
+      transform: translateY(105%); transition: transform 0.25s ease; max-width: 760px; margin: 0 auto;
+    }
+    .sheet-bg.open { opacity: 1; pointer-events: auto; }
+    .sheet.open { transform: translateY(0); }
+    .sheet-grab { width: 40px; height: 5px; border-radius: 99px; background: var(--surface-3); margin: 8px auto 0; flex-shrink: 0; }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px 8px; flex-shrink: 0; }
+    .sheet-head h2 { font-size: 17px; font-weight: 800; }
+    .sheet-body { padding: 4px 16px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; }
+
+    .toasts { position: fixed; left: 0; right: 0; top: calc(12px + env(safe-area-inset-top)); z-index: 80; display: grid; justify-items: center; gap: 8px; pointer-events: none; padding: 0 14px; }
+    .toast {
+      background: var(--surface-3); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow);
+      padding: 11px 16px; border-radius: 14px; font-size: 14px; font-weight: 600; max-width: 520px; width: 100%;
+      animation: pop 0.2s ease; transition: opacity 0.3s;
+    }
+    .toast.ok { border-left: 4px solid var(--ok); }
+    .toast.err { border-left: 4px solid var(--danger); }
+    .toast.out { opacity: 0; }
+    @keyframes pop { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    /* ---------- Login ---------- */
+    .login { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+    .login-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 26px 22px; box-shadow: var(--shadow); text-align: center; }
+    .logo { width: 64px; height: 64px; border-radius: 20px; background: var(--primary); color: #fff; display: grid; place-items: center; margin: 0 auto 14px; box-shadow: 0 10px 24px rgba(79, 70, 229, 0.35); }
+    .logo svg { width: 30px; height: 30px; }
+    .login-card h1 { font-size: 21px; font-weight: 800; }
+    .login-card p { color: var(--muted); font-size: 14px; margin: 6px 0 20px; }
+    .google { background: #fff; color: #1f2937; border-color: #dadce0; }
+    .login-err { color: var(--danger); font-size: 13px; font-weight: 700; margin-top: 12px; min-height: 18px; }
+
+    /* ---------- Tagihan publik ---------- */
+    .inv { max-width: 460px; margin: 0 auto; padding: 18px 16px calc(40px + env(safe-area-inset-bottom)); }
+    .inv-head { text-align: center; padding: 6px 0 16px; }
+    .inv-head .kicker { font-size: 11.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; }
+    .inv-head h1 { font-size: 20px; font-weight: 800; margin-top: 4px; }
+    .inv-status { border-radius: var(--r); padding: 18px; text-align: center; margin-bottom: 14px; border: 1px solid var(--border); }
+    .inv-status.paid { background: var(--ok-bg); border-color: transparent; color: var(--ok); }
+    .inv-status.due { background: var(--surface); }
+    .inv-status.late { background: var(--late-bg); border-color: transparent; color: var(--late); }
+    .inv-status.cut { background: var(--danger-bg); border-color: transparent; color: var(--danger); }
+    .inv-status .amt { font-size: 28px; font-weight: 800; color: var(--text); margin-top: 6px; }
+    .inv-status.paid .amt { color: var(--ok); }
+    .inv-status .lbl { font-size: 15px; font-weight: 800; }
+    .inv-status .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .inv-status.late .sub, .inv-status.cut .sub, .inv-status.paid .sub { color: inherit; opacity: 0.9; }
+    .qris { background: #fff; color: #0f172a; border-radius: var(--r); padding: 14px; text-align: center; margin-bottom: 14px; }
+    .qris img { max-width: 230px; width: 100%; height: auto; border-radius: 10px; display: block; margin: 8px auto; }
+    .qris a { font-size: 13px; font-weight: 700; color: #4f46e5; }
+    .inv .card { margin-bottom: 14px; }
+    .inv-foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 18px; }
+
+    .noscroll { overflow: hidden; }
   </style>
 </head>
 <body>
 
-  <!-- ADMIN LOGIN VIEW -->
-  <div id="loginView" class="login-wrap">
+  <!-- LOGIN ADMIN -->
+  <div id="loginView" class="login" hidden>
     <div class="login-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div class="brand">
-          <div class="brand-icon">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-          </div>
-          <div>
-            <div style="font-size:15.5px;font-weight:800;">Admin Login</div>
-            <div style="font-size:11px;color:var(--text-muted);">NetWarga Manager</div>
-          </div>
-        </div>
-        <button class="theme-pill" id="loginThemePill" onclick="toggleTheme()" title="Ganti tema gelap / terang">
-          <span id="loginThemeIcon">☀️</span>
-        </button>
+      <div class="logo">
+        <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
       </div>
-
-      <p style="font-size:13px;color:var(--text-muted);text-align:center;margin:4px 0 14px;">Masuk dengan akun Google kamu untuk mengelola NetWarga.<br/>Hanya akun <b style="color:var(--text);">gagan.70700@gmail.com</b> yang diizinkan.</p>
-      <button class="btn-outline" style="width:100%;padding:12px;background:#ffffff;color:#1f2937;border:1px solid #dadce0;font-size:15px;" onclick="handleGoogleLogin()"><span style="font-weight:800;color:#4285F4;">G</span>&nbsp; Lanjutkan dengan Google</button>
-      <div id="loginStatus" style="color:var(--text-muted);font-size:11px;margin-top:10px;text-align:center;">Memeriksa koneksi Firebase...</div>
-
-      <div id="loginErrorMsg" style="color:var(--danger);font-size:12px;margin-top:10px;text-align:center;font-weight:600;"></div>
+      <h1>NetWarga Billing</h1>
+      <p>Masuk dengan akun admin untuk mengelola tagihan.</p>
+      <button class="btn google block" data-act="login" id="loginBtn">
+        <span style="color:#4285F4;font-weight:800;">G</span> Masuk dengan Google
+      </button>
+      <div id="loginErr" class="login-err"></div>
     </div>
   </div>
 
-  <!-- ADMIN APP VIEW -->
-  <div id="adminApp" class="hidden">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-icon">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-        </div>
-        <div class="brand-text">
-          <div class="brand-title" id="headerPageTitle">Dashboard</div>
-          <div class="brand-sub" id="headerBrandSub">NetWarga • Mode Lokal</div>
-        </div>
+  <!-- APLIKASI ADMIN -->
+  <div id="adminView" hidden>
+    <header class="top">
+      <div style="min-width:0;">
+        <div class="top-title" id="topTitle">Beranda</div>
+        <div class="top-sub" id="topSub">NetWarga</div>
       </div>
-      <div class="top-actions">
-        <button class="theme-pill" id="headerThemePill" onclick="toggleTheme()" title="Ganti tema gelap / terang">
-          <span id="headerThemeIcon">☀️</span>
-        </button>
-        <button class="btn-primary btn-sm" onclick="openCustomerModal()">+ Pelanggan</button>
-        <button class="btn-danger btn-sm" onclick="logoutAdmin()">Keluar</button>
+      <div class="top-right">
+        <span class="sync" id="syncPill">Menyambung…</span>
+        <button class="icon-btn" data-act="theme" aria-label="Ganti tema">🌓</button>
       </div>
     </header>
 
-    <main class="container">
-      <!-- TAB: DASHBOARD -->
-      <section id="tab-dashboard">
-        <div class="grid-stats">
-          <div class="card stat-card">
-            <div class="stat-label">Pemasukan Bulan Ini</div>
-            <div class="stat-val" style="color:var(--success)" id="statIncome">Rp0</div>
-            <div class="stat-sub" id="statPaidRatio">0 dari 0 pelanggan aktif lunas</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-label">Progres Pelunasan</div>
-            <div class="stat-val" id="statProgressPct">0%</div>
-            <div class="progress-track"><div class="progress-fill" id="statProgressBar" style="width:0%"></div></div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-label">Potensi Belum Tertagih</div>
-            <div class="stat-val" style="color:var(--warning)" id="statUnpaid">Rp0</div>
-            <div class="stat-sub" id="statUnpaidCount">0 pelanggan belum bayar</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-label">Saldo Kas Bersih</div>
-            <div class="stat-val" id="statProfit">Rp0</div>
-            <div class="stat-sub">Setelah dikurangi biaya ISP/alat</div>
-          </div>
-        </div>
+    <main>
+      <!-- BERANDA -->
+      <section class="view on" id="v-home"></section>
 
-        <div class="card">
-          <div class="sec-head">
-            <div class="sec-title-wrap">
-              <span class="dot-danger"></span>
-              <div>
-                <div class="sec-title">Perlu Tindakan Segera</div>
-                <div class="sec-sub">(Belum Lunas &amp; Lewat Jatuh Tempo)</div>
-              </div>
-            </div>
-            <button class="btn-outline btn-sm" onclick="switchTab('customers')">Lihat Semua</button>
-          </div>
-          <div id="urgentList"></div>
+      <!-- PELANGGAN -->
+      <section class="view" id="v-customers">
+        <div class="toolbar">
+          <input type="search" id="searchInput" placeholder="Cari nama / HP / blok" autocomplete="off" />
+          <select id="sortSel" style="width:auto;min-width:130px;">
+            <option value="name">Nama A–Z</option>
+            <option value="late">Terlambat terbanyak</option>
+            <option value="due">Jatuh tempo terdekat</option>
+          </select>
         </div>
+        <div class="pills" id="filterPills"></div>
+        <div class="list" id="customerList"></div>
       </section>
 
-      <!-- TAB: CUSTOMERS -->
-      <section id="tab-customers" class="hidden">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-            <div class="sec-title">Daftar Pelanggan LAN</div>
-            <button class="btn-outline btn-sm" onclick="generateNewCycle()">🔄 Reset Bulan Baru</button>
-          </div>
-          <div style="margin-bottom:10px;">
-            <input type="text" id="searchInput" placeholder="Cari nama warga, blok rumah, atau port switch..." oninput="renderAll()" />
-          </div>
-          <div class="pills" id="filterPills">
-            <button class="pill active" onclick="setFilter('all', this)">Semua</button>
-            <button class="pill" onclick="setFilter('telat', this)">Wajib Putus</button>
-            <button class="pill" onclick="setFilter('belum', this)">Belum Bayar</button>
-            <button class="pill" onclick="setFilter('lunas', this)">Lunas</button>
-          </div>
-          <div id="customerList"></div>
-        </div>
-      </section>
+      <!-- KAS -->
+      <section class="view" id="v-cash"></section>
 
-      <!-- TAB: FINANCE -->
-      <section id="tab-finance" class="hidden">
+      <!-- LAINNYA / PENGATURAN -->
+      <section class="view" id="v-settings">
         <div class="card">
-          <div class="sec-title" style="margin-bottom:12px;">Catat Pengeluaran Operasional</div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Keterangan (misal: Bayar ISP Pusat, Kabel LAN)</label>
-              <input type="text" id="expDesc" placeholder="Tagihan ISP Pusat" />
-            </div>
-            <div class="form-group">
-              <label>Nominal (Rp)</label>
-              <input type="number" id="expAmount" placeholder="350000" />
-            </div>
+          <div class="card-head"><div class="card-title">Akun</div></div>
+          <p class="small muted" id="accountEmail" style="margin-bottom:12px;">Masuk sebagai admin</p>
+          <div class="actions">
+            <button class="btn ghost" data-act="install" id="installBtn" hidden>⬇️ Pasang aplikasi</button>
+            <button class="btn danger" data-act="logout">Keluar</button>
           </div>
-          <button class="btn-primary" onclick="addExpense()">+ Simpan Pengeluaran</button>
+          <p class="hint" id="installHint"></p>
         </div>
 
         <div class="card">
-          <div class="sec-title" style="margin-bottom:12px;">Buku Kas & Riwayat Mutasi</div>
-          <div id="ledgerList"></div>
-        </div>
-      </section>
-
-      <!-- TAB: SETTINGS -->
-      <section id="tab-settings" class="hidden">
-        <div class="card">
-          <div class="sec-title" style="margin-bottom:6px;">📲 Instal Aplikasi</div>
-          <p id="installStatus" style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">Memeriksa apakah aplikasi bisa diinstal di HP ini…</p>
-          <button id="installBtn" class="btn-primary" style="display:none;" onclick="installApp()">⬇️ Instal NetWarga ke Layar Utama</button>
-          <p id="installHint" style="font-size:12px;color:var(--text-muted);margin-top:10px;">Kalau tombol di atas tidak muncul, pakai menu Chrome (titik tiga) → “Instal aplikasi”. Kalau menu itu juga tidak ada, hapus dulu data situs ini di Chrome → Setelan → Setelan situs → hapus data ugan-dev.github.io, lalu buka lagi aplikasinya.</p>
+          <div class="card-head"><div class="card-title">Bisnis & pembayaran</div></div>
+          <div class="field"><label>Nama RT/RW Net</label><input id="s_biz" /></div>
+          <div class="field"><label>Nomor WhatsApp admin</label><input id="s_wa" inputmode="tel" placeholder="6281234567890" /><span class="hint">Dipakai untuk tombol "Konfirmasi sudah bayar" di halaman tagihan pelanggan.</span></div>
+          <div class="field"><label>Info rekening / e-wallet</label><textarea id="s_bank" rows="3"></textarea></div>
+          <div class="field">
+            <label>Gambar QRIS</label>
+            <input type="file" accept="image/*" id="s_qrisFile" />
+            <div id="s_qrisPrev" style="margin-top:10px;"></div>
+          </div>
         </div>
 
         <div class="card">
-          <div class="sec-title" style="margin-bottom:12px;">Identitas, QRIS & Template Pesan WA</div>
-          <div class="form-group">
-            <label>Nama RT/RW Net</label>
-            <input type="text" id="setBizName" />
+          <div class="card-head"><div class="card-title">Aturan tagihan</div></div>
+          <div class="grid2">
+            <div class="field"><label>Pengingat (hari sebelum tempo)</label><input type="number" id="s_remind" min="0" max="30" inputmode="numeric" /></div>
+            <div class="field"><label>Batas tenggang (hari)</label><input type="number" id="s_grace" min="0" max="60" inputmode="numeric" /></div>
           </div>
-          <div class="form-group">
-            <label>Nomor WhatsApp Admin (Format 628xxx)</label>
-            <input type="text" id="setAdminWa" placeholder="6281234567890" />
+          <p class="hint" id="s_ruleHint" style="margin-bottom:12px;"></p>
+          <div class="field">
+            <label>Paket & iuran (satu baris per paket: nama | harga)</label>
+            <textarea id="s_plans" rows="4"></textarea>
           </div>
-          <div class="form-group">
-            <label>Info Rekening Bank / E-Wallet</label>
-            <textarea id="setBankInfo" rows="2"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Template Pesan Tagihan WA ({nama}, {wifi}, {paket}, {tagihan}, {tempo}, {link})</label>
-            <textarea id="setWaTemplate" rows="5"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Pengingat tagihan (H-berapa hari sebelum jatuh tempo)</label>
-            <input type="number" id="setReminderDays" min="0" max="30" value="5" />
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Contoh: H-5 berarti tagihan dibuka &amp; pengingat dikirim 5 hari sebelum jatuh tempo.</div>
-          </div>
-          <div class="form-group">
-            <label>Masa tenggang sebelum putus (hari setelah jatuh tempo)</label>
-            <input type="number" id="setGraceDays" min="0" max="30" value="10" />
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Contoh: jatuh tempo tgl 1, tenggang 10 hari &rarr; diputus tgl 11 kalau belum bayar.</div>
-          </div>
-          <div class="form-group">
-            <label>Upload Gambar QRIS (Otomatis Muncul di Link Pelanggan)</label>
-            <input type="file" accept="image/*" onchange="handleQrisUpload(event)" />
-            <div id="qrisPreviewAdmin" style="margin-top:10px;"></div>
-          </div>
-          <button class="btn-primary" onclick="saveSettings()">💾 Simpan Pengaturan</button>
         </div>
 
         <div class="card">
-          <div class="sec-title" style="margin-bottom:6px;">Koneksi Cloud Firebase & Backup</div>
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Tempelkan konfigurasi JSON dari Firebase Console agar data pelanggan, kas, dan status anti-ganda WA tersinkronisasi dengan Cronjob.</p>
-          <div class="form-group">
-            <label>Firebase Config JSON</label>
-            <textarea id="setFirebaseJson" rows="6" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+          <div class="card-head"><div class="card-title">Pesan WhatsApp</div></div>
+          <div class="field">
+            <label>Template pesan tagihan</label>
+            <textarea id="s_tpl" rows="7"></textarea>
+            <span class="hint">Kata yang bisa dipakai: <b>{nama}</b> <b>{wifi}</b> <b>{paket}</b> <b>{tagihan}</b> <b>{tempo}</b> <b>{periode}</b> <b>{bulan}</b> <b>{keterangan}</b> <b>{link}</b>. Template ini juga dipakai pengingat otomatis.</span>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-primary" onclick="saveFirebaseConfig()">🔗 Hubungkan & Sync Firebase</button>
-            <button class="btn-outline" onclick="exportBackup()">⬇️ Export JSON</button>
-            <label class="btn-outline" style="cursor:pointer;padding:9px 12px;border-radius:11px;font-weight:600;font-size:14px;">
-              ⬆️ Restore JSON
-              <input type="file" accept=".json,application/json" style="display:none;" onchange="importBackup(event)" />
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title">Data & cadangan</div></div>
+          <div class="actions">
+            <button class="btn" data-act="exportBackup">⬇️ Cadangan JSON</button>
+            <button class="btn" data-act="exportCsv">📄 Kas ke CSV</button>
+            <label class="btn wide" style="cursor:pointer;">⬆️ Pulihkan dari JSON
+              <input type="file" accept=".json,application/json" id="importFile" hidden />
             </label>
           </div>
+          <p class="hint">Pulihkan akan MENGGANTI semua data di server. Pakai hanya kalau kamu yakin.</p>
         </div>
+
+        <button class="btn primary block" data-act="saveSettings" style="margin-top:4px;">💾 Simpan pengaturan</button>
       </section>
     </main>
 
-    <!-- BOTTOM NAVIGATION BAR -->
-    <nav class="bottom-nav">
-      <button class="bnav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-        <span>Dashboard</span>
+    <nav class="tabbar" aria-label="Navigasi utama">
+      <button class="tab on" data-act="tab" data-id="home">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Beranda
       </button>
-      <button class="bnav-btn" data-tab="customers" onclick="switchTab('customers')">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span>Pelanggan</span>
+      <button class="tab" data-act="tab" data-id="customers">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Pelanggan
       </button>
-      <button class="bnav-btn" data-tab="finance" onclick="switchTab('finance')">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-        <span>Buku Kas</span>
+      <button class="tab" data-act="tab" data-id="cash">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Kas
       </button>
-      <button class="bnav-btn" data-tab="settings" onclick="switchTab('settings')">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Pengaturan</span>
+      <button class="tab" data-act="tab" data-id="settings">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Lainnya
       </button>
     </nav>
+
+    <button class="fab" id="fab" data-act="addCustomer" aria-label="Tambah pelanggan">+</button>
   </div>
 
-  <!-- PUBLIC CLIENT INVOICE VIEW (?inv=...) -->
-  <div id="clientInvoiceView" class="client-wrap hidden">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <button id="backToAdminBtn" class="btn-outline btn-sm" onclick="exitClientPreview()">← Kembali ke Admin</button>
-      <button class="btn-outline btn-sm" onclick="toggleTheme()">🌓 Tema</button>
-    </div>
-    <div class="card" id="clientInvoiceCard">
-      <p style="text-align:center;color:var(--text-muted);">Memuat tagihan...</p>
-    </div>
-  </div>
+  <!-- TAGIHAN PUBLIK (?inv=...) -->
+  <div id="invView" class="inv" hidden></div>
 
-  <!-- MODAL TAMBAH / EDIT PELANGGAN -->
-  <div class="modal-backdrop" id="customerModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3 id="modalTitle" style="font-size:15px;">Tambah Pelanggan</h3>
-        <button class="btn-outline btn-sm" onclick="closeModal('customerModal')">✕</button>
-      </div>
-      <input type="hidden" id="editCustId" />
-      <div class="form-group">
-        <label>Nama Pelanggan</label>
-        <input type="text" id="custName" placeholder="Budi Santoso" />
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>No. WhatsApp (628xxx)</label>
-          <div style="position:relative;">
-            <input type="text" id="custPhone" placeholder="628123456789" style="padding-right:42px;" />
-            <button type="button" onclick="pickContact()" title="Pilih dari Kontak" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;line-height:1;cursor:pointer;padding:8px;">📇</button>
-          </div>
-          <div id="contactHint" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Ketuk ikon 📇 di dalam kolom untuk pilih dari kontak, atau ketik manual seperti biasa.</div>
-        </div>
-        <div class="form-group">
-          <label>Blok / Alamat Rumah</label>
-          <input type="text" id="custAddress" placeholder="Blok A1 No. 04" />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Jalur Kabel / Port Switch</label>
-          <input type="text" id="custPort" placeholder="Switch Utama - Port 2" />
-        </div>
-        <div class="form-group">
-          <label>Tanggal Jatuh Tempo</label>
-          <input type="date" id="custDueDay" />
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Ketuk kotaknya, pilih tanggal di kalender — tanggalnya (misal 20) dipakai sebagai jatuh tempo bulanan yang berulang.</div>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nama Paket</label>
-          <input type="text" id="custPlan" value="Paket Keluarga 10 Mbps" />
-        </div>
-        <div class="form-group">
-          <label>Iuran Bulanan (Rp)</label>
-          <input type="number" id="custAmount" value="100000" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Status Pembayaran Bulan Ini</label>
-        <select id="custStatus">
-          <option value="belum">Belum Bayar</option>
-          <option value="telat">Wajib Putus / Telat</option>
-          <option value="lunas">Lunas</option>
-        </select>
-      </div>
-      <button class="btn-primary" style="width:100%;" onclick="saveCustomer()">Simpan Data Pelanggan</button>
-    </div>
-  </div>
+  <!-- SHEET (dipakai untuk semua form dan detail) -->
+  <div class="sheet-bg" id="sheetBg" data-act="close"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-grab"></div>
+    <header class="sheet-head">
+      <h2 id="sheetTitle"></h2>
+      <button class="icon-btn" data-act="close" aria-label="Tutup">✕</button>
+    </header>
+    <div class="sheet-body" id="sheetBody"></div>
+  </section>
 
-  <!-- MODAL KIRIM WA TAGIHAN -->
-  <div class="modal-backdrop" id="waModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3 style="font-size:15px;">Kirim Tagihan WhatsApp</h3>
-        <button class="btn-outline btn-sm" onclick="closeModal('waModal')">✕</button>
-      </div>
-      <div class="form-group">
-        <label>Pratinjau Pesan (Otomatis menyertakan Link Invoice & QRIS)</label>
-        <textarea id="waPreviewText" rows="8"></textarea>
-      </div>
-      <p style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;">
-        ℹ️ Saat Anda mengirim via WA, sistem menandai tagihan siklus ini sebagai <strong>Terkirim (Manual)</strong> sehingga Cronjob otomatis melewati pelanggan ini.
-      </p>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <a id="waDirectLink" target="_blank" class="btn-wa" style="padding:10px;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">📲 Buka WhatsApp & Tandai Terkirim</a>
-        <button class="btn-success" id="shareQrisBtn" style="padding:10px;border-radius:10px;">📷 Tagih WA dengan Gambar QRIS</button>
-        <p id="shareQrisNote" style="font-size:11.5px;color:var(--text-muted);margin:0;">Ketuk tombol ini: layar berbagi terbuka — pilih kontak pelanggan, gambar QRIS + teks tagihan terkirim bersamaan.</p>
-        <button class="btn-outline" id="copyLinkModalBtn">📋 Salin Link Tagihan Pelanggan</button>
-        <button class="btn-outline" id="previewClientLinkBtn">👁️ Lihat Tampilan Link di HP Pelanggan</button>
-      </div>
-    </div>
-  </div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
 
-  <!-- Firebase Compat SDK -->
+  <!-- Firebase compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    const HARDCODED_FIREBASE_CONFIG = {
-      apiKey: "AIzaSyBPTrmC95iLfhP3VEMra70CPrexTQrwC8M",
-      authDomain: "netwarga-manager.firebaseapp.com",
-      projectId: "netwarga-manager",
-      storageBucket: "netwarga-manager.firebasestorage.app",
-      messagingSenderId: "957466403730",
-      appId: "1:957466403730:web:8f3af0b427f4af7e92974b"
+  /* ============================================================
+     LOGIKA TAGIHAN BERSAMA (harus identik dengan cronjob)
+     ============================================================ */
+// Logika tagihan bersama (app + cronjob pakai blok yang sama persis).
+// Semua perhitungan pakai string "YYYY-MM-DD" dan angka hari, jadi tidak
+// tergantung timezone perangkat.
+const MONTHS_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const DEFAULT_TPL = "Halo Kak *{nama}*,\n\nMengingatkan tagihan WiFi *{wifi}* ({paket}) untuk periode {periode} sebesar *{tagihan}*. Status: {keterangan}.\n\nSilakan buka link berikut untuk rincian, transfer, atau scan QRIS:\n{link}\n\nTerima kasih 🙏";
+const DEFAULT_TPL_LUNAS = "Halo Kak *{nama}*,\n\nTerima kasih! Pembayaran WiFi *{wifi}* sebesar *{tagihan}* sudah kami terima.\n\nLihat rincian pembayaran di sini:\n{link}";
+
+function pad2(n) { return String(n).padStart(2, "0"); }
+function dnum(ymdStr) { const p = ymdStr.split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000; }
+function dnumToYmd(n) { const d = new Date(n * 86400000); return d.getUTCFullYear() + "-" + pad2(d.getUTCMonth() + 1) + "-" + pad2(d.getUTCDate()); }
+function cycAdd(cyc, k) { const p = cyc.split("-"); const t = (+p[0]) * 12 + (+p[1] - 1) + k; return Math.floor(t / 12) + "-" + pad2(t % 12 + 1); }
+function cycleOf(ymdStr) { return ymdStr.slice(0, 7); }
+function daysInMonth(y, m1) { return new Date(Date.UTC(y, m1, 0)).getUTCDate(); }
+// Tanggal jatuh tempo untuk satu siklus (YYYY-MM). Tanggal 31 dipasang ke tanggal terakhir bulan pendek.
+function dueYmd(cyc, dueDay) {
+  const p = cyc.split("-");
+  const d = Math.min(Math.max(1, +dueDay || 20), daysInMonth(+p[0], +p[1]));
+  return cyc + "-" + pad2(d);
+}
+function cycLabel(cyc) { const p = cyc.split("-"); return MONTHS_SHORT[+p[1] - 1] + " " + p[0]; }
+function dateLong(ymdStr) { const p = ymdStr.split("-"); return (+p[2]) + " " + MONTHS_ID[+p[1] - 1] + " " + p[0]; }
+function fmtRp(n) {
+  const v = Math.round(Number(n) || 0);
+  return (v < 0 ? "-" : "") + "Rp" + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+// Dipakai hanya untuk data lama (sebelum schema v3) yang belum punya lastPaidCycle.
+function legacyLast(c, today) {
+  const cur = cycleOf(today);
+  if (c.billingCycle) return c.status === "lunas" ? c.billingCycle : cycAdd(c.billingCycle, -1);
+  return c.status === "lunas" ? cur : cycAdd(cur, -1);
+}
+// Siklus terakhir yang sudah dibayar ("" = belum pernah bayar).
+function effLast(c, today) {
+  return (c.lastPaidCycle !== undefined && c.lastPaidCycle !== null) ? c.lastPaidCycle : legacyLast(c, today);
+}
+// Hitung status tagihan. Semua turunan dari data mentah, jadi tidak
+// bergantung pada apakah app sempat dibuka hari itu.
+function billing(c, today, cfg) {
+  const R = Number(cfg.reminderDays ?? 5), G = Number(cfg.graceDays ?? 10);
+  const last = effLast(c, today);
+  const out = { active: c.active !== false, last: last, unpaid: [], owed: 0, dueYmd: "", late: 0, status: "lunas", stage: 0 };
+  if (!out.active) { out.status = "nonaktif"; return out; }
+  const t = dnum(today);
+  const start = last ? cycAdd(last, 1) : (c.startCycle || cycleOf(today));
+  // Siklus dianggap "tagihan terbuka" mulai H-R sebelum jatuh tempo.
+  for (let cyc = start, i = 0; i < 36; cyc = cycAdd(cyc, 1), i++) {
+    if (t < dnum(dueYmd(cyc, c.dueDay)) - R) break;
+    out.unpaid.push(cyc);
+  }
+  out.owed = out.unpaid.length * (Number(c.amount) || 0);
+  if (!out.unpaid.length) { out.status = c.paidAt ? "lunas" : "belum-tagih"; return out; }
+  out.dueYmd = dueYmd(out.unpaid[0], c.dueDay);
+  out.late = t - dnum(out.dueYmd);
+  out.status = out.late <= 0 ? "belum" : (out.late >= G ? "putus" : "terlambat");
+  out.stage = stageOf(out, today, cfg);
+  return out;
+}
+// Tahap pengingat otomatis. 0 = tidak kirim otomatis hari ini.
+// 1 = H-R, 2 = hari H, 3 = H+(G-1) sebelum layanan dinonaktifkan.
+function stageOf(b, today, cfg) {
+  if (!b.unpaid || !b.unpaid.length) return 0;
+  const R = Number(cfg.reminderDays ?? 5), G = Number(cfg.graceDays ?? 10);
+  const t = dnum(today), due = dnum(b.dueYmd);
+  if (t === due) return 2;
+  if (G >= 2 && t === due + G - 1) return 3;
+  if (R > 0 && t === due - R) return 1;
+  return 0;
+}
+// Tahap untuk pesan manual (kapan saja): sebelum hari H = 1, sesudahnya = 2.
+function manualStage(b, today) {
+  if (!b.unpaid || !b.unpaid.length) return 0;
+  return dnum(today) < dnum(b.dueYmd) ? 1 : 2;
+}
+function keterangan(b, today, stage) {
+  const t = dnum(today), due = dnum(b.dueYmd);
+  let s;
+  if (t < due) s = "jatuh tempo " + (due - t) + " hari lagi (" + dateLong(b.dueYmd) + ")";
+  else if (t === due) s = "jatuh tempo HARI INI";
+  else s = "sudah lewat jatuh tempo " + (t - due) + " hari";
+  if (stage === 3) s += "; layanan akan dinonaktifkan besok jika belum dibayar";
+  return s;
+}
+// Siklus yang akan tercakup kalau pelanggan bayar n bulan sekarang.
+function payCycles(c, today, n) {
+  const last = effLast(c, today);
+  const start = last ? cycAdd(last, 1) : (c.startCycle || cycleOf(today));
+  const arr = [];
+  for (let i = 0; i < n; i++) arr.push(cycAdd(start, i));
+  return arr;
+}
+function buildMessage(c, b, cfg, today, link, stage) {
+  const vals = {
+    nama: c.name || "",
+    wifi: cfg.bizName || "",
+    paket: c.plan || "",
+    tagihan: fmtRp(b.owed),
+    tempo: b.dueYmd ? dateLong(b.dueYmd) : "",
+    periode: b.unpaid.map(cycLabel).join(", "),
+    bulan: b.unpaid.length + " bulan",
+    keterangan: keterangan(b, today, stage),
+    link: link
+  };
+  const tpl = (cfg.waTemplate && String(cfg.waTemplate).trim()) ? cfg.waTemplate : DEFAULT_TPL;
+  let out = tpl;
+  Object.keys(vals).forEach(k => { out = out.split("{" + k + "}").join(vals[k]); });
+  return out;
+}
+function receiptMessage(c, cfg, link, owedAmount) {
+  let out = DEFAULT_TPL_LUNAS;
+  const vals = { nama: c.name || "", wifi: cfg.bizName || "", tagihan: fmtRp(owedAmount || c.amount), link: link };
+  Object.keys(vals).forEach(k => { out = out.split("{" + k + "}").join(vals[k]); });
+  return out;
+}
+
+  /* ============================================================
+     KONFIG & STATE
+     ============================================================ */
+  const FB_CONFIG = {
+    apiKey: "AIzaSyBPTrmC95iLfhP3VEMra70CPrexTQrwC8M",
+    authDomain: "netwarga-manager.firebaseapp.com",
+    projectId: "netwarga-manager",
+    storageBucket: "netwarga-manager.firebasestorage.app",
+    messagingSenderId: "957466403730",
+    appId: "1:957466403730:web:8f3af0b427f4af7e92974b"
+  };
+  const ADMIN_EMAIL = "gagan.70700@gmail.com";
+  const SETTINGS_DEFAULT = {
+    bizName: "NetWarga RT/RW Net", adminWa: "", bankInfo: "", waTemplate: DEFAULT_TPL,
+    qrisImage: "", reminderDays: 5, graceDays: 10,
+    plans: [{ name: "Paket Keluarga 10 Mbps", amount: 100000 }, { name: "Paket Keluarga 15 Mbps", amount: 130000 }],
+    schemaVersion: 0
+  };
+  const SCHEMA_VERSION = 3;
+
+  const APP = {
+    settings: JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),
+    customers: [], ledger: [],
+    pend: { customers: false, ledger: false, settings: false },
+    loaded: { customers: false, ledger: false, settings: false },
+    syncErr: "", online: navigator.onLine,
+    tab: "home", filter: "all", month: ymd(new Date()).slice(0, 7), cashType: "all",
+    migrating: false
+  };
+  let db = null, auth = null, unsubs = [], deferredInstall = null;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  /* ---------- helper umum ---------- */
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+  function todayYmd() { return ymd(new Date()); }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function makeToken() {
+    const a = new Uint8Array(12); crypto.getRandomValues(a);
+    return Array.from(a, b => b.toString(36).padStart(2, "0")).join("").slice(0, 20);
+  }
+  function clean(o) { return JSON.parse(JSON.stringify(o)); }
+  function cfg() {
+    const s = APP.settings;
+    return { ...s, reminderDays: Number(s.reminderDays ?? 5), graceDays: Number(s.graceDays ?? 10) };
+  }
+  function getC(id) { return APP.customers.find(c => c.id === id); }
+  function billOf(c) { return billing(c, todayYmd(), cfg()); }
+  function invoiceLink(c) { return location.href.split("?")[0] + "?inv=" + encodeURIComponent(c.publicToken || ""); }
+  function telLink(phone) { return "https://wa.me/" + String(phone || "").replace(/\D/g, ""); }
+
+  const STATUS = {
+    lunas: ["b-lunas", "Lunas"],
+    belum: ["b-belum", "Belum bayar"],
+    terlambat: ["b-terlambat", "Terlambat"],
+    putus: ["b-putus", "Wajib putus"],
+    "belum-tagih": ["b-baru", "Belum tagih"],
+    nonaktif: ["b-off", "Nonaktif"]
+  };
+  function badge(status) { const s = STATUS[status] || STATUS.nonaktif; return `<span class="badge ${s[0]}">${s[1]}</span>`; }
+  function initial(name) { return esc((name || "?").trim().charAt(0).toUpperCase()); }
+
+  /* ---------- toast & sheet ---------- */
+  function toast(msg, kind = "ok") {
+    const t = document.createElement("div");
+    t.className = "toast " + kind; t.textContent = msg;
+    $("#toasts").appendChild(t);
+    setTimeout(() => t.classList.add("out"), 2600);
+    setTimeout(() => t.remove(), 3000);
+  }
+  function openSheet(title, html) {
+    $("#sheetTitle").textContent = title;
+    $("#sheetBody").innerHTML = html;
+    $("#sheetBg").classList.add("open");
+    $("#sheet").classList.add("open");
+    document.body.classList.add("noscroll");
+    $("#sheetBody").scrollTop = 0;
+  }
+  function closeSheet() {
+    $("#sheetBg").classList.remove("open");
+    $("#sheet").classList.remove("open");
+    document.body.classList.remove("noscroll");
+  }
+  function confirmSheet(title, text, okLabel, fn, danger = true) {
+    openSheet(title, `
+      <p class="muted" style="margin-bottom:16px;">${esc(text)}</p>
+      <div class="actions">
+        <button class="btn ghost" data-act="close">Batal</button>
+        <button class="btn ${danger ? "danger" : "primary"}" id="cfOk">${esc(okLabel)}</button>
+      </div>`);
+    $("#cfOk").onclick = async () => { closeSheet(); await fn(); };
+  }
+
+  /* ============================================================
+     FIREBASE
+     ============================================================ */
+  function initFirebase() {
+    try {
+      if (typeof firebase === "undefined") return false;
+      if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+      db = firebase.firestore();
+      auth = firebase.auth();
+      db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+      return true;
+    } catch (e) { console.error(e); return false; }
+  }
+  function startListeners() {
+    stopListeners();
+    unsubs.push(db.collection("customers").onSnapshot(snap => {
+      APP.customers = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      APP.loaded.customers = true; APP.pend.customers = snap.metadata.hasPendingWrites;
+      onData();
+    }, err => onListenErr(err)));
+    unsubs.push(db.collection("ledger").onSnapshot(snap => {
+      APP.ledger = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      APP.loaded.ledger = true; APP.pend.ledger = snap.metadata.hasPendingWrites;
+      onData();
+    }, err => onListenErr(err)));
+    unsubs.push(db.collection("app_meta").doc("settings").onSnapshot(d => {
+      APP.settings = { ...JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), ...(d.exists ? d.data() : {}) };
+      APP.loaded.settings = true; APP.pend.settings = d.metadata.hasPendingWrites;
+      onData();
+    }, err => onListenErr(err)));
+  }
+  function stopListeners() { unsubs.forEach(u => { try { u(); } catch (e) {} }); unsubs = []; }
+  function onListenErr(err) {
+    console.error(err);
+    APP.syncErr = (err && err.code === "permission-denied") ? "Akses ditolak. Pastikan masuk dengan akun admin." : "Gagal sinkron dengan server.";
+    renderSync();
+  }
+  function onData() {
+    APP.syncErr = "";
+    renderAll();
+    maybeMigrate();
+  }
+  async function persist(promises, okMsg) {
+    if (!db) return toast("Belum terhubung ke server", "err");
+    try {
+      await Promise.all(promises);
+      if (okMsg) toast(okMsg);
+    } catch (e) {
+      console.error(e);
+      toast("Gagal menyimpan. Cek koneksi lalu coba lagi.", "err");
+    }
+  }
+  // Tampilan publik (halaman tagihan) hanya menyimpan data yang perlu ditampilkan.
+  function publicView(c) {
+    const pays = APP.ledger.filter(l => l.type === "in" && l.customerId === c.id)
+      .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 12)
+      .map(l => ({ cycles: l.cycles || [], amount: l.amount || 0, date: l.date || "" }));
+    return {
+      name: c.name || "", address: c.address || "", plan: c.plan || "",
+      amount: Number(c.amount) || 0, dueDay: Number(c.dueDay) || 20,
+      startCycle: c.startCycle || "", lastPaidCycle: c.lastPaidCycle || "",
+      paidAt: c.paidAt || "", active: c.active !== false, payments: pays
     };
-    const STORAGE_KEY = "netwarga_state_v6";
-    const SESSION_KEY = "netwarga_admin_google_v1";
-    const ALLOWED_ADMIN_EMAIL = "gagan.70700@gmail.com"; // hanya akun Google ini yang bisa login Firebase/Google
-    let db = null;
-    let auth = null;
-    let currentFilter = "all";
-    let currentTab = "dashboard";
+  }
+  function customerWrites(c) {
+    if (!c.publicToken) c.publicToken = makeToken();
+    return [
+      db.collection("customers").doc(c.id).set(clean(c), { merge: true }),
+      db.collection("invoices").doc(c.publicToken).set(clean(publicView(c)))
+    ];
+  }
+  function saveCustomer(c, msg) { return persist(customerWrites(c), msg); }
 
-    const DEFAULT_WA_TEMPLATE =
-      "Halo Kak *{nama}*,\n\n" +
-      "Mengingatkan tagihan WiFi *{wifi}* ({paket}) sebesar *{tagihan}* jatuh tempo tanggal *{tempo}*.\n\n" +
-      "Silakan klik link berikut untuk melihat rincian tagihan, salin rekening, atau scan QRIS:\n" +
-      "{link}\n\n" +
-      "Terima kasih 🙏";
-
-    let state = {
-      theme: "dark",
-      adminPin: "123456",
-      settings: {
-        bizName: "NetWarga RT/RW Net",
-        adminWa: "6281234567890",
-        bankInfo: "BCA 1234567890 a.n. Admin NetWarga\nDANA / GoPay: 081234567890",
-        waTemplate: DEFAULT_WA_TEMPLATE,
-        qrisImage: "",
-        reminderDays: 5,
-        graceDays: 10,
-        settingsVersion: 2,
-        firebaseConfig: HARDCODED_FIREBASE_CONFIG
-      },
-      customers: [
-        { id: "c1", invoiceCode: "INV-202611-001", name: "Budi Santoso", phone: "628123456701", address: "Blok A1 No. 04", port: "Switch Utama - Port 2", plan: "Paket Keluarga 10 Mbps", amount: 100000, dueDay: 20, status: "telat", paidAt: "", waSentCycle: "", lastWaMethod: "", lastWaSentAt: "" },
-        { id: "c2", invoiceCode: "INV-202611-002", name: "Siti Aminah", phone: "628123456702", address: "Blok B1 No. 08", port: "Switch Utama - Port 3", plan: "Paket Keluarga 15 Mbps", amount: 130000, dueDay: 25, status: "belum", paidAt: "", waSentCycle: "", lastWaMethod: "", lastWaSentAt: "" },
-        { id: "c3", invoiceCode: "INV-202611-003", name: "Hendra Wijaya", phone: "628123456703", address: "Blok C3 No. 01", port: "Switch Gang - Port 1", plan: "Paket Hemat 10 Mbps", amount: 100000, dueDay: 10, status: "lunas", paidAt: "2026-11-04", waSentCycle: "2026-11", lastWaMethod: "manual", lastWaSentAt: "2026-11-03" }
-      ],
-      ledger: [
-        { id: "l1", type: "in", desc: "Iuran WiFi - Hendra Wijaya", amount: 100000, date: "2026-11-04" },
-        { id: "l2", type: "out", desc: "Bayar Langganan ISP Pusat", amount: 95000, date: "2026-11-01" }
-      ]
-    };
-
-    const MONTHS_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    const MONTHS_ID_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-    // Format Date jadi "YYYY-MM-DD" untuk <input type="date">.
-    function toDateInputValue(d) {
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    }
-
-    // Tanggal lengkap dari input kalender (YYYY-MM-DD -> Date lokal), atau null.
-    function getPickedDueDate() {
-      const v = document.getElementById("custDueDay").value;
-      if (!v) return null;
-      const p = v.split("-");
-      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
-    }
-
-    // Siklus dari tanggal yang dipilih di kalender; kalau beda dengan siklus
-    // jatuh tempo berikutnya, itulah siklus yang sedang ditagih (misal dipilih
-    // 20 Nov padahal jatuh tempo berikutnya 20 Des -> siklus 2026-11).
-    function computeCycleOverride(picked, dueDay, now = new Date()) {
-      if (!picked) return "";
-      const pickedCycle = `${picked.getFullYear()}-${String(picked.getMonth() + 1).padStart(2, "0")}`;
-      const nextCycle = getCustomerBillingCycle(dueDay, now);
-      return pickedCycle !== nextCycle ? pickedCycle : "";
-    }
-
-    // Ambil tanggal (1-31) dari input kalender. Yang dipakai hanya tanggalnya,
-    // karena jatuh tempo berulang tiap bulan.
-    function getDueDayFromInput() {
-      const v = document.getElementById("custDueDay").value;
-      if (!v) return 20;
-      const day = Number(v.split("-")[2]);
-      return Math.min(31, Math.max(1, day || 20));
-    }
-
-    // Jatuh tempo yang ditampilkan = jatuh tempo SIKLUS YANG SEDANG DITAGIH
-    // (billingCycle kalau ada, kalau belum tercatat pakai jatuh tempo
-    // berikutnya). Misal Lala siklus Nov (due 20) -> "20 Nov 2026".
-    function formatDueDateFor(c) {
-      const due = getCycleDueDate(c);
-      return `${due.getDate()} ${MONTHS_ID_SHORT[due.getMonth()]} ${due.getFullYear()}`;
-    }
-
-    // Versi bulan penuh, khusus untuk pesan WA: "20 November 2026".
-    function formatDueDateFullFor(c) {
-      const due = getCycleDueDate(c);
-      return `${due.getDate()} ${MONTHS_ID[due.getMonth()]} ${due.getFullYear()}`;
-    }
-
-    // Berapa hari pelanggan telat bayar (0 kalau belum lewat jatuh tempo / lunas).
-    function getDaysLate(c, now = new Date()) {
-      if (c.status === "lunas") return 0;
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const due = getCycleDueDate(c, now);
-      const d = new Date(due.getFullYear(), due.getMonth(), due.getDate());
-      return Math.max(0, Math.round((today - d) / 86400000));
-    }
-
-    function getCurrentCycle() {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    }
-
-    function daysInMonth(year, month) {
-      return new Date(year, month + 1, 0).getDate();
-    }
-
-    // Tanggal jatuh tempo BERIKUTNYA, dihitung dinamis dari kalender asli
-    // (bukan hardcode 28 hari). dueDay dijepit ke jumlah hari bulan itu,
-    // misal due 31 di Februari jadi tanggal 28.
-    function getNextDueDate(dueDay, now = new Date()) {
-      const d = Math.min(31, Math.max(1, Number(dueDay || 20)));
-      const y = now.getFullYear(), m = now.getMonth();
-      const today = new Date(y, m, now.getDate());
-      let due = new Date(y, m, Math.min(d, daysInMonth(y, m)));
-      if (due < today) {
-        due = new Date(y, m + 1, Math.min(d, daysInMonth(y, m + 1)));
+  /* ---------- migrasi data lama (sekali) ---------- */
+  function maybeMigrate() {
+    if (APP.migrating || !db) return;
+    if (!(APP.loaded.customers && APP.loaded.settings && APP.loaded.ledger)) return;
+    if (APP.settings.schemaVersion === SCHEMA_VERSION) return;
+    APP.migrating = true;
+    const today = todayYmd();
+    const writes = [];
+    APP.customers.forEach(c => {
+      if (c.lastPaidCycle === undefined) {
+        c.lastPaidCycle = effLast(c, today);
+        if (!c.startCycle) c.startCycle = cycAdd(c.lastPaidCycle, 1);
+        writes.push(...customerWrites(c));
+      } else if (!c.publicToken) {
+        writes.push(...customerWrites(c));
       }
-      return due;
-    }
+    });
+    APP.ledger.forEach(l => { if (!l.ts) l.ts = 0; });
+    writes.push(db.collection("app_meta").doc("settings").set({ schemaVersion: SCHEMA_VERSION }, { merge: true }));
+    Promise.all(writes).then(() => { APP.migrating = false; }).catch(e => { console.error(e); APP.migrating = false; });
+  }
 
-    // Tanggal pengingat = N hari sebelum jatuh tempo berikutnya (N dari
-    // pengaturan, default 5). Date menangani ganti bulan dengan jumlah
-    // hari asli (Jan 31, Feb 28/29, Apr 30, dst).
-    function getReminderDate(dueDay, now = new Date()) {
-      const r = getNextDueDate(dueDay, now);
-      r.setDate(r.getDate() - Number(state.settings.reminderDays ?? 5));
-      return r;
-    }
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  function renderAll() {
+    renderSync();
+    renderHome();
+    renderCustomers();
+    renderCash();
+    if (APP.tab === "settings") { /* form tidak diisi ulang saat mengetik */ }
+  }
+  function renderSync() {
+    const el = $("#syncPill");
+    let cls = "ok", txt = "Tersinkron";
+    const pending = APP.pend.customers || APP.pend.ledger || APP.pend.settings;
+    if (APP.syncErr) { cls = "error"; txt = "Gagal sinkron"; }
+    else if (!navigator.onLine) { cls = "offline"; txt = "Offline"; }
+    else if (pending) { cls = "pending"; txt = "Menyimpan…"; }
+    el.className = "sync " + cls; el.textContent = txt;
+  }
+  function monthPicker() {
+    return `<input type="month" class="monthPick" value="${esc(APP.month)}" data-change="month" style="width:auto;min-height:40px;" />`;
+  }
 
-    // Siklus tagihan yang sedang ditagih untuk pelanggan ini (YYYY-MM),
-    // diambil dari bulan tanggal jatuh tempo berikutnya.
-    function getCustomerBillingCycle(dueDay, now = new Date()) {
-      const due = getNextDueDate(dueDay, now);
-      return `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}`;
-    }
+  function renderHome() {
+    const c0 = cfg(), today = todayYmd(), m = APP.month;
+    const rows = APP.customers.map(c => ({ c, b: billing(c, today, c0) }));
+    const act = rows.filter(x => x.b.status !== "nonaktif");
+    const denom = act.filter(x => x.b.status !== "belum-tagih");
+    const lunas = denom.filter(x => x.b.status === "lunas").length;
+    const pct = denom.length ? Math.round(lunas / denom.length * 100) : 0;
+    const tunggakan = act.reduce((s, x) => s + x.b.owed, 0);
+    const tunggakanN = act.filter(x => x.b.unpaid.length).length;
+    const masuk = APP.ledger.filter(l => l.type === "in" && (l.date || "").startsWith(m)).reduce((s, l) => s + (+l.amount || 0), 0);
+    const keluar = APP.ledger.filter(l => l.type === "out" && (l.date || "").startsWith(m)).reduce((s, l) => s + (+l.amount || 0), 0);
+    const nMasuk = APP.ledger.filter(l => l.type === "in" && (l.date || "").startsWith(m)).length;
+    const kas = (Number(APP.settings.openingCash) || 0) +
+      APP.ledger.reduce((s, l) => s + (l.type === "in" ? 1 : -1) * (+l.amount || 0), 0);
 
-    // Auto-reset siklus: mulai tanggal pengingat (H-reminderDays) status
-    // kembali "belum", paidAt + penanda WA dikosongkan, invoice diperbarui,
-    // billingCycle dicatat supaya tidak reset berulang. Pakai >= (bukan ==)
-    // supaya tetap jalan kalau aplikasi tidak dibuka tepat di hari H-nya.
-    // Pelanggan yang sudah bayar siklus itu dilewati. Riwayat Buku Kas
-    // TIDAK dihapus. Mengembalikan true jika ada yang berubah.
-    function runAutoResetCycle() {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      let updated = false;
+    const urgent = rows.filter(x => x.b.status === "putus" || x.b.status === "terlambat")
+      .sort((a, b) => b.b.late - a.b.late);
+    const dueSoon = rows.filter(x => x.b.status === "belum" && x.b.unpaid.length &&
+      dnum(x.b.dueYmd) - dnum(today) <= 7).sort((a, b) => dnum(a.b.dueYmd) - dnum(b.b.dueYmd));
 
-      state.customers.forEach((c, idx) => {
-        const dueDay = Number(c.dueDay || 20);
-        const h5 = getReminderDate(dueDay, now);
-        const cycle = getCustomerBillingCycle(dueDay, now);
+    const urgentHtml = urgent.length ? `<div class="list">${urgent.map(x => `
+      <div class="row" data-act="open" data-id="${esc(x.c.id)}">
+        <div class="avatar" style="background:var(--danger-bg);color:var(--danger);">${initial(x.c.name)}</div>
+        <div class="row-main">
+          <div class="row-top"><span class="row-name">${esc(x.c.name)}</span>${badge(x.b.status)}</div>
+          <div class="row-meta">${esc(x.c.address || "")}</div>
+          <div class="row-foot"><b>${x.b.unpaid.length} bulan</b> · ${fmtRp(x.b.owed)} · telat ${x.b.late} hari</div>
+        </div>
+        <button class="btn success sm" data-act="pay" data-id="${esc(x.c.id)}">Terima</button>
+      </div>`).join("")}</div>`
+      : `<div class="card empty"><b>Tidak ada yang perlu tindakan 🎉</b>Semua pelanggan aktif sudah bayar atau masih dalam tenggang.</div>`;
 
-        if (today.getTime() >= h5.getTime() && c.billingCycle !== cycle) {
-          const ym = cycle.replace("-", "");
-          c.status = "belum";
-          c.paidAt = "";
-          c.waSentCycle = "";
-          c.lastWaMethod = "";
-          c.lastWaSentAt = "";
-          c.billingCycle = cycle;
-          c.invoiceCode = `INV-${ym}-${String(idx + 1).padStart(3, "0")}`;
-          updated = true;
-        }
-      });
+    const dueHtml = dueSoon.length ? `<div class="list">${dueSoon.slice(0, 8).map(x => `
+      <div class="row" data-act="open" data-id="${esc(x.c.id)}">
+        <div class="avatar">${initial(x.c.name)}</div>
+        <div class="row-main">
+          <div class="row-top"><span class="row-name">${esc(x.c.name)}</span></div>
+          <div class="row-meta">Jatuh tempo ${dateLong(x.b.dueYmd)}</div>
+        </div>
+        <div class="row-amt">${fmtRp(x.b.owed)}</div>
+      </div>`).join("")}</div>` : `<div class="card empty">Tidak ada jatuh tempo dalam 7 hari ke depan.</div>`;
 
-      if (updated) saveLocal();
-      return updated;
-    }
+    $("#v-home").innerHTML = `
+      <div class="toolbar" style="grid-template-columns:1fr auto;align-items:center;">
+        <div class="muted small">Ringkasan bulan</div>${monthPicker()}
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Pemasukan bulan ini</div>
+          <div class="stat-val in num">${fmtRp(masuk)}</div>
+          <div class="stat-sub">${nMasuk} pembayaran · keluar ${fmtRp(keluar)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Sudah bayar</div>
+          <div class="stat-val num">${lunas}/${denom.length}</div>
+          <div class="bar"><i style="width:${pct}%"></i></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Tunggakan</div>
+          <div class="stat-val num" style="color:var(--warn);">${fmtRp(tunggakan)}</div>
+          <div class="stat-sub">${tunggakanN} pelanggan punya tagihan belum dibayar</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Saldo kas</div>
+          <div class="stat-val num">${fmtRp(kas)}</div>
+          <div class="stat-sub">Termasuk saldo awal ${fmtRp(APP.settings.openingCash || 0)}</div>
+        </div>
+      </div>
+      <div class="section-label">Perlu tindakan</div>
+      ${urgentHtml}
+      <div class="section-label">Jatuh tempo 7 hari ke depan</div>
+      ${dueHtml}
+    `;
+  }
 
-    // Migrasi sekali untuk data lama (belum ada settingsVersion): aturan
-    // tenggang lama default 4 hari -> H+10. Nilai 4 hanya pernah muncul
-    // sebagai default lama, bukan pilihan pengguna; kalau sudah versi 2
-    // (pengguna sudah mengatur sendiri), nilainya tidak disentuh.
-    function migrateSettingsObject(s) {
-      if (!s || s.settingsVersion != null) return s;
-      if (s.graceDays === 4) s.graceDays = 10;
-      if (s.reminderDays == null) s.reminderDays = 5;
-      s.settingsVersion = 2;
-      return s;
-    }
+  function filterDefs(rows) {
+    return [
+      ["all", "Semua", rows.length],
+      ["belum", "Belum bayar", rows.filter(x => x.b.status === "belum" || x.b.status === "terlambat").length],
+      ["putus", "Wajib putus", rows.filter(x => x.b.status === "putus").length],
+      ["lunas", "Lunas", rows.filter(x => x.b.status === "lunas").length],
+      ["nonaktif", "Nonaktif", rows.filter(x => x.b.status === "nonaktif").length]
+    ];
+  }
+  function renderCustomers() {
+    const c0 = cfg(), today = todayYmd();
+    const rows = APP.customers.map(c => ({ c, b: billing(c, today, c0) }));
+    $("#filterPills").innerHTML = filterDefs(rows).map(([id, label, n]) =>
+      `<button class="pill ${APP.filter === id ? "on" : ""}" data-act="filter" data-id="${id}">${label}<span class="n">${n}</span></button>`).join("");
 
-    function loadLocal() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          state = { ...state, ...parsed, settings: { ...state.settings, ...migrateSettingsObject(parsed.settings || {}) } };
-        }
-        if (HARDCODED_FIREBASE_CONFIG) state.settings.firebaseConfig = HARDCODED_FIREBASE_CONFIG;
-      } catch (e) {}
-      applyTheme(state.theme || "dark");
-    }
+    const q = ($("#searchInput").value || "").trim().toLowerCase();
+    let list = rows.filter(x => {
+      const f = APP.filter;
+      const okF = f === "all" ||
+        (f === "belum" && (x.b.status === "belum" || x.b.status === "terlambat")) ||
+        x.b.status === f;
+      if (!okF) return false;
+      if (!q) return true;
+      return [x.c.name, x.c.phone, x.c.address, x.c.port].some(v => String(v || "").toLowerCase().includes(q));
+    });
+    const sort = $("#sortSel").value;
+    list.sort((a, b) => {
+      if (sort === "late") return (b.b.late || -999) - (a.b.late || -999);
+      if (sort === "due") return (a.b.dueYmd ? dnum(a.b.dueYmd) : 9e9) - (b.b.dueYmd ? dnum(b.b.dueYmd) : 9e9);
+      return String(a.c.name || "").localeCompare(String(b.c.name || ""), "id");
+    });
 
-    function saveLocal() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-    }
-
-    function initFirebase() {
-      const cfg = state.settings.firebaseConfig;
-      if (!cfg || !cfg.projectId || typeof firebase === "undefined") return false;
-      try {
-        if (!firebase.apps.length) firebase.initializeApp(cfg);
-        db = firebase.firestore();
-        if (firebase.auth) auth = firebase.auth();
-        return true;
-      } catch (err) {
-        console.error(err);
-        return false;
-      }
-    }
-
-    function setLoginStatus(msg) {
-      const el = document.getElementById("loginStatus");
-      if (el) el.textContent = msg;
-    }
-
-    async function handleGoogleLogin() {
-      const errEl = document.getElementById("loginErrorMsg");
-      if (!auth) {
-        errEl.textContent = "Firebase belum terhubung. Coba lagi sebentar lagi.";
-        setLoginStatus("Status: Firebase tidak terhubung.");
-        return;
-      }
-      setLoginStatus("Status: membuka jendela login Google...");
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        const res = await auth.signInWithPopup(provider);
-        const u = res && res.user;
-        if (u && (u.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
-          localStorage.setItem(SESSION_KEY, "true");
-          setLoginStatus("Status: login berhasil sebagai " + u.email + ", membuka dashboard...");
-          await enterAdminDashboard();
-        } else if (u) {
-          await auth.signOut();
-          errEl.textContent = "Hanya akun Google gagan.70700@gmail.com yang diizinkan.";
-          setLoginStatus("Status: akun " + u.email + " ditolak.");
-        } else {
-          setLoginStatus("Status: Google tidak mengembalikan sesi login.");
-        }
-      } catch (e) {
-        errEl.textContent = "Login Google gagal: " + (e && e.message ? e.message : e);
-        setLoginStatus("Status: login gagal (" + (e && e.code ? e.code : "tanpa kode") + ").");
-      }
-    }
-
-
-    // Tanggal jatuh tempo dari siklus yang sedang ditagih (billingCycle).
-    // Kalau siklus belum tercatat, pakai jatuh tempo berikutnya.
-    function getCycleDueDate(c, now = new Date()) {
-      if (c.billingCycle) {
-        const parts = String(c.billingCycle).split("-");
-        const y = Number(parts[0]), m = Number(parts[1]) - 1;
-        return new Date(y, m, Math.min(Number(c.dueDay || 20), daysInMonth(y, m)));
-      }
-      return getNextDueDate(c.dueDay, now);
-    }
-
-    // Tanggal putus = jatuh tempo siklus + masa tenggang (default 10 hari).
-    // Contoh: jatuh tempo 1 Des + 10 hari -> diputus 11 Des kalau belum bayar.
-    function getDisconnectDate(c, now = new Date()) {
-      const due = getCycleDueDate(c, now);
-      const cut = new Date(due);
-      cut.setDate(cut.getDate() + Number(state.settings.graceDays ?? 10));
-      return cut;
-    }
-
-    // Perlu Tindakan Segera: belum lunas DAN sudah lewat tanggal jatuh
-    // tempo siklusnya (mulai hari jatuh tempo). Yang jatuh temponya masih
-    // jauh tidak masuk sini, walau belum bayar.
-    function needsUrgentAction(c, now = new Date()) {
-      if (c.status === "lunas") return false;
-      if (c.status === "telat") return true;
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const due = getCycleDueDate(c, now);
-      return today.getTime() >= due.getTime();
-    }
-
-    // Auto-telat: pelanggan "belum" yang sudah lewat tanggal putus
-    // (jatuh tempo + masa tenggang) otomatis jadi "telat" (Wajib Putus).
-    // Hanya berlaku kalau billingCycle sudah tercatat, supaya pelanggan lama
-    // yang datanya belum beres tidak langsung ditandai telat.
-    function runAutoMarkTelat() {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      let updated = false;
-      state.customers.forEach(c => {
-        if (c.status !== "belum" || !c.billingCycle) return;
-        if (today.getTime() >= getDisconnectDate(c, now).getTime()) {
-          c.status = "telat";
-          updated = true;
-        }
-      });
-      if (updated) saveLocal();
-      return updated;
-    }
-
-    async function enterAdminDashboard() {
-      document.getElementById("loginView").classList.add("hidden");
-      document.getElementById("adminApp").classList.remove("hidden");
-      renderAll();
-      if (db) await pullFromCloud();
-    }
-
-    async function logoutAdmin() {
-      localStorage.removeItem(SESSION_KEY);
-      if (auth && auth.currentUser) {
-        try { await auth.signOut(); } catch (e) {}
-      }
-      document.getElementById("adminApp").classList.add("hidden");
-      document.getElementById("loginView").classList.remove("hidden");
-    }
-
-    async function syncToCloud() {
-      saveLocal();
-      if (!db) return;
-      try {
-        await db.collection("app_meta").doc("settings").set({
-          bizName: state.settings.bizName,
-          adminWa: state.settings.adminWa,
-          bankInfo: state.settings.bankInfo,
-          waTemplate: state.settings.waTemplate || DEFAULT_WA_TEMPLATE,
-          qrisImage: state.settings.qrisImage || "",
-          reminderDays: state.settings.reminderDays ?? 5,
-          graceDays: state.settings.graceDays ?? 10,
-          settingsVersion: 2
-        }, { merge: true });
-        for (const c of state.customers) {
-          await db.collection("customers").doc(c.id).set(c, { merge: true });
-        }
-        for (const l of state.ledger) {
-          await db.collection("ledger").doc(l.id).set(l, { merge: true });
-        }
-      } catch (e) {
-        console.warn("Gagal sync ke Firestore:", e);
-      }
-    }
-
-    async function pullFromCloud() {
-      if (!db) return;
-      try {
-        const metaDoc = await db.collection("app_meta").doc("settings").get();
-        if (metaDoc.exists) state.settings = { ...state.settings, ...migrateSettingsObject(metaDoc.data()) };
-        const snap = await db.collection("customers").get();
-        if (!snap.empty) state.customers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const ledgerSnap = await db.collection("ledger").get();
-        if (!ledgerSnap.empty) state.ledger = ledgerSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        saveLocal();
-        renderAll();
-      } catch (e) {
-        console.warn("Gagal tarik data Firestore:", e);
-      }
-    }
-
-    function applyTheme(t) {
-      state.theme = t;
-      document.documentElement.setAttribute("data-theme", t);
-      const isDark = t === "dark";
-      ["loginThemeIcon", "headerThemeIcon"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = isDark ? "☀️" : "🌙";
-      });
-      saveLocal();
-    }
-
-    function toggleTheme() {
-      applyTheme(state.theme === "dark" ? "light" : "dark");
-    }
-
-    function formatRp(n) {
-      return "Rp" + Number(n || 0).toLocaleString("id-ID");
-    }
-
-    function getInvoiceLink(invCode) {
-      return `${window.location.origin + window.location.pathname}?inv=${encodeURIComponent(invCode)}`;
-    }
-
-    function copyText(text, label = "Teks") {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => alert(label + " berhasil disalin!"));
-      } else {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-        alert(label + " berhasil disalin!");
-      }
-    }
-
-    function switchTab(tabName) {
-      currentTab = tabName;
-      document.querySelectorAll(".bnav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
-      if (tabName === "settings") updateInstallUI();
-      ["dashboard", "customers", "finance", "settings"].forEach(t => {
-        document.getElementById("tab-" + t).classList.toggle("hidden", t !== tabName);
-      });
-      const titles = {
-        dashboard: "Dashboard",
-        customers: "Pelanggan",
-        finance: "Buku Kas",
-        settings: "Pengaturan"
-      };
-      document.getElementById("headerPageTitle").textContent = titles[tabName] || "Dashboard";
-      if (tabName === "settings") fillSettingsForm();
-    }
-
-    function setFilter(f, el) {
-      currentFilter = f;
-      document.querySelectorAll("#filterPills .pill").forEach(p => p.classList.remove("active"));
-      el.classList.add("active");
-      renderAll();
-    }
-
-    function renderAll() {
-      const cloudLabel = db ? `Firebase (${state.settings.firebaseConfig.projectId})` : "Mode Lokal";
-      document.getElementById("headerBrandSub").textContent = `${state.settings.bizName} • ${cloudLabel}`;
-
-      const totalCust = state.customers.length;
-      const paidList = state.customers.filter(c => c.status === "lunas");
-      const unpaidList = state.customers.filter(c => c.status !== "lunas");
-      const totalIncome = state.ledger.filter(l => l.type === "in").reduce((a, b) => a + Number(b.amount), 0);
-      const totalOut = state.ledger.filter(l => l.type === "out").reduce((a, b) => a + Number(b.amount), 0);
-      const totalUnpaid = unpaidList.reduce((a, b) => a + Number(b.amount), 0);
-      const pct = totalCust > 0 ? Math.round((paidList.length / totalCust) * 100) : 0;
-
-      document.getElementById("statIncome").textContent = formatRp(totalIncome);
-      document.getElementById("statPaidRatio").textContent = `${paidList.length} dari ${totalCust} pelanggan aktif lunas`;
-      document.getElementById("statProgressPct").textContent = `${pct}%`;
-      document.getElementById("statProgressBar").style.width = `${pct}%`;
-      document.getElementById("statUnpaid").textContent = formatRp(totalUnpaid);
-      document.getElementById("statUnpaidCount").textContent = `${unpaidList.length} pelanggan belum bayar`;
-      document.getElementById("statProfit").textContent = formatRp(totalIncome - totalOut);
-
-      const urgentList = state.customers.filter(c => needsUrgentAction(c));
-      const urgentEl = document.getElementById("urgentList");
-      if (!urgentList.length) {
-        urgentEl.innerHTML = `<p style="color:var(--text-muted);font-size:13px;">Tidak ada pelanggan yang perlu tindakan saat ini.</p>`;
-      } else {
-        urgentEl.innerHTML = urgentList.map(c => renderCustomerCard(c, true)).join("");
-      }
-
-      const q = (document.getElementById("searchInput").value || "").toLowerCase();
-      const filtered = state.customers.filter(c => {
-        const matchFilter = currentFilter === "all" || c.status === currentFilter;
-        const matchQuery = c.name.toLowerCase().includes(q) || c.address.toLowerCase().includes(q) || (c.port || "").toLowerCase().includes(q);
-        return matchFilter && matchQuery;
-      });
-      document.getElementById("customerList").innerHTML = filtered.length
-        ? filtered.map(c => renderCustomerCard(c, false)).join("")
-        : `<p style="color:var(--text-muted);font-size:13px;">Tidak ada data pelanggan yang cocok.</p>`;
-
-      document.getElementById("ledgerList").innerHTML = state.ledger.length
-        ? state.ledger.slice().reverse().map(l => `
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--border);">
-            <div style="min-width:0;flex:1;">
-              <div style="font-weight:700;font-size:13.5px;">${l.desc}</div>
-              <div style="font-size:11.5px;color:var(--text-muted);">${l.date}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-              <div style="font-weight:800;font-size:13.5px;color:${l.type === 'in' ? 'var(--success)' : 'var(--danger)'};">
-                ${l.type === 'in' ? '+' : '-'} ${formatRp(l.amount)}
-              </div>
-              <button class="btn-outline btn-sm" onclick="deleteLedger('${l.id}')">🗑️</button>
-            </div>
-          </div>
-        `).join("")
-        : `<p style="color:var(--text-muted);font-size:13px;">Belum ada riwayat mutasi kas.</p>`;
-    }
-
-    function renderCustomerCard(c, isUrgent) {
-      const currentCycle = getCurrentCycle();
-      const isSentThisCycle = c.waSentCycle === currentCycle;
-      const methodLabel = c.lastWaMethod === "cronjob" ? "Cronjob" : "Manual";
-
-      const badgeMap = {
-        lunas: `<span class="badge badge-lunas">Lunas</span>`,
-        belum: `<span class="badge badge-belum">Belum Bayar</span>`,
-        telat: `<span class="badge badge-telat">Wajib Putus</span>`
-      };
-
-      const cardClass = isUrgent ? "urgent-card" : "cust-card";
-      const dueText = formatDueDateFor(c);
-      const daysLate = getDaysLate(c);
-
+    $("#customerList").innerHTML = list.length ? list.map(x => {
+      const b = x.b;
+      let info;
+      if (b.status === "nonaktif") info = `<span class="muted">Layanan nonaktif</span>`;
+      else if (b.status === "belum-tagih") info = `<span class="muted">Tagihan mulai ${cycLabel(x.c.startCycle || cycleOf(today))}</span>`;
+      else if (b.unpaid.length) info = `<b>${b.unpaid.length} bulan</b> · ${fmtRp(b.owed)}${b.late > 0 ? ` · telat ${b.late} hari` : ` · tempo ${esc(dateLong(b.dueYmd))}`}`;
+      else info = `<span class="muted">Lunas s/d ${cycLabel(b.last)}</span>`;
       return `
-        <div class="${cardClass}">
-          <div class="cust-top">
-            <div>
-              <div class="cust-name">${c.name}</div>
-              <div class="cust-meta">${c.address} • ${c.plan}</div>
-              ${isSentThisCycle ? `<div style="margin-top:5px;"><span class="badge badge-sent">✓ WA Terkirim (${methodLabel})</span></div>` : ""}
-            </div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center;white-space:nowrap;flex-shrink:0;">${badgeMap[c.status] || ""}${daysLate > 0 ? `<span class="badge badge-telat">⏰ Telat ${daysLate} hari</span>` : ""}</div>
-          </div>
-
-          <div class="info-box">
-            <div>
-              <div class="info-col-label">Iuran</div>
-              <div class="info-col-val">${formatRp(c.amount)}</div>
-            </div>
-            <div>
-              <div class="info-col-label">Jatuh Tempo</div>
-              <div class="info-col-val">${dueText}</div>
-            </div>
-            <div>
-              <div class="info-col-label">Jalur Kabel</div>
-              <div class="info-col-val">${c.port || "-"}</div>
-            </div>
-          </div>
-
-          <div class="action-grid-2">
-            <button class="btn-wa btn-sm" onclick="openWaModal('${c.id}')">💬 WA Tagih</button>
-            <button class="btn-outline btn-sm" onclick="previewClientInvoice('${c.invoiceCode}')">🔗 Link & QRIS</button>
-            ${c.status !== "lunas"
-              ? `<button class="btn-success btn-sm" onclick="markAsPaid('${c.id}')">✔ Lunas</button>`
-              : `<button class="btn-outline btn-sm" onclick="markAsUnpaid('${c.id}')">↺ Batal</button>`
-            }
-            <div style="display:flex;gap:6px;">
-              <button class="btn-outline btn-sm" style="flex:1;" onclick="openCustomerModal('${c.id}')">Edit</button>
-              <button class="btn-danger btn-sm" onclick="deleteCustomer('${c.id}')">🗑️</button>
-            </div>
-          </div>
+      <div class="row" data-act="open" data-id="${esc(x.c.id)}">
+        <div class="avatar">${initial(x.c.name)}</div>
+        <div class="row-main">
+          <div class="row-top"><span class="row-name">${esc(x.c.name)}</span>${badge(b.status)}</div>
+          <div class="row-meta">${esc(x.c.address || "-")} · ${esc(x.c.plan || "")}</div>
+          <div class="row-foot">${info}</div>
         </div>
-      `;
-    }
+        ${b.status !== "nonaktif" ? `<button class="btn ${b.unpaid.length ? "success" : "ghost"} sm" data-act="pay" data-id="${esc(x.c.id)}">Terima</button>` : ""}
+      </div>`;
+    }).join("") : `<div class="empty"><b>Belum ada pelanggan</b>${APP.customers.length ? "Coba ubah filter atau kata pencarian." : "Ketuk tombol + untuk menambah pelanggan pertama."}</div>`;
 
-    function openCustomerModal(id = "") {
-      document.getElementById("editCustId").value = id;
-      if (id) {
-        const c = state.customers.find(x => x.id === id);
-        document.getElementById("modalTitle").textContent = "Edit Pelanggan";
-        document.getElementById("custName").value = c.name;
-        document.getElementById("custPhone").value = c.phone;
-        document.getElementById("custAddress").value = c.address;
-        document.getElementById("custPort").value = c.port || "";
-        document.getElementById("custDueDay").value = toDateInputValue(getCycleDueDate(c));
-        document.getElementById("custPlan").value = c.plan;
-        document.getElementById("custAmount").value = c.amount;
-        document.getElementById("custStatus").value = c.status;
-      } else {
-        document.getElementById("modalTitle").textContent = "Tambah Pelanggan Baru";
-        document.getElementById("custName").value = "";
-        document.getElementById("custPhone").value = "628";
-        document.getElementById("custAddress").value = "";
-        document.getElementById("custPort").value = "";
-        document.getElementById("custDueDay").value = toDateInputValue(getNextDueDate(20));
-        document.getElementById("custPlan").value = "Paket Keluarga 10 Mbps";
-        document.getElementById("custAmount").value = 100000;
-        document.getElementById("custStatus").value = "belum";
-      }
-      document.getElementById("customerModal").classList.add("open");
-    }
+    $("#fab").classList.toggle("on", APP.tab === "customers");
+  }
 
-    function closeModal(id) {
-      document.getElementById(id).classList.remove("open");
-    }
+  function renderCash() {
+    const m = APP.month, t = APP.cashType;
+    const inMonth = APP.ledger.filter(l => (l.date || "").startsWith(m));
+    const masuk = inMonth.filter(l => l.type === "in").reduce((s, l) => s + (+l.amount || 0), 0);
+    const keluar = inMonth.filter(l => l.type === "out").reduce((s, l) => s + (+l.amount || 0), 0);
+    const list = APP.ledger.filter(l => (l.date || "").startsWith(m) && (t === "all" || l.type === t))
+      .sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.ts || 0) - (a.ts || 0));
 
-    async function pickContact() {
-      const hint = document.getElementById("contactHint");
-      if (!("contacts" in navigator) || !navigator.contacts.select) {
-        if (hint) hint.textContent = "HP/browser ini tidak mendukung pilih kontak — ketik nomornya secara manual.";
-        return;
-      }
-      try {
-        const contacts = await navigator.contacts.select(["name", "tel"], { multiple: false });
-        if (!contacts || !contacts.length) return;
-        const c = contacts[0];
-        if (c.name && c.name.length && !document.getElementById("custName").value.trim()) {
-          document.getElementById("custName").value = c.name[0];
-        }
-        if (c.tel && c.tel.length) {
-          let num = String(c.tel[0]).replace(/[\s\-()]/g, "");
-          if (num.startsWith("+62")) num = num.slice(1);
-          else if (num.startsWith("0")) num = "62" + num.slice(1);
-          document.getElementById("custPhone").value = num.replace(/\D/g, "");
-        }
-        if (hint) hint.textContent = "Kontak dipilih: " + (c.name && c.name.length ? c.name[0] : "tanpa nama");
-      } catch (e) {
-        if (hint) hint.textContent = "Pemilihan kontak dibatalkan.";
-      }
-    }
+    // Rekap 6 bulan terakhir
+    const months = [];
+    for (let i = 5; i >= 0; i--) months.push(cycAdd(m, -i));
+    const recap = months.map(mm => ({
+      m: mm,
+      masuk: APP.ledger.filter(l => l.type === "in" && (l.date || "").startsWith(mm)).reduce((s, l) => s + (+l.amount || 0), 0),
+      keluar: APP.ledger.filter(l => l.type === "out" && (l.date || "").startsWith(mm)).reduce((s, l) => s + (+l.amount || 0), 0)
+    }));
+    const maxV = Math.max(1, ...recap.map(r => Math.max(r.masuk, r.keluar)));
 
-    async function saveCustomer() {
-      const id = document.getElementById("editCustId").value;
-      const name = document.getElementById("custName").value.trim();
-      if (!name) return alert("Nama pelanggan wajib diisi");
-      const phone = document.getElementById("custPhone").value.replace(/\D/g, "");
-      const payload = {
-        name,
-        phone: phone.startsWith("0") ? "62" + phone.slice(1) : phone,
-        address: document.getElementById("custAddress").value.trim(),
-        port: document.getElementById("custPort").value.trim(),
-        dueDay: getDueDayFromInput(),
-        plan: document.getElementById("custPlan").value.trim(),
-        amount: Number(document.getElementById("custAmount").value || 0),
-        status: document.getElementById("custStatus").value
-      };
+    $("#v-cash").innerHTML = `
+      <div class="toolbar" style="grid-template-columns:1fr auto;align-items:center;">
+        <div class="muted small">Kas bulan</div>${monthPicker()}
+      </div>
+      <div class="summary">
+        <div><span class="tiny muted">Masuk</span><b class="in num">${fmtRp(masuk)}</b></div>
+        <div><span class="tiny muted">Keluar</span><b class="out num">${fmtRp(keluar)}</b></div>
+        <div><span class="tiny muted">Selisih</span><b class="num" style="color:${masuk - keluar >= 0 ? "var(--ok)" : "var(--danger)"}">${fmtRp(masuk - keluar)}</b></div>
+      </div>
+      <div class="actions" style="margin-bottom:12px;">
+        <button class="btn primary" data-act="addExpense">+ Catat pengeluaran</button>
+        <button class="btn ghost" data-act="exportCsv">📄 CSV</button>
+      </div>
+      <div class="segs">
+        ${[["all", "Semua"], ["in", "Masuk"], ["out", "Keluar"]].map(([id, l]) =>
+          `<button class="seg ${t === id ? "on" : ""}" data-act="cashType" data-id="${id}">${l}</button>`).join("")}
+      </div>
+      <div class="list" style="margin-bottom:14px;">${list.length ? list.map(l => {
+        const isIn = l.type === "in";
+        return `
+        <div class="row" data-act="ledger" data-id="${esc(l.id)}">
+          <div class="row-main">
+            <div class="row-name" style="font-size:14px;">${esc(l.desc || "")}</div>
+            <div class="row-meta">${esc(dateLong(l.date || todayYmd()))}${l.category ? " · " + esc(l.category) : ""}</div>
+          </div>
+          <div class="row-amt ${isIn ? "in" : "out"}">${isIn ? "+" : "−"} ${fmtRp(l.amount)}</div>
+        </div>`;
+      }).join("") : `<div class="empty"><b>Belum ada catatan</b>Pembayaran pelanggan akan muncul di sini otomatis.</div>`}</div>
 
-      // Kalau tanggal yang dipilih bulannya beda dengan siklus jatuh tempo
-      // berikutnya, catat siklus itu supaya tanggal yang dipilih benar-benar
-      // tampil (tidak "tidak berubah" saat disimpan).
-      const cycleOverride = computeCycleOverride(getPickedDueDate(), payload.dueDay);
+      <div class="card">
+        <div class="card-head"><div class="card-title">6 bulan terakhir</div></div>
+        ${recap.map(r => `
+          <div class="recap-row">
+            <span class="muted">${cycLabel(r.m)}</span>
+            <div class="recap-bars">
+              <i style="width:${Math.round(r.masuk / maxV * 100)}%;background:var(--ok);"></i>
+              <i style="width:${Math.round(r.keluar / maxV * 100)}%;background:var(--danger);opacity:.8;"></i>
+              <span class="tiny muted num">${fmtRp(r.masuk)} masuk · ${fmtRp(r.keluar)} keluar</span>
+            </div>
+          </div>`).join("")}
+      </div>`;
+  }
 
-      if (id) {
-        const idx = state.customers.findIndex(x => x.id === id);
-        state.customers[idx] = { ...state.customers[idx], ...payload };
-        if (cycleOverride) state.customers[idx].billingCycle = cycleOverride;
-      } else {
-        const ym = getCurrentCycle().replace("-", "");
-        const invCode = "INV-" + ym + "-" + String(state.customers.length + 1).padStart(3, "0");
-        state.customers.push({
-          id: "c" + Date.now(),
-          invoiceCode: invCode,
-          paidAt: "",
-          waSentCycle: "",
-          lastWaMethod: "",
-          lastWaSentAt: "",
-          ...payload,
-          ...(cycleOverride ? { billingCycle: cycleOverride } : {})
-        });
-      }
-      closeModal("customerModal");
-      renderAll();
-      await syncToCloud();
-    }
+  /* ============================================================
+     SHEETS: pelanggan, bayar, WA, pengeluaran
+     ============================================================ */
+  function openCustomer(id) {
+    const c = getC(id); if (!c) return;
+    const b = billOf(c);
+    const hist = APP.ledger.filter(l => l.type === "in" && l.customerId === c.id)
+      .sort((a, b2) => (b2.ts || 0) - (a.ts || 0));
+    const last = hist[0];
+    const canUndo = last && (last.cycles || []).length && last.cycles[last.cycles.length - 1] === c.lastPaidCycle;
+    const statusTxt = b.status === "belum-tagih" ? "Tagihan belum dimulai"
+      : b.status === "nonaktif" ? "Layanan nonaktif"
+      : b.unpaid.length ? `${b.unpaid.length} bulan belum dibayar · ${fmtRp(b.owed)}` : "Tidak ada tunggakan";
+    openSheet(c.name || "Pelanggan", `
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">${badge(b.status)}<span class="small muted">${esc(statusTxt)}</span></div>
+      <dl class="kv">
+        <dt>No. WA</dt><dd>${c.phone ? `<a href="${telLink(c.phone)}" target="_blank" rel="noopener">${esc(c.phone)}</a>` : "-"}</dd>
+        <dt>Alamat</dt><dd>${esc(c.address || "-")}</dd>
+        <dt>Port</dt><dd>${esc(c.port || "-")}</dd>
+        <dt>Paket</dt><dd>${esc(c.plan || "-")} · ${fmtRp(c.amount)}/bln</dd>
+        <dt>Tgl tagihan</dt><dd>Tanggal ${Number(c.dueDay) || 20} tiap bulan</dd>
+        ${b.dueYmd ? `<dt>Jatuh tempo</dt><dd>${esc(dateLong(b.dueYmd))}</dd>` : ""}
+        ${c.notes ? `<dt>Catatan</dt><dd style="font-weight:500;">${esc(c.notes)}</dd>` : ""}
+      </dl>
+      <div class="actions" style="margin-bottom:6px;">
+        <button class="btn success" data-act="pay" data-id="${esc(c.id)}">💰 Terima bayar</button>
+        <button class="btn wa" data-act="wa" data-id="${esc(c.id)}">💬 Tagih WA</button>
+        <a class="btn ghost" href="${esc(invoiceLink(c))}" target="_blank" rel="noopener">🔗 Halaman tagihan</a>
+        <button class="btn ghost" data-act="editCustomer" data-id="${esc(c.id)}">✏️ Edit</button>
+        <button class="btn ghost wide" data-act="toggleActive" data-id="${esc(c.id)}">${c.active === false ? "▶ Aktifkan kembali" : "⏸ Nonaktifkan layanan"}</button>
+        <button class="btn danger wide" data-act="delCustomer" data-id="${esc(c.id)}">🗑️ Hapus pelanggan</button>
+      </div>
+      <div class="section-label" style="margin-top:16px;">Riwayat pembayaran</div>
+      ${hist.length ? hist.slice(0, 20).map(h => `
+        <div class="hist"><span>${esc((h.cycles || []).map(cycLabel).join(", ") || h.desc)}<br><span class="tiny muted">${esc(dateLong(h.date || todayYmd()))}</span></span><b class="in num">${fmtRp(h.amount)}</b></div>`).join("")
+        : `<p class="small muted">Belum ada pembayaran tercatat.</p>`}
+      ${canUndo ? `<button class="btn ghost block" style="margin-top:12px;" data-act="undoPay" data-id="${esc(c.id)}">↺ Batalkan pembayaran terakhir</button>` : ""}
+    `);
+  }
 
-    async function deleteCustomer(id) {
-      const cust = state.customers.find(x => x.id === id);
-      if (!cust) return;
-      if (!confirm(`Hapus pelanggan "${cust.name}" secara permanen?`)) return;
-      state.customers = state.customers.filter(x => x.id !== id);
-      saveLocal();
-      renderAll();
-      if (db) {
-        try { await db.collection("customers").doc(id).delete(); } catch (e) {}
-      }
-    }
-
-    async function markAsPaid(id) {
-      const c = state.customers.find(x => x.id === id);
-      if (!c) return;
-      const today = new Date().toISOString().slice(0, 10);
-      c.status = "lunas";
-      c.paidAt = today;
-      // Catat siklus yang dibayar: kalau siklus sudah tercatat (tagihan yang
-      // sedang ditagih, misal telat bayar November), bayar siklus itu; kalau
-      // belum tercatat, catat siklus jatuh tempo berikutnya, supaya reset
-      // tidak menghapus pembayaran yang dicatat sebelum H-5.
-      if (!c.billingCycle) c.billingCycle = getCustomerBillingCycle(c.dueDay);
-      const ymPaid = c.billingCycle.replace("-", "");
-      const idxPaid = state.customers.findIndex(x => x.id === id);
-      c.invoiceCode = `INV-${ymPaid}-${String(idxPaid + 1).padStart(3, "0")}`;
-      state.ledger.push({ id: "l" + Date.now(), type: "in", desc: "Iuran WiFi - " + c.name, amount: c.amount, date: today });
-      renderAll();
-      await syncToCloud();
-    }
-
-    async function markAsUnpaid(id) {
-      const c = state.customers.find(x => x.id === id);
-      if (!c) return;
-      c.status = "belum";
-      c.paidAt = "";
-      c.billingCycle = "";
-      renderAll();
-      await syncToCloud();
-    }
-
-    async function generateNewCycle() {
-      if (!confirm("Reset semua status pelanggan menjadi 'Belum Bayar', reset tanda kirim WA, dan buat kode invoice bulan baru?")) return;
-      const ym = getCurrentCycle().replace("-", "");
-      state.customers.forEach((c, i) => {
-        c.status = "belum";
-        c.paidAt = "";
-        c.billingCycle = "";
-        c.waSentCycle = "";
-        c.lastWaMethod = "";
-        c.lastWaSentAt = "";
-        c.invoiceCode = `INV-${ym}-${String(i + 1).padStart(3, "0")}`;
+  function payCountDefault(b) { return Math.max(1, b.unpaid.length); }
+  function openPay(id) {
+    const c = getC(id); if (!c) return;
+    const today = todayYmd(), b = billOf(c);
+    openSheet("Terima pembayaran", `
+      <p class="muted" style="margin-bottom:12px;"><b style="color:var(--text);">${esc(c.name)}</b> · ${fmtRp(c.amount)}/bulan${b.unpaid.length ? `<br>Tunggakan: ${b.unpaid.length} bulan (${fmtRp(b.owed)})` : "<br>Tidak ada tunggakan — bisa bayar di muka."}</p>
+      <div class="field">
+        <label>Dibayar untuk berapa bulan?</label>
+        <div class="stepper">
+          <button class="btn ghost" data-act="stepPay" data-id="${esc(c.id)}" data-d="-1" aria-label="Kurangi">−</button>
+          <input type="number" id="payN" value="${payCountDefault(b)}" min="1" max="12" inputmode="numeric" />
+          <button class="btn ghost" data-act="stepPay" data-id="${esc(c.id)}" data-d="1" aria-label="Tambah">+</button>
+        </div>
+      </div>
+      <div class="sumbox" id="paySum"></div>
+      <div class="field">
+        <label>Tanggal pembayaran</label>
+        <input type="date" id="payDate" value="${today}" />
+      </div>
+      <button class="btn primary block" data-act="savePay" data-id="${esc(c.id)}">Simpan pembayaran</button>
+    `);
+    updatePaySum(c);
+  }
+  function updatePaySum(c) {
+    const el = $("#payN"), n = Math.min(12, Math.max(1, parseInt(el ? el.value : "1", 10) || 1));
+    if (!c) return;
+    const cycles = payCycles(c, todayYmd(), n);
+    const sum = $("#paySum");
+    if (sum) sum.innerHTML = `<div class="small muted">Mencakup periode</div>
+      <div style="font-weight:700;margin:2px 0 6px;">${esc(cycLabel(cycles[0]))}${n > 1 ? " – " + esc(cycLabel(cycles[cycles.length - 1])) : ""}</div>
+      <div class="big num">${fmtRp(n * (Number(c.amount) || 0))}</div>`;
+  }
+  function stepPay(d, id) {
+    const el = $("#payN"); if (!el) return;
+    el.value = Math.min(12, Math.max(1, (parseInt(el.value, 10) || 1) + d));
+    updatePaySum(getC(id));
+  }
+  async function savePay(id) {
+    const c = getC(id); if (!c) return;
+    const n = Math.min(12, Math.max(1, parseInt($("#payN").value, 10) || 1));
+    const date = $("#payDate").value || todayYmd();
+    await recordPayment(c, n, date);
+  }
+  async function recordPayment(c, n, date) {
+    const today = todayYmd();
+    const cycles = payCycles(c, today, n);
+    const entry = {
+      id: uid(), ts: Date.now(), type: "in", category: "Iuran", customerId: c.id,
+      desc: `Iuran ${c.name} · ${cycles.map(cycLabel).join(", ")}`,
+      cycles, amount: n * (Number(c.amount) || 0), date,
+      prevLastPaid: c.lastPaidCycle ?? "", prevPaidAt: c.paidAt || ""
+    };
+    if (!c.startCycle) c.startCycle = cycles[0];
+    c.lastPaidCycle = cycles[cycles.length - 1];
+    c.paidAt = date;
+    APP.ledger.push(entry);
+    closeSheet();
+    renderAll();
+    await persist([db.collection("ledger").doc(entry.id).set(clean(entry)), ...customerWrites(c)],
+      `Pembayaran ${fmtRp(entry.amount)} tercatat`);
+  }
+  function undoPayment(id) {
+    const c = getC(id); if (!c) return;
+    const last = APP.ledger.filter(l => l.type === "in" && l.customerId === c.id)
+      .sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
+    if (!last) return toast("Tidak ada pembayaran untuk dibatalkan", "err");
+    confirmSheet("Batalkan pembayaran?",
+      `Pembayaran ${fmtRp(last.amount)} (${(last.cycles || []).map(cycLabel).join(", ")}) akan dihapus dari kas dan pelanggan kembali berstatus belum bayar.`,
+      "Batalkan pembayaran", async () => {
+        c.lastPaidCycle = last.prevLastPaid ?? "";
+        c.paidAt = last.prevPaidAt || "";
+        APP.ledger = APP.ledger.filter(l => l.id !== last.id);
+        renderAll();
+        await persist([db.collection("ledger").doc(last.id).delete(), ...customerWrites(c)], "Pembayaran dibatalkan");
       });
-      renderAll();
-      await syncToCloud();
-    }
+  }
 
-    async function addExpense() {
-      const desc = document.getElementById("expDesc").value.trim();
-      const amount = Number(document.getElementById("expAmount").value || 0);
-      if (!desc || amount <= 0) return alert("Isi keterangan dan nominal pengeluaran dengan benar.");
-      state.ledger.push({ id: "l" + Date.now(), type: "out", desc, amount, date: new Date().toISOString().slice(0, 10) });
-      document.getElementById("expDesc").value = "";
-      document.getElementById("expAmount").value = "";
-      renderAll();
-      await syncToCloud();
-    }
-
-    async function deleteLedger(id) {
-      if (!confirm("Hapus catatan mutasi kas ini?")) return;
-      state.ledger = state.ledger.filter(x => x.id !== id);
-      saveLocal();
-      renderAll();
-      if (db) {
-        try { await db.collection("ledger").doc(id).delete(); } catch (e) {}
-      }
-    }
-
-    function buildWaMessage(c) {
-      const link = getInvoiceLink(c.invoiceCode);
-      if (c.status === "lunas") {
-        return `Halo Kak *${c.name}*,
-
-Terima kasih! Pembayaran WiFi *${state.settings.bizName}* sebesar *${formatRp(c.amount)}* telah kami terima (*LUNAS*).
-
-Lihat struk digital Anda di sini:
-${link}`;
-      }
-      const tpl = state.settings.waTemplate || DEFAULT_WA_TEMPLATE;
-      return tpl
-        .replace(/\{nama\}/g, c.name)
-        .replace(/\{wifi\}/g, state.settings.bizName)
-        .replace(/\{paket\}/g, c.plan)
-        .replace(/\{tagihan\}/g, formatRp(c.amount))
-        .replace(/\{tempo\}/g, formatDueDateFullFor(c))
-        .replace(/\{link\}/g, link);
-    }
-
-    async function markWaSentManual(id) {
-      const c = state.customers.find(x => x.id === id);
-      if (!c) return;
-      c.waSentCycle = getCurrentCycle();
-      c.lastWaMethod = "manual";
-      c.lastWaSentAt = new Date().toISOString().slice(0, 10);
-      renderAll();
-      await syncToCloud();
-    }
-
-    function openWaModal(id) {
-      const c = state.customers.find(x => x.id === id);
-      if (!c) return;
-      const link = getInvoiceLink(c.invoiceCode);
-      const txtEl = document.getElementById("waPreviewText");
-      txtEl.value = buildWaMessage(c);
-
-      const waLinkEl = document.getElementById("waDirectLink");
-      const updateHref = () => {
-        waLinkEl.href = `https://wa.me/${c.phone}?text=${encodeURIComponent(txtEl.value)}`;
-      };
-      txtEl.oninput = updateHref;
-      updateHref();
-
-      waLinkEl.onclick = async () => { await markWaSentManual(c.id); };
-      const shareBtn = document.getElementById("shareQrisBtn");
-      const shareNote = document.getElementById("shareQrisNote");
-      if (state.settings.qrisImage) {
-        shareBtn.style.display = "";
-        shareNote.textContent = "Ketuk tombol ini: layar berbagi terbuka — pilih kontak pelanggan, gambar QRIS + teks tagihan terkirim bersamaan.";
-        shareBtn.onclick = async () => { await shareQrisViaWa(c.id); };
-      } else {
-        shareBtn.style.display = "none";
-        shareNote.textContent = "Belum ada gambar QRIS — upload dulu di Pengaturan → Upload Gambar QRIS, baru tombol bagikan gambar muncul di sini.";
-      }
-      document.getElementById("copyLinkModalBtn").onclick = () => copyText(link, "Link tagihan");
-      document.getElementById("previewClientLinkBtn").onclick = () => {
-        closeModal("waModal");
-        previewClientInvoice(c.invoiceCode);
-      };
-      document.getElementById("waModal").classList.add("open");
-    }
-
-    function dataUrlToFile(dataUrl, filename) {
-      const blob = dataUrlToBlob(dataUrl);
-      return new File([blob], filename, { type: blob.type });
-    }
-
-    function dataUrlToBlob(dataUrl) {
-      const parts = dataUrl.split(",");
-      const mime = (parts[0].match(/:(.*?);/) || [])[1] || "image/jpeg";
-      const bin = atob(parts[1]);
-      const arr = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-      return new Blob([arr], { type: mime });
-    }
-
-    // Tagih WA + QRIS: gambar QRIS dilampirkan lewat layar berbagi Android
-    // (navigator.share) — pilih kontak pelanggan, gambar + teks tagihan
-    // terkirim bersamaan. Ini satu-satunya cara gambar bisa tersemat dari
-    // browser; link wa.me tidak bisa melampirkan gambar.
-    async function shareQrisViaWa(id) {
-      const c = state.customers.find(x => x.id === id);
-      if (!c) return;
-      if (!state.settings.qrisImage) {
-        alert("Belum ada gambar QRIS. Upload dulu di Pengaturan → Upload Gambar QRIS.");
-        return;
-      }
-      const text = document.getElementById("waPreviewText").value || buildWaMessage(c);
-      const file = dataUrlToFile(state.settings.qrisImage, "QRIS-NetWarga.jpg");
-      try {
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], text: text, title: "Tagihan NetWarga" });
-          await markWaSentManual(c.id);
-          closeModal("waModal");
-        } else {
-          const blobUrl = URL.createObjectURL(dataUrlToBlob(state.settings.qrisImage));
-          const a = document.createElement("a");
-          a.href = blobUrl;
-          a.download = "QRIS-NetWarga.jpg";
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-          alert("Perangkat tidak mendukung berbagi file. Gambar QRIS diunduh, lampirkan manual di WhatsApp.");
-        }
-      } catch (e) {
-        if (!e || e.name !== "AbortError") alert("Gagal berbagi. Coba lagi.");
-      }
-    }
-
-    function fillSettingsForm() {
-      document.getElementById("setBizName").value = state.settings.bizName;
-      document.getElementById("setAdminWa").value = state.settings.adminWa;
-      document.getElementById("setBankInfo").value = state.settings.bankInfo;
-      document.getElementById("setWaTemplate").value = state.settings.waTemplate || DEFAULT_WA_TEMPLATE;
-      document.getElementById("setReminderDays").value = state.settings.reminderDays ?? 5;
-      document.getElementById("setGraceDays").value = state.settings.graceDays ?? 10;
-      if (state.settings.firebaseConfig) {
-        document.getElementById("setFirebaseJson").value = JSON.stringify(state.settings.firebaseConfig, null, 2);
-      }
-      renderQrisPreviewAdmin();
-    }
-
-    function renderQrisPreviewAdmin() {
-      const box = document.getElementById("qrisPreviewAdmin");
-      if (state.settings.qrisImage) {
-        box.innerHTML = `<img src="${state.settings.qrisImage}" style="max-width:180px;border-radius:8px;border:1px solid var(--border);" /><br><button class="btn-danger btn-sm" style="margin-top:6px;" onclick="removeQris()">Hapus QRIS</button>`;
-      } else {
-        box.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">Belum ada gambar QRIS diunggah.</span>`;
-      }
-    }
-
-    function handleQrisUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(ev) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const maxW = 420;
-          const scale = Math.min(1, maxW / img.width);
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
-          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-          state.settings.qrisImage = canvas.toDataURL("image/jpeg", 0.78);
-          renderQrisPreviewAdmin();
-        };
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function removeQris() {
-      state.settings.qrisImage = "";
-      renderQrisPreviewAdmin();
-    }
-
-    async function saveSettings() {
-      state.settings.bizName = document.getElementById("setBizName").value.trim() || "NetWarga RT/RW Net";
-      state.settings.adminWa = document.getElementById("setAdminWa").value.replace(/\D/g, "");
-      state.settings.bankInfo = document.getElementById("setBankInfo").value.trim();
-      state.settings.waTemplate = document.getElementById("setWaTemplate").value.trim() || DEFAULT_WA_TEMPLATE;
-      state.settings.reminderDays = Math.min(30, Math.max(0, Number(document.getElementById("setReminderDays").value || 5)));
-      state.settings.graceDays = Math.min(30, Math.max(0, Number(document.getElementById("setGraceDays").value || 10)));
-      renderAll();
-      await syncToCloud();
-      alert("Pengaturan & QRIS berhasil disimpan!");
-    }
-
-    async function saveFirebaseConfig() {
-      try {
-        const cfg = JSON.parse(document.getElementById("setFirebaseJson").value.trim());
-        if (!cfg.projectId) throw new Error("projectId tidak ditemukan");
-        state.settings.firebaseConfig = cfg;
-        saveLocal();
-        if (initFirebase()) {
-          renderAll();
-          await syncToCloud();
-          alert("Berhasil terhubung ke Firebase & data tersinkronisasi!");
-        }
-      } catch (e) {
-        alert("Format JSON Firebase tidak valid: " + e.message);
-      }
-    }
-
-    function exportBackup() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "backup-netwarga-v4.json";
-      a.click();
-    }
-
-    function importBackup(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async function(ev) {
-        try {
-          const parsed = JSON.parse(ev.target.result);
-          if (!parsed.customers || !Array.isArray(parsed.customers)) throw new Error("File backup tidak valid");
-          state = { ...state, ...parsed, settings: { ...state.settings, ...(parsed.settings || {}) } };
-          saveLocal();
-          renderAll();
-          await syncToCloud();
-          alert("Data backup berhasil dipulihkan!");
-        } catch (err) {
-          alert("Gagal memulihkan backup: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    async function previewClientInvoice(invCode, isDirectUrl = false) {
-      document.getElementById("loginView").classList.add("hidden");
-      document.getElementById("adminApp").classList.add("hidden");
-      document.getElementById("clientInvoiceView").classList.remove("hidden");
-      document.getElementById("backToAdminBtn").classList.toggle("hidden", isDirectUrl);
-
-      let cust = state.customers.find(c => c.invoiceCode === invCode);
-      if (!cust && db) {
-        try {
-          const snap = await db.collection("customers").where("invoiceCode", "==", invCode).limit(1).get();
-          if (!snap.empty) cust = snap.docs[0].data();
-          const meta = await db.collection("app_meta").doc("settings").get();
-          if (meta.exists) state.settings = { ...state.settings, ...meta.data() };
-        } catch (e) {}
-      }
-
-      const card = document.getElementById("clientInvoiceCard");
-      if (!cust) {
-        card.innerHTML = `<h3 style="text-align:center;">Invoice Tidak Ditemukan</h3><p style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:6px;">Kode tagihan ${invCode} tidak terdaftar atau belum disinkronkan ke server.</p>`;
-        return;
-      }
-
-      const isPaid = cust.status === "lunas";
-      const confirmWaText = encodeURIComponent(`Halo Admin ${state.settings.bizName}, saya *${cust.name}* (${cust.address}) sudah melakukan pembayaran tagihan WiFi *${cust.invoiceCode}* sebesar *${formatRp(cust.amount)}*. Berikut bukti transfernya:`);
-
-      card.innerHTML = `
-        <div style="text-align:center;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px;">
-          <div style="font-size:11px;color:var(--text-muted);font-weight:700;">TAGIHAN INTERNET WIFI</div>
-          <h2 style="font-size:18px;margin:2px 0;">${state.settings.bizName}</h2>
-          <div style="font-size:12px;color:var(--text-muted);">${cust.invoiceCode}</div>
-        </div>
-        <div style="text-align:center;margin-bottom:14px;">
-          <span class="badge ${isPaid ? 'badge-lunas' : 'badge-telat'}" style="font-size:12.5px;padding:5px 14px;">
-            ${isPaid ? 'Sudah Lunas' : 'Menunggu Pembayaran'}
-          </span>
-          <div style="font-size:26px;font-weight:800;margin-top:8px;">${formatRp(cust.amount)}</div>
-        </div>
-        <div style="background:var(--surface-2);padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Nama Pelanggan</span><strong>${cust.name}</strong></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Alamat</span><strong>${cust.address}</strong></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--text-muted);">Paket</span><strong>${cust.plan}</strong></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Jatuh Tempo</span><strong>${formatDueDateFor(cust)}</strong></div>
-        </div>
-        ${!isPaid ? `
-          ${state.settings.qrisImage ? `
-            <div class="qris-box">
-              <div style="font-weight:700;font-size:13px;margin-bottom:8px;">Scan QRIS untuk Bayar</div>
-              <img src="${state.settings.qrisImage}" alt="QRIS Pembayaran" />
-              <a href="${state.settings.qrisImage}" download="QRIS-${state.settings.bizName}.jpg" style="display:inline-block;margin-top:6px;font-size:12px;color:#4f46e5;font-weight:700;text-decoration:none;">⬇️ Simpan Gambar QRIS ke Galeri</a>
-            </div>
-          ` : ""}
-          <div style="background:var(--surface-2);padding:12px;border-radius:10px;font-size:13px;margin-bottom:14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <strong style="color:var(--text-muted);">Transfer Bank / E-Wallet:</strong>
-              <button class="btn-outline btn-sm" onclick="copyText(state.settings.bankInfo, 'Info rekening')">📋 Salin</button>
-            </div>
-            <div style="white-space:pre-line;">${state.settings.bankInfo}</div>
-          </div>
-          <a href="https://wa.me/${state.settings.adminWa}?text=${confirmWaText}" target="_blank" class="btn-wa" style="width:100%;padding:12px;border-radius:11px;text-decoration:none;text-align:center;font-weight:700;">
-            📲 Konfirmasi Sudah Bayar ke Admin
-          </a>
-        ` : `
-          <div style="text-align:center;font-size:13px;color:var(--success);font-weight:600;">
-            Terima kasih! Pembayaran tercatat pada ${cust.paidAt || "bulan ini"}.
-          </div>
-        `}
-      `;
-    }
-
-    function exitClientPreview() {
-      document.getElementById("clientInvoiceView").classList.add("hidden");
-      document.getElementById("adminApp").classList.remove("hidden");
-    }
-
-    // Tangkap sinyal instal PWA dari Chrome, tampilkan tombol Instal di Pengaturan
-    let deferredInstallPrompt = null;
-    function updateInstallUI() {
-      const btn = document.getElementById("installBtn");
-      const status = document.getElementById("installStatus");
-      if (!btn || !status) return;
-      if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
-        status.textContent = "Aplikasi sudah terinstal dan sedang dibuka sebagai aplikasi.";
-        btn.style.display = "none";
-      } else if (deferredInstallPrompt) {
-        status.textContent = "Aplikasi bisa diinstal di HP ini. Tekan tombol di bawah.";
-        btn.style.display = "inline-flex";
-      } else {
-        status.textContent = "Chrome belum menawarkan instalasi saat ini. Coba tutup lalu buka lagi aplikasi ini, atau pakai menu Chrome (titik tiga) → “Instal aplikasi”.";
-        btn.style.display = "none";
-      }
-    }
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      updateInstallUI();
-    });
-    window.addEventListener("appinstalled", () => {
-      deferredInstallPrompt = null;
-      updateInstallUI();
-    });
-    async function installApp() {
-      if (!deferredInstallPrompt) { updateInstallUI(); return; }
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      updateInstallUI();
-    }
-
-    // Daftarkan service worker agar aplikasi bisa diinstal (PWA)
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("sw.js").catch((e) => console.warn("SW gagal:", e));
-      });
-    }
-
-    (async function boot() {
-      loadLocal();
-      const fbOk = initFirebase();
-      const autoChanged = runAutoResetCycle();
-      const telatChanged = runAutoMarkTelat();
-      setLoginStatus(fbOk ? "Status: Firebase terhubung." : "Status: Firebase TIDAK terhubung (cek internet, lalu reload).");
-      const bootParams = new URLSearchParams(window.location.search);
-      const bootInv = bootParams.get("inv");
-      if (auth) {
-        auth.onAuthStateChanged(async (u) => {
-          if (!u) return;
-          if ((u.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
-            localStorage.setItem(SESSION_KEY, "true");
-            if (!bootInv && !document.getElementById("loginView").classList.contains("hidden")) {
-              await enterAdminDashboard();
-            }
-          } else {
-            try { await auth.signOut(); } catch (e) {}
-            localStorage.removeItem(SESSION_KEY);
-          }
-        });
-      }
-      if (auth) {
-        try {
-          const res = await auth.getRedirectResult();
-          const u = (res && res.user) || auth.currentUser;
-          if (!u) setLoginStatus("Status: Google tidak mengembalikan sesi login. Coba tekan tombol Google sekali lagi.");
-          if (u) {
-            if ((u.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
-              localStorage.setItem(SESSION_KEY, "true");
-              setLoginStatus("Status: login berhasil sebagai " + u.email + ", membuka dashboard...");
-            } else {
-              await auth.signOut();
-              localStorage.removeItem(SESSION_KEY);
-              setTimeout(() => {
-                document.getElementById("loginErrorMsg").textContent = "Hanya akun Google gagan.70700@gmail.com yang diizinkan.";
-              }, 0);
-            }
-          }
-        } catch (e) {
-          console.warn("Google redirect gagal:", e);
-          setTimeout(() => {
-            document.getElementById("loginErrorMsg").textContent = "Login Google gagal: " + (e && e.message ? e.message : e);
-          }, 0);
-        }
-      }
-      const params = new URLSearchParams(window.location.search);
-      const invParam = params.get("inv");
-      if (invParam) {
-        await previewClientInvoice(invParam, true);
-      } else if (localStorage.getItem(SESSION_KEY) === "true") {
-        await enterAdminDashboard();
-        // enterAdminDashboard menarik data Firestore (menimpa state lokal),
-        // jadi jalankan lagi reset siklus pada data hasil pull lalu sinkronkan.
-        const postChanged = runAutoResetCycle();
-        const postTelat = runAutoMarkTelat();
-        if ((autoChanged || postChanged || telatChanged || postTelat) && db) await syncToCloud();
-      } else {
-        document.getElementById("loginView").classList.remove("hidden");
-        document.getElementById("adminApp").classList.add("hidden");
-      }
+  function planOptions(selected) {
+    return (APP.settings.plans || []).map(p => `<option value="${esc(p.name)}">`).join("");
+  }
+  function openCustomerForm(id) {
+    const c = id ? getC(id) : null;
+    const today = todayYmd();
+    const defStart = (() => {
+      const cur = cycleOf(today);
+      return today < dueYmd(cur, 20) ? cur : cycAdd(cur, 1);
     })();
+    const hasContacts = "contacts" in navigator && navigator.contacts && navigator.contacts.select;
+    const dueOpts = Array.from({ length: 31 }, (_, i) => i + 1)
+      .map(d => `<option value="${d}" ${(c ? Number(c.dueDay) : 20) === d ? "selected" : ""}>Tanggal ${d}</option>`).join("");
+    openSheet(c ? "Edit pelanggan" : "Pelanggan baru", `
+      <div class="field"><label>Nama</label><input id="f_name" autocomplete="off" value="${esc(c ? c.name : "")}" placeholder="Budi Santoso" /></div>
+      <div class="field">
+        <label>No. WhatsApp</label>
+        <div class="inline">
+          <input id="f_phone" inputmode="tel" placeholder="628xxxxxxxxx" value="${esc(c ? c.phone : "62")}" />
+          ${hasContacts ? `<button class="icon-btn" type="button" data-act="pickContact" aria-label="Pilih dari kontak">📇</button>` : ""}
+        </div>
+        <span class="hint" id="f_phoneHint">Awali dengan 62 (contoh: 6281234567890).</span>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Blok / alamat</label><input id="f_addr" value="${esc(c ? c.address : "")}" placeholder="Blok A1 No. 4" /></div>
+        <div class="field"><label>Port / jalur</label><input id="f_port" value="${esc(c ? c.port : "")}" placeholder="Switch utama · port 2" /></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Paket</label>
+          <input id="f_plan" list="planList" value="${esc(c ? c.plan : (APP.settings.plans[0] ? APP.settings.plans[0].name : ""))}" />
+          <datalist id="planList">${planOptions()}</datalist>
+        </div>
+        <div class="field"><label>Iuran / bulan (Rp)</label><input id="f_amount" inputmode="numeric" value="${esc(c ? c.amount : (APP.settings.plans[0] ? APP.settings.plans[0].amount : 100000))}" /></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Tanggal tagihan tiap bulan</label><select id="f_due">${dueOpts}</select></div>
+        ${c ? `<div class="field"><label>Terakhir dibayar s/d</label><input value="${esc(c.lastPaidCycle ? cycLabel(c.lastPaidCycle) : "Belum pernah")}" disabled /></div>`
+            : `<div class="field"><label>Mulai tagihan dari</label><input type="month" id="f_start" value="${defStart}" /></div>`}
+      </div>
+      <div class="field"><label>Catatan (opsional)</label><textarea id="f_notes" rows="2">${esc(c ? c.notes : "")}</textarea></div>
+      ${c ? `<p class="hint" style="margin-bottom:12px;">Perubahan iuran berlaku untuk tagihan yang belum dibayar.</p>`
+          : `<label class="check"><input type="checkbox" id="f_paid" /> Bulan pertama sudah dibayar (catat sebagai lunas)</label>`}
+      <button class="btn primary block" data-act="saveCustomer" data-id="${esc(c ? c.id : "")}">Simpan pelanggan</button>
+    `);
+  }
+  function normPhone(raw) {
+    let d = String(raw || "").replace(/\D/g, "");
+    if (d.startsWith("0")) d = "62" + d.slice(1);
+    return d;
+  }
+  async function saveCustomerForm(id) {
+    const name = $("#f_name").value.trim();
+    if (!name) return toast("Nama pelanggan wajib diisi", "err");
+    const phone = normPhone($("#f_phone").value);
+    if (phone && !/^62\d{8,13}$/.test(phone)) return toast("Format nomor WA tidak valid (contoh 6281234567890)", "err");
+    const amount = Number(String($("#f_amount").value).replace(/\D/g, "")) || 0;
+    if (amount <= 0) return toast("Iuran harus lebih dari 0", "err");
+    const dueDay = Number($("#f_due").value) || 20;
+    const data = {
+      name, phone, address: $("#f_addr").value.trim(), port: $("#f_port").value.trim(),
+      plan: $("#f_plan").value.trim(), amount, dueDay, notes: $("#f_notes").value.trim()
+    };
+    if (id) {
+      const c = getC(id); if (!c) return;
+      Object.assign(c, data);
+      closeSheet();
+      renderAll();
+      await saveCustomer(c, "Data pelanggan disimpan");
+      return;
+    }
+    const startEl = $("#f_start");
+    const startCycle = (startEl && startEl.value) ? startEl.value : cycleOf(todayYmd());
+    const c = {
+      id: uid(), ...data, active: true, startCycle, lastPaidCycle: "", paidAt: "",
+      waCycle: "", waStage: 0, createdAt: todayYmd(), publicToken: makeToken()
+    };
+    const paid = $("#f_paid") && $("#f_paid").checked;
+    APP.customers.push(c);
+    closeSheet();
+    renderAll();
+    await saveCustomer(c, "Pelanggan ditambahkan");
+    if (paid) await recordPayment(c, 1, todayYmd());
+  }
+  function pickContact() {
+    const hint = $("#f_phoneHint");
+    navigator.contacts.select(["name", "tel"], { multiple: false }).then(list => {
+      if (!list || !list.length) return;
+      const k = list[0];
+      if (k.name && k.name[0] && !$("#f_name").value.trim()) $("#f_name").value = k.name[0];
+      if (k.tel && k.tel[0]) $("#f_phone").value = normPhone(k.tel[0]);
+      if (hint) hint.textContent = "Kontak dipilih.";
+    }).catch(() => { if (hint) hint.textContent = "Pemilihan kontak dibatalkan."; });
+  }
+
+  function toggleActive(id) {
+    const c = getC(id); if (!c) return;
+    c.active = c.active === false ? true : false;
+    closeSheet(); renderAll();
+    saveCustomer(c, c.active ? "Layanan diaktifkan" : "Layanan dinonaktifkan");
+  }
+  function deleteCustomer(id) {
+    const c = getC(id); if (!c) return;
+    confirmSheet("Hapus pelanggan?",
+      `"${c.name}" akan dihapus dari daftar. Riwayat pembayaran di Buku Kas tetap tersimpan.`,
+      "Hapus", async () => {
+        APP.customers = APP.customers.filter(x => x.id !== id);
+        renderAll();
+        const writes = [db.collection("customers").doc(id).delete()];
+        if (c.publicToken) writes.push(db.collection("invoices").doc(c.publicToken).delete());
+        await persist(writes, "Pelanggan dihapus");
+      });
+  }
+
+  function waMessageFor(c) {
+    const today = todayYmd(), b = billOf(c), link = invoiceLink(c);
+    if (b.unpaid.length) return buildMessage(c, b, cfg(), today, link, Math.max(1, manualStage(b, today)));
+    return receiptMessage(c, cfg(), link, c.amount);
+  }
+  function openWa(id) {
+    const c = getC(id); if (!c) return;
+    const text = waMessageFor(c);
+    const hasQris = !!APP.settings.qrisImage;
+    openSheet("Tagih via WhatsApp", `
+      <div class="field">
+        <label>Pratinjau pesan (boleh diedit)</label>
+        <textarea id="waText" rows="8">${esc(text)}</textarea>
+      </div>
+      <div class="actions">
+        <a id="waOpen" class="btn wa wide" target="_blank" rel="noopener" data-act="waOpen" data-id="${esc(c.id)}" href="#">📲 Buka WhatsApp</a>
+        ${hasQris ? `<button class="btn success wide" data-act="shareQris" data-id="${esc(c.id)}">📷 Kirim bersama gambar QRIS</button>` : ""}
+        <button class="btn ghost" data-act="copyLink" data-id="${esc(c.id)}">🔗 Salin link</button>
+        <a class="btn ghost" href="${esc(invoiceLink(c))}" target="_blank" rel="noopener">👁 Lihat tagihan</a>
+      </div>
+      <p class="hint" style="margin-top:12px;">Membuka WhatsApp otomatis menandai tagihan ini sudah ditagih, jadi pengingat otomatis tidak mengirim pesan lagi untuk tahap yang sama.</p>
+    `);
+    const fill = () => {
+      const a = $("#waOpen");
+      a.href = telLink(c.phone) + "?text=" + encodeURIComponent($("#waText").value);
+    };
+    $("#waText").addEventListener("input", fill);
+    fill();
+  }
+  async function markWaSent(id) {
+    const c = getC(id); if (!c) return;
+    const b = billOf(c); if (!b.unpaid.length) return;
+    c.waCycle = b.unpaid[0];
+    c.waStage = Math.max(Number(c.waStage) || 0, manualStage(b, todayYmd()));
+    await persist([db.collection("customers").doc(c.id).set({ waCycle: c.waCycle, waStage: c.waStage }, { merge: true })]);
+  }
+  function dataUrlToBlob(dataUrl) {
+    const parts = dataUrl.split(",");
+    const mime = (parts[0].match(/:(.*?);/) || [])[1] || "image/jpeg";
+    const bin = atob(parts[1]);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+  async function shareQris(id) {
+    const c = getC(id); if (!c) return;
+    const dataUrl = APP.settings.qrisImage;
+    if (!dataUrl || !dataUrl.startsWith("data:image/")) return toast("Belum ada gambar QRIS. Upload di Lainnya → Gambar QRIS.", "err");
+    const text = $("#waText").value;
+    const file = new File([dataUrlToBlob(dataUrl)], "QRIS-NetWarga.jpg", { type: "image/jpeg" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text, title: "Tagihan WiFi" });
+        await markWaSent(id);
+        closeSheet();
+      } else {
+        const url = URL.createObjectURL(file);
+        const a = document.createElement("a"); a.href = url; a.download = file.name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        toast("Browser tidak bisa melampirkan file. QRIS diunduh, lampirkan manual di WhatsApp.");
+        await markWaSent(id);
+      }
+    } catch (e) {
+      if (!e || e.name !== "AbortError") toast("Gagal berbagi. Coba lagi.", "err");
+    }
+  }
+  async function copyText(text, label) {
+    try { await navigator.clipboard.writeText(text); toast(label + " disalin"); }
+    catch (e) { toast("Gagal menyalin. Salin manual dari kolom.", "err"); }
+  }
+
+  function openExpense() {
+    openSheet("Catat pengeluaran", `
+      <div class="field"><label>Keterangan</label><input id="e_desc" placeholder="Bayar ISP pusat" /></div>
+      <div class="grid2">
+        <div class="field"><label>Kategori</label>
+          <select id="e_cat">
+            ${["ISP / internet", "Listrik", "Alat & kabel", "Teknisi", "Operasional", "Lainnya"].map(x => `<option>${esc(x)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field"><label>Nominal (Rp)</label><input id="e_amt" inputmode="numeric" placeholder="350000" /></div>
+      </div>
+      <div class="field"><label>Tanggal</label><input type="date" id="e_date" value="${todayYmd()}" /></div>
+      <button class="btn primary block" data-act="saveExpense">Simpan pengeluaran</button>`);
+  }
+  async function saveExpense() {
+    const desc = $("#e_desc").value.trim();
+    const amount = Number(String($("#e_amt").value).replace(/\D/g, "")) || 0;
+    const date = $("#e_date").value || todayYmd();
+    if (!desc || amount <= 0) return toast("Isi keterangan dan nominal dengan benar", "err");
+    const e = { id: uid(), ts: Date.now(), type: "out", category: $("#e_cat").value, desc, amount, date };
+    APP.ledger.push(e);
+    closeSheet(); renderAll();
+    await persist([db.collection("ledger").doc(e.id).set(clean(e))], "Pengeluaran dicatat");
+  }
+  function ledgerRow(id) {
+    const l = APP.ledger.find(x => x.id === id); if (!l) return;
+    if (l.type === "in" && l.customerId) return openCustomer(l.customerId);
+    confirmSheet("Hapus catatan?", `"${l.desc}" (${fmtRp(l.amount)}) akan dihapus dari kas.`, "Hapus", async () => {
+      APP.ledger = APP.ledger.filter(x => x.id !== id);
+      renderAll();
+      await persist([db.collection("ledger").doc(id).delete()], "Catatan dihapus");
+    });
+  }
+
+  /* ============================================================
+     PENGATURAN
+     ============================================================ */
+  function fillSettings() {
+    const s = APP.settings;
+    $("#s_biz").value = s.bizName || "";
+    $("#s_wa").value = s.adminWa || "";
+    $("#s_bank").value = s.bankInfo || "";
+    $("#s_remind").value = s.reminderDays ?? 5;
+    $("#s_grace").value = s.graceDays ?? 10;
+    $("#s_plans").value = (s.plans || []).map(p => p.name + " | " + p.amount).join("\n");
+    $("#s_tpl").value = s.waTemplate || DEFAULT_TPL;
+    $("#accountEmail").textContent = "Masuk sebagai " + ADMIN_EMAIL;
+    renderQrisPrev();
+    updateRuleHint();
+  }
+  function updateRuleHint() {
+    const r = Math.max(0, Number($("#s_remind").value) || 0), g = Math.max(0, Number($("#s_grace").value) || 0);
+    $("#s_ruleHint").textContent = `Pengingat dikirim ${r} hari sebelum jatuh tempo. Kalau belum bayar setelah ${g} hari lewat jatuh tempo, status jadi "Wajib putus".`;
+  }
+  function renderQrisPrev() {
+    const box = $("#s_qrisPrev");
+    const q = APP.settings.qrisImage;
+    box.innerHTML = q && q.startsWith("data:image/")
+      ? `<img src="${q}" alt="QRIS" style="max-width:180px;border-radius:10px;border:1px solid var(--border);display:block;" />
+         <button class="btn danger sm" style="margin-top:8px;" data-act="removeQris">Hapus QRIS</button>`
+      : `<span class="small muted">Belum ada gambar QRIS.</span>`;
+  }
+  function handleQrisFile(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const scale = Math.min(1, 420 / img.width);
+        canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        APP.settings.qrisImage = canvas.toDataURL("image/jpeg", 0.8);
+        renderQrisPrev();
+        persist([db.collection("app_meta").doc("settings").set({ qrisImage: APP.settings.qrisImage }, { merge: true })], "QRIS disimpan");
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(f);
+  }
+  function removeQris() {
+    APP.settings.qrisImage = "";
+    renderQrisPrev();
+    persist([db.collection("app_meta").doc("settings").set({ qrisImage: "" }, { merge: true })], "QRIS dihapus");
+  }
+  async function saveSettings() {
+    const plans = $("#s_plans").value.split("\n").map(line => {
+      const [n, a] = line.split("|");
+      return { name: (n || "").trim(), amount: Number(String(a || "").replace(/\D/g, "")) || 0 };
+    }).filter(p => p.name && p.amount > 0);
+    const data = {
+      bizName: $("#s_biz").value.trim() || SETTINGS_DEFAULT.bizName,
+      adminWa: $("#s_wa").value.replace(/\D/g, ""),
+      bankInfo: $("#s_bank").value.trim(),
+      reminderDays: Math.min(30, Math.max(0, Number($("#s_remind").value) || 0)),
+      graceDays: Math.min(60, Math.max(0, Number($("#s_grace").value) || 0)),
+      plans: plans.length ? plans : SETTINGS_DEFAULT.plans,
+      waTemplate: $("#s_tpl").value.trim() || DEFAULT_TPL
+    };
+    Object.assign(APP.settings, data);
+    updateRuleHint();
+    await persist([db.collection("app_meta").doc("settings").set(clean(data), { merge: true })], "Pengaturan disimpan");
+  }
+
+  function exportBackup() {
+    const blob = new Blob([JSON.stringify({ version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), settings: APP.settings, customers: APP.customers, ledger: APP.ledger }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "cadangan-netwarga-" + todayYmd() + ".json";
+    a.click();
+  }
+  function importBackup(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      let data;
+      try { data = JSON.parse(ev.target.result); } catch (err) { return toast("File bukan JSON yang valid", "err"); }
+      if (!Array.isArray(data.customers) || !Array.isArray(data.ledger)) return toast("Isi cadangan tidak dikenali", "err");
+      confirmSheet("Pulihkan cadangan?",
+        `Akan mengganti ${APP.customers.length} pelanggan dan ${APP.ledger.length} catatan kas di server dengan isi file ini (${data.customers.length} pelanggan, ${data.ledger.length} catatan).`,
+        "Ya, pulihkan", async () => {
+          const writes = [];
+          const newIds = new Set(data.customers.map(c => c.id));
+          APP.customers.filter(c => !newIds.has(c.id)).forEach(c => writes.push(db.collection("customers").doc(c.id).delete()));
+          data.customers.forEach(c => { if (c.id) writes.push(...customerWrites(c)); });
+          const newLedger = new Set(data.ledger.map(l => l.id));
+          APP.ledger.filter(l => !newLedger.has(l.id)).forEach(l => writes.push(db.collection("ledger").doc(l.id).delete()));
+          data.ledger.forEach(l => { if (l.id) writes.push(db.collection("ledger").doc(l.id).set(clean(l))); });
+          if (data.settings) writes.push(db.collection("app_meta").doc("settings").set(clean(data.settings), { merge: true }));
+          await persist(writes, "Cadangan dipulihkan");
+        });
+    };
+    reader.readAsText(f);
+    e.target.value = "";
+  }
+  function exportCsv() {
+    const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+    const rows = [["tanggal", "jenis", "kategori", "keterangan", "jumlah"]]
+      .concat(APP.ledger.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""))
+        .map(l => [l.date, l.type === "in" ? "masuk" : "keluar", l.category || "", l.desc, l.amount]));
+    const blob = new Blob(["﻿" + rows.map(r => r.map(q).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "kas-netwarga-" + todayYmd() + ".csv";
+    a.click();
+  }
+
+  /* ============================================================
+     NAVIGASI, TEMA, LOGIN
+     ============================================================ */
+  function switchTab(id) {
+    APP.tab = id;
+    ["home", "customers", "cash", "settings"].forEach(t => {
+      $("#v-" + t).classList.toggle("on", t === id);
+    });
+    $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.id === id));
+    const titles = { home: ["Beranda", "NetWarga"], customers: ["Pelanggan", "Kelola tagihan & pelanggan"], cash: ["Kas", "Pemasukan & pengeluaran"], settings: ["Lainnya", "Pengaturan aplikasi"] };
+    $("#topTitle").textContent = titles[id][0];
+    $("#topSub").textContent = (APP.settings.bizName || "NetWarga") ;
+    $("#fab").classList.toggle("on", id === "customers");
+    if (id === "settings") fillSettings();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    renderAll();
+  }
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("nw_theme", t); } catch (e) {}
+  }
+  function initTheme() {
+    let t = "dark";
+    try { t = localStorage.getItem("nw_theme") || "dark"; } catch (e) {}
+    applyTheme(t);
+  }
+  function toggleTheme() {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  }
+
+  function showLogin() {
+    $("#loginView").hidden = false; $("#adminView").hidden = true; $("#invView").hidden = true;
+  }
+  function showAdmin() {
+    $("#loginView").hidden = true; $("#adminView").hidden = false; $("#invView").hidden = true;
+    switchTab(APP.tab || "home");
+  }
+  function loginErr(msg) { $("#loginErr").textContent = msg || ""; }
+  async function login() {
+    loginErr("");
+    if (!auth) return loginErr("Koneksi ke server belum siap. Muat ulang halaman.");
+    const btn = $("#loginBtn"); btn.disabled = true;
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    try {
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")) {
+        try { return await auth.signInWithRedirect(provider); } catch (e2) { loginErr("Login gagal. Coba lagi."); }
+      } else if (e && e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") {
+        loginErr("Login gagal. Coba lagi.");
+      }
+    } finally { btn.disabled = false; }
+  }
+  async function logout() {
+    stopListeners();
+    try { await auth.signOut(); } catch (e) {}
+    showLogin();
+  }
+
+  /* ============================================================
+     TAGIHAN PUBLIK (?inv=...)
+     ============================================================ */
+  async function renderPublicInvoice(token) {
+    $("#loginView").hidden = true; $("#adminView").hidden = true; $("#invView").hidden = false;
+    const box = $("#invView");
+    box.innerHTML = `<div class="card empty" style="margin-top:40px;">Memuat tagihan…</div>`;
+    if (!/^[A-Za-z0-9_-]{8,80}$/.test(token)) {
+      box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Link tidak valid</b>Minta link tagihan yang baru ke admin.</div>`;
+      return;
+    }
+    try {
+      const [iv, st] = await Promise.all([
+        db.collection("invoices").doc(token).get(),
+        db.collection("app_meta").doc("settings").get()
+      ]);
+      if (!iv.exists) {
+        box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Tagihan tidak ditemukan</b>Link ini mungkin sudah tidak berlaku. Hubungi admin.</div>`;
+        return;
+      }
+      const c = iv.data();
+      const s = { ...SETTINGS_DEFAULT, ...(st.exists ? st.data() : {}) };
+      const cf = { ...s, reminderDays: Number(s.reminderDays ?? 5), graceDays: Number(s.graceDays ?? 10) };
+      const today = todayYmd();
+      const b = billing(c, today, cf);
+      const hasQris = s.qrisImage && s.qrisImage.startsWith("data:image/");
+      const payments = (c.payments || []);
+
+      let statusBox;
+      if (b.status === "lunas") {
+        statusBox = `<div class="inv-status paid"><div class="lbl">✓ Sudah lunas</div>
+          <div class="sub">Periode terakhir ${esc(cycLabel(b.last))}${c.paidAt ? " · dibayar " + esc(dateLong(c.paidAt)) : ""}</div></div>`;
+      } else if (b.status === "nonaktif") {
+        statusBox = `<div class="inv-status b-off" style="border-radius:16px;padding:18px;text-align:center;background:var(--surface-3);"><div class="lbl">Layanan nonaktif</div><div class="sub">Hubungi admin untuk informasi lebih lanjut.</div></div>`;
+      } else if (b.status === "belum-tagih") {
+        statusBox = `<div class="inv-status due"><div class="lbl">Belum ada tagihan</div><div class="sub">Tagihan pertama dimulai ${esc(cycLabel(c.startCycle || cycleOf(today)))}.</div></div>`;
+      } else {
+        const cls = b.status === "putus" ? "cut" : (b.status === "terlambat" ? "late" : "due");
+        const txt = b.status === "putus" ? "Layanan dapat dinonaktifkan"
+          : b.status === "terlambat" ? `Terlambat ${b.late} hari`
+          : (dnum(b.dueYmd) - dnum(today) === 0 ? "Jatuh tempo hari ini" : `Jatuh tempo ${dnum(b.dueYmd) - dnum(today)} hari lagi`);
+        statusBox = `<div class="inv-status ${cls}">
+          <div class="lbl">${esc(txt)}</div>
+          <div class="amt num">${fmtRp(b.owed)}</div>
+          <div class="sub">${b.unpaid.length} bulan: ${esc(b.unpaid.map(cycLabel).join(", "))} · tempo ${esc(dateLong(b.dueYmd))}</div>
+        </div>`;
+      }
+
+      box.innerHTML = `
+        <div class="inv-head">
+          <div class="kicker">Tagihan WiFi</div>
+          <h1>${esc(s.bizName)}</h1>
+        </div>
+        <div class="card">
+          <dl class="kv" style="margin:0;">
+            <dt>Nama</dt><dd>${esc(c.name)}</dd>
+            <dt>Alamat</dt><dd>${esc(c.address || "-")}</dd>
+            <dt>Paket</dt><dd>${esc(c.plan || "-")} · ${fmtRp(c.amount)}/bln</dd>
+          </dl>
+        </div>
+        ${statusBox}
+        ${b.unpaid.length && hasQris ? `
+          <div class="qris">
+            <div style="font-weight:800;font-size:14px;">Scan QRIS untuk bayar</div>
+            <img src="${s.qrisImage}" alt="QRIS pembayaran" />
+            <a href="${s.qrisImage}" download="QRIS-${esc(s.bizName).replace(/\W+/g, "-")}.jpg">⬇️ Simpan gambar QRIS</a>
+          </div>` : ""}
+        ${b.unpaid.length && s.bankInfo ? `
+          <div class="card">
+            <div class="card-head"><div class="card-title">Transfer bank / e-wallet</div>
+              <button class="btn ghost sm" data-act="copyBank">📋 Salin</button></div>
+            <div id="bankText" style="white-space:pre-line;font-weight:600;">${esc(s.bankInfo)}</div>
+          </div>` : ""}
+        ${b.unpaid.length && s.adminWa ? `
+          <a class="btn wa block" style="margin-bottom:14px;" target="_blank" rel="noopener"
+             href="https://wa.me/${esc(s.adminWa)}?text=${encodeURIComponent(`Halo Admin ${s.bizName}, saya ${c.name} sudah membayar tagihan WiFi ${b.unpaid.map(cycLabel).join(", ")} sebesar ${fmtRp(b.owed)}. Berikut bukti transfernya:`)}">
+            📲 Konfirmasi sudah bayar ke admin</a>` : ""}
+        ${payments.length ? `
+          <div class="card">
+            <div class="card-title" style="margin-bottom:8px;">Riwayat pembayaran</div>
+            ${payments.slice(0, 6).map(p => `<div class="hist"><span>${esc((p.cycles || []).map(cycLabel).join(", "))}<br><span class="tiny muted">${esc(dateLong(p.date || today))}</span></span><b class="in num">${fmtRp(p.amount)}</b></div>`).join("")}
+          </div>` : ""}
+        <div class="inv-foot">${esc(s.bizName)} · Terima kasih 🙏</div>`;
+      box.dataset.bank = s.bankInfo || "";
+    } catch (e) {
+      console.error(e);
+      box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Gagal memuat tagihan</b>Periksa koneksi lalu muat ulang halaman.</div>`;
+    }
+  }
+
+  /* ============================================================
+     EVENT DELEGATION
+     ============================================================ */
+  const ACTIONS = {
+    tab: id => switchTab(id),
+    close: () => closeSheet(),
+    login: () => login(),
+    logout: () => logout(),
+    theme: () => toggleTheme(),
+    open: id => openCustomer(id),
+    pay: id => openPay(id),
+    savePay: id => savePay(id),
+    stepPay: (id, el) => stepPay(Number(el.dataset.d), id),
+    wa: id => openWa(id),
+    waOpen: id => markWaSent(id),
+    shareQris: id => shareQris(id),
+    copyLink: (id) => { const c = getC(id); if (c) copyText(invoiceLink(c), "Link tagihan"); },
+    addCustomer: () => openCustomerForm(""),
+    editCustomer: id => openCustomerForm(id),
+    saveCustomer: id => saveCustomerForm(id),
+    pickContact: () => pickContact(),
+    toggleActive: id => toggleActive(id),
+    delCustomer: id => deleteCustomer(id),
+    undoPay: id => undoPayment(id),
+    filter: (id) => { APP.filter = id; renderCustomers(); },
+    addExpense: () => openExpense(),
+    saveExpense: () => saveExpense(),
+    ledger: id => ledgerRow(id),
+    cashType: (id) => { APP.cashType = id; renderCash(); },
+    saveSettings: () => saveSettings(),
+    removeQris: () => removeQris(),
+    exportBackup: () => exportBackup(),
+    exportCsv: () => exportCsv(),
+    install: () => installApp(),
+    copyBank: () => copyText($("#bankText").textContent, "Info rekening")
+  };
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    if (el.tagName === "A" && el.getAttribute("href") === "#") e.preventDefault();
+    const fn = ACTIONS[el.dataset.act];
+    if (fn) fn(el.dataset.id, el, e);
+  });
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t.id === "searchInput") renderCustomers();
+    else if (t.id === "payN") { const c = getC(($("#sheetBody [data-act='savePay']") || {}).dataset?.id); updatePaySum(c); }
+    else if (t.id === "f_plan") {
+      const p = (APP.settings.plans || []).find(x => x.name === t.value.trim());
+      if (p) $("#f_amount").value = p.amount;
+    }
+    else if (t.id === "f_phone") {
+      const v = normPhone(t.value);
+      $("#f_phoneHint").textContent = !v ? "Awali dengan 62 (contoh: 6281234567890)." : (/^62\d{8,13}$/.test(v) ? "Nomor sudah benar." : "Nomor belum lengkap.");
+    }
+    else if (t.id === "s_remind" || t.id === "s_grace") updateRuleHint();
+  });
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.dataset && t.dataset.change === "month" && t.value) { APP.month = t.value; $$(".monthPick").forEach(m => m.value = t.value); renderHome(); renderCash(); }
+    else if (t.id === "sortSel") renderCustomers();
+    else if (t.id === "s_qrisFile") handleQrisFile(e);
+    else if (t.id === "importFile") importBackup(e);
+    else if (t.id === "payN") { const c = getC(($("#sheetBody [data-act='savePay']") || {}).dataset?.id); updatePaySum(c); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+  window.addEventListener("online", renderSync);
+  window.addEventListener("offline", renderSync);
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); deferredInstall = e;
+    $("#installBtn").hidden = false;
+    $("#installHint").textContent = "Pasang sebagai aplikasi biar bisa dibuka dari layar utama HP.";
+  });
+  window.addEventListener("appinstalled", () => { deferredInstall = null; $("#installBtn").hidden = true; $("#installHint").textContent = "Aplikasi sudah terpasang."; });
+  async function installApp() {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    await deferredInstall.userChoice;
+    deferredInstall = null; $("#installBtn").hidden = true;
+  }
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+
+  /* ============================================================
+     BOOT
+     ============================================================ */
+  (function boot() {
+    initTheme();
+    const ok = initFirebase();
+    const inv = new URLSearchParams(location.search).get("inv");
+    if (inv) { renderPublicInvoice(inv); return; }
+    if (!ok) { showLogin(); loginErr("Koneksi ke server gagal dimuat. Periksa internet lalu muat ulang."); return; }
+    showLogin();
+    auth.onAuthStateChanged(user => {
+      if (!user) { stopListeners(); showLogin(); return; }
+      if ((user.email || "").toLowerCase() !== ADMIN_EMAIL || !user.emailVerified) {
+        loginErr("Akun ini tidak punya akses admin.");
+        auth.signOut();
+        return;
+      }
+      showAdmin();
+      startListeners();
+    });
+  })();
   </script>
 </body>
 </html>
