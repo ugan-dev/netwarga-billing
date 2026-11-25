@@ -1260,8 +1260,9 @@ ${link}`;
       if (auth) {
         try {
           const res = await auth.getRedirectResult();
-          if (res && res.user) {
-            if ((res.user.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
+          const u = (res && res.user) || auth.currentUser;
+          if (u) {
+            if ((u.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
               localStorage.setItem(SESSION_KEY, "true");
             } else {
               await auth.signOut();
@@ -1273,6 +1274,9 @@ ${link}`;
           }
         } catch (e) {
           console.warn("Google redirect gagal:", e);
+          setTimeout(() => {
+            document.getElementById("loginErrorMsg").textContent = "Login Google gagal: " + (e && e.message ? e.message : e);
+          }, 0);
         }
       }
       const params = new URLSearchParams(window.location.search);
