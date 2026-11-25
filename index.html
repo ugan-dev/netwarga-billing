@@ -334,6 +334,11 @@
             <textarea id="setWaTemplate" rows="5"></textarea>
           </div>
           <div class="form-group">
+            <label>Masa tenggang sebelum putus (hari setelah jatuh tempo)</label>
+            <input type="number" id="setGraceDays" min="0" max="30" value="4" />
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Contoh: jatuh tempo tgl 1, tenggang 4 hari &rarr; diputus tgl 5 kalau belum bayar.</div>
+          </div>
+          <div class="form-group">
             <label>Upload Gambar QRIS (Otomatis Muncul di Link Pelanggan)</label>
             <input type="file" accept="image/*" onchange="handleQrisUpload(event)" />
             <div id="qrisPreviewAdmin" style="margin-top:10px;"></div>
@@ -510,6 +515,7 @@
         bankInfo: "BCA 1234567890 a.n. Admin NetWarga\nDANA / GoPay: 081234567890",
         waTemplate: DEFAULT_WA_TEMPLATE,
         qrisImage: "",
+        graceDays: 4,
         firebaseConfig: HARDCODED_FIREBASE_CONFIG
       },
       customers: [
@@ -524,9 +530,11 @@
     };
 
     const MONTHS_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    // Jatuh tempo yang ditampilkan = jatuh tempo BERIKUTNYA (belum lewat).
+    // Misal hari ini 25 Nov dan dueDay 1 -> "1 Desember 2026".
     function formatDueDate(dueDay) {
-      const now = new Date();
-      return `${dueDay} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
+      const due = getNextDueDate(dueDay);
+      return `${due.getDate()} ${MONTHS_ID[due.getMonth()]} ${due.getFullYear()}`;
     }
 
     function getCurrentCycle() {
@@ -665,6 +673,56 @@
       }
     }
 
+
+    // Tanggal jatuh tempo dari siklus yang sedang ditagih (billingCycle).
+    // Kalau siklus belum tercatat, pakai jatuh tempo berikutnya.
+    function getCycleDueDate(c, now = new Date()) {
+      if (c.billingCycle) {
+        const parts = String(c.billingCycle).split("-");
+        const y = Number(parts[0]), m = Number(parts[1]) - 1;
+        return new Date(y, m, Math.min(Number(c.dueDay || 20), daysInMonth(y, m)));
+      }
+      return getNextDueDate(c.dueDay, now);
+    }
+
+    // Tanggal putus = jatuh tempo siklus + masa tenggang (default 4 hari).
+    // Contoh: jatuh tempo 1 Des + 4 hari -> diputus 5 Des kalau belum bayar.
+    function getDisconnectDate(c, now = new Date()) {
+      const due = getCycleDueDate(c, now);
+      const cut = new Date(due);
+      cut.setDate(cut.getDate() + Number(state.settings.graceDays ?? 4));
+      return cut;
+    }
+
+    // Internet aktif kalau: lunas, atau belum bayar tapi masih dalam masa tenggang.
+    // Telat = mati. Belum bayar tanpa siklus tercatat = mati (datanya belum beres).
+    function isInternetActive(c, now = new Date()) {
+      if (c.status === "lunas") return true;
+      if (c.status === "telat") return false;
+      if (!c.billingCycle) return false;
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return today.getTime() < getDisconnectDate(c, now).getTime();
+    }
+
+    // Auto-telat: pelanggan "belum" yang sudah lewat tanggal putus
+    // (jatuh tempo + masa tenggang) otomatis jadi "telat" (Wajib Putus).
+    // Hanya berlaku kalau billingCycle sudah tercatat, supaya pelanggan lama
+    // yang datanya belum beres tidak langsung ditandai telat.
+    function runAutoMarkTelat() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      let updated = false;
+      state.customers.forEach(c => {
+        if (c.status !== "belum" || !c.billingCycle) return;
+        if (today.getTime() >= getDisconnectDate(c, now).getTime()) {
+          c.status = "telat";
+          updated = true;
+        }
+      });
+      if (updated) saveLocal();
+      return updated;
+    }
+
     async function enterAdminDashboard() {
       document.getElementById("loginView").classList.add("hidden");
       document.getElementById("adminApp").classList.remove("hidden");
@@ -690,7 +748,8 @@
           adminWa: state.settings.adminWa,
           bankInfo: state.settings.bankInfo,
           waTemplate: state.settings.waTemplate || DEFAULT_WA_TEMPLATE,
-          qrisImage: state.settings.qrisImage || ""
+          qrisImage: state.settings.qrisImage || "",
+          graceDays: state.settings.graceDays ?? 4
         }, { merge: true });
         for (const c of state.customers) {
           await db.collection("customers").doc(c.id).set(c, { merge: true });
@@ -860,6 +919,7 @@
               <div class="cust-name">${c.name}</div>
               <div class="cust-meta">${c.address} • ${c.plan}</div>
               ${isSentThisCycle ? `<div style="margin-top:5px;"><span class="badge badge-sent">✓ WA Terkirim (${methodLabel})</span></div>` : ""}
+              <div style="margin-top:5px;">${isInternetActive(c) ? `<span class="badge badge-lunas">🌐 Internet Aktif</span>` : `<span class="badge badge-telat">🌐 Internet Mati</span>`}</div>
             </div>
             <div>${badgeMap[c.status] || ""}</div>
           </div>
@@ -1159,6 +1219,7 @@ ${link}`;
       document.getElementById("setAdminWa").value = state.settings.adminWa;
       document.getElementById("setBankInfo").value = state.settings.bankInfo;
       document.getElementById("setWaTemplate").value = state.settings.waTemplate || DEFAULT_WA_TEMPLATE;
+      document.getElementById("setGraceDays").value = state.settings.graceDays ?? 4;
       if (state.settings.firebaseConfig) {
         document.getElementById("setFirebaseJson").value = JSON.stringify(state.settings.firebaseConfig, null, 2);
       }
@@ -1205,6 +1266,7 @@ ${link}`;
       state.settings.adminWa = document.getElementById("setAdminWa").value.replace(/\D/g, "");
       state.settings.bankInfo = document.getElementById("setBankInfo").value.trim();
       state.settings.waTemplate = document.getElementById("setWaTemplate").value.trim() || DEFAULT_WA_TEMPLATE;
+      state.settings.graceDays = Math.min(30, Math.max(0, Number(document.getElementById("setGraceDays").value || 4)));
       renderAll();
       await syncToCloud();
       alert("Pengaturan & QRIS berhasil disimpan!");
@@ -1373,6 +1435,7 @@ ${link}`;
       loadLocal();
       const fbOk = initFirebase();
       const autoChanged = runAutoResetHMinus5();
+      const telatChanged = runAutoMarkTelat();
       setLoginStatus(fbOk ? "Status: Firebase terhubung." : "Status: Firebase TIDAK terhubung (cek internet, lalu reload).");
       const bootParams = new URLSearchParams(window.location.search);
       const bootInv = bootParams.get("inv");
@@ -1423,7 +1486,8 @@ ${link}`;
         // enterAdminDashboard menarik data Firestore (menimpa state lokal),
         // jadi jalankan lagi reset H-5 pada data hasil pull lalu sinkronkan.
         const postChanged = runAutoResetHMinus5();
-        if ((autoChanged || postChanged) && db) await syncToCloud();
+        const postTelat = runAutoMarkTelat();
+        if ((autoChanged || postChanged || telatChanged || postTelat) && db) await syncToCloud();
       } else {
         document.getElementById("loginView").classList.remove("hidden");
         document.getElementById("adminApp").classList.add("hidden");
