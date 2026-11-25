@@ -492,6 +492,8 @@
       </p>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <a id="waDirectLink" target="_blank" class="btn-wa" style="padding:10px;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">📲 Buka WhatsApp & Tandai Terkirim</a>
+        <button class="btn-success" id="shareQrisBtn" style="padding:10px;border-radius:10px;">📷 Bagikan Gambar QRIS + Pesan via WhatsApp</button>
+        <p id="shareQrisNote" style="font-size:11.5px;color:var(--text-muted);margin:0;">Tombol ini membagikan gambar QRIS beserta teks tagihan langsung ke WhatsApp (pilih kontak pelanggan di layar berbagi). Link wa.me biasa tidak bisa melampirkan gambar, jadi ini jalurnya.</p>
         <button class="btn-outline" id="copyLinkModalBtn">📋 Salin Link Tagihan Pelanggan</button>
         <button class="btn-outline" id="previewClientLinkBtn">👁️ Lihat Tampilan Link di HP Pelanggan</button>
       </div>
@@ -1033,12 +1035,57 @@ ${link}`;
       updateHref();
 
       waLinkEl.onclick = async () => { await markWaSentManual(c.id); };
+      const shareBtn = document.getElementById("shareQrisBtn");
+      const shareNote = document.getElementById("shareQrisNote");
+      if (state.settings.qrisImage) {
+        shareBtn.style.display = "";
+        shareNote.textContent = "Tombol ini membagikan gambar QRIS beserta teks tagihan langsung ke WhatsApp (pilih kontak pelanggan di layar berbagi). Link wa.me biasa tidak bisa melampirkan gambar, jadi ini jalurnya.";
+        shareBtn.onclick = async () => { await shareQrisViaWa(c.id); };
+      } else {
+        shareBtn.style.display = "none";
+        shareNote.textContent = "Belum ada gambar QRIS — upload dulu di Pengaturan → Upload Gambar QRIS, baru tombol bagikan gambar muncul di sini.";
+      }
       document.getElementById("copyLinkModalBtn").onclick = () => copyText(link, "Link tagihan");
       document.getElementById("previewClientLinkBtn").onclick = () => {
         closeModal("waModal");
         previewClientInvoice(c.invoiceCode);
       };
       document.getElementById("waModal").classList.add("open");
+    }
+
+    function dataUrlToFile(dataUrl, fileName) {
+      const parts = dataUrl.split(",");
+      const mime = (parts[0].match(/:(.*?);/) || [])[1] || "image/jpeg";
+      const bin = atob(parts[1]);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new File([arr], fileName, { type: mime });
+    }
+
+    async function shareQrisViaWa(id) {
+      const c = state.customers.find(x => x.id === id);
+      if (!c) return;
+      if (!state.settings.qrisImage) {
+        alert("Belum ada gambar QRIS. Upload dulu di Pengaturan → Upload Gambar QRIS.");
+        return;
+      }
+      const file = dataUrlToFile(state.settings.qrisImage, "QRIS-NetWarga.jpg");
+      const text = document.getElementById("waPreviewText").value || buildWaMessage(c);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], text });
+          await markWaSentManual(c.id);
+          closeModal("waModal");
+          return;
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+        }
+      }
+      const a = document.createElement("a");
+      a.href = state.settings.qrisImage;
+      a.download = "QRIS-NetWarga.jpg";
+      a.click();
+      alert("HP ini tidak mendukung berbagi gambar langsung. Gambar QRIS sudah diunduh — buka WhatsApp pelanggan, lampirkan gambar itu, lalu tempel teks tagihannya.");
     }
 
     function fillSettingsForm() {
