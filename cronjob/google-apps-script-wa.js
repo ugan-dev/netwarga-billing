@@ -13,10 +13,10 @@
  */
 const CONFIG = {
   FIREBASE_PROJECT_ID: "netwarga-manager",
-  APP_URL: "https://GANTI_USERNAME.github.io/netwarga-billing/",
+  APP_URL: "https://ugan-dev.github.io/netwarga-billing/",
   WA_GATEWAY: "WAHA",                // "WAHA" atau "FONNTE"
-  WA_API_URL: "https://GANTI_DOMAIN_WAHA/api/sendText",   // untuk FONNTE: https://api.fonnte.com/send
-  WA_API_KEY: "GANTI_API_KEY",
+  WA_API_URL: "http://sg-sgp11.tryaltare.ai:27191/api/sendText",
+  WA_API_KEY: "GANTI_API_KEY_WAHA",   // isi API key WAHA
   WA_SESSION: "default",
   TIMEZONE: "Asia/Jakarta",
   JAM_JALAN: 8,                      // pemicu harian jam 08:00-09:00
@@ -87,14 +87,28 @@ function billing(c, today, cfg) {
 }
 // Tahap pengingat otomatis. 0 = tidak kirim otomatis hari ini.
 // 1 = H-R, 2 = hari H, 3 = H+(G-1) sebelum layanan dinonaktifkan.
+// Jadwal pengingat: offset hari terhadap jatuh tempo (negatif = sebelum, 0 = hari H, positif = sesudah).
+function rawScheduleOf(cfg) {
+  let arr = Array.isArray(cfg.reminderSchedule) ? cfg.reminderSchedule : null;
+  if (!arr) arr = [-Number(cfg.reminderDays ?? 5), 0, Number(cfg.graceDays ?? 10) - 1];
+  const out = [];
+  arr.forEach(v => { const n = Number(v); if (Number.isInteger(n) && n >= -60 && n <= 60 && out.indexOf(n) < 0) out.push(n); });
+  return out.sort((a, b) => a - b);
+}
+// Jadwal yang benar-benar aktif (kosong kalau pengingat otomatis dimatikan).
+function scheduleOf(cfg) {
+  return cfg.reminderAuto === false ? [] : rawScheduleOf(cfg);
+}
+// Berapa hari sebelum jatuh tempo tagihan mulai terbuka, supaya pengingat paling awal tetap di dalam periode tagihan.
+function leadOf(cfg) {
+  const neg = rawScheduleOf(cfg).filter(n => n < 0);
+  return neg.length ? -neg[0] : 0;
+}
+// Offset jadwal yang jatuh pada hari ini untuk tagihan yang belum lunas. null kalau tidak ada.
 function stageOf(b, today, cfg) {
-  if (!b.unpaid || !b.unpaid.length) return 0;
-  const R = Number(cfg.reminderDays ?? 5), G = Number(cfg.graceDays ?? 10);
-  const t = dnum(today), due = dnum(b.dueYmd);
-  if (t === due) return 2;
-  if (G >= 2 && t === due + G - 1) return 3;
-  if (R > 0 && t === due - R) return 1;
-  return 0;
+  if (!b.unpaid || !b.unpaid.length) return null;
+  const d = dnum(today) - dnum(b.dueYmd);
+  return scheduleOf(cfg).indexOf(d) >= 0 ? d : null;
 }
 // Tahap untuk pesan manual (kapan saja): sebelum hari H = 1, sesudahnya = 2.
 function manualStage(b, today) {
@@ -197,11 +211,12 @@ function bacaPengaturan() {
   cfg.graceDays = Number(cfg.graceDays ?? 10);
   return cfg;
 }
-function tandaiTerkirim(docId, cycle, stage, today) {
-  const mask = "updateMask.fieldPaths=waCycle&updateMask.fieldPaths=waStage&updateMask.fieldPaths=waAt";
+function tandaiTerkirim(docId, cycle, offset, prevOffsets, today) {
+  const list = (prevOffsets || []).concat([offset]).filter((v, i, arr) => arr.indexOf(v) === i);
+  const mask = "updateMask.fieldPaths=waCycle&updateMask.fieldPaths=waSentOffsets&updateMask.fieldPaths=waAt";
   const body = { fields: {
     waCycle: { stringValue: cycle },
-    waStage: { integerValue: String(stage) },
+    waSentOffsets: { arrayValue: { values: list.map(v => ({ integerValue: String(v) })) } },
     waAt: { stringValue: today }
   } };
   UrlFetchApp.fetch(fsUrl("customers/" + docId) + "?" + mask, {
@@ -243,6 +258,11 @@ function kirimPengingatTagihanOtomatis(dryRun) {
   const mulai = Date.now();
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd");
   const cfg = bacaPengaturan();
+  cfg.reminderDays = leadOf(cfg);
+  if (!scheduleOf(cfg).length) {
+    Logger.log("Pengingat otomatis nonaktif atau jadwal kosong. Tidak ada pesan dikirim.");
+    return;
+  }
   const docs = fsListAll("customers");
   let terkirim = 0, gagal = 0, lewati = 0, sisa = 0;
 
@@ -251,21 +271,24 @@ function kirimPengingatTagihanOtomatis(dryRun) {
     const c = dokumenKeObjek(docs[i]);
     if (!c.publicToken) { lewati++; continue; }
     const b = billing(c, today, cfg);
-    const tahap = stageOf(b, today, cfg);
-    if (!tahap) continue;
-    // Anti-ganda: tahap yang sama untuk siklus yang sama tidak dikirim dua kali.
-    if (c.waCycle === b.unpaid[0] && Number(c.waStage || 0) >= tahap) continue;
+    const off = stageOf(b, today, cfg);          // offset jadwal hari ini, atau null
+    if (off === null) continue;
+    // Anti-ganda per titik: titik yang sama untuk siklus yang sama tidak dikirim dua kali.
+    const sudahTitikIni = c.waCycle === b.unpaid[0] && (c.waSentOffsets || []).indexOf(off) >= 0;
+    if (sudahTitikIni) continue;
     const nomor = normalisasiNomor(c.phone);
     if (!nomor) { Logger.log("Nomor tidak valid, dilewati: " + c.name); lewati++; continue; }
 
     const link = CONFIG.APP_URL + "?inv=" + encodeURIComponent(c.publicToken);
-    const pesan = buildMessage(c, b, cfg, today, link, tahap);
+    const adaPeringatanPutus = cfg.graceDays >= 2 && off === cfg.graceDays - 1;
+    const pesan = buildMessage(c, b, cfg, today, link, adaPeringatanPutus ? 3 : 0);
     if (dryRun) {
-      Logger.log("[UJI] " + c.name + " (" + nomor + ") tahap " + tahap + ":\n" + pesan);
+      Logger.log("[UJI] " + c.name + " (" + nomor + ") titik " + off + ":\n" + pesan);
       continue;
     }
+    const prev = c.waCycle === b.unpaid[0] ? (c.waSentOffsets || []) : [];
     if (kirimWa(nomor, pesan)) {
-      tandaiTerkirim(c.id, b.unpaid[0], tahap, today);
+      tandaiTerkirim(c.id, b.unpaid[0], off, prev, today);
       terkirim++;
     } else {
       gagal++;

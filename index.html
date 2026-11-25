@@ -278,6 +278,12 @@
     .inv .card { margin-bottom: 14px; }
     .inv-foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 18px; }
 
+    .sched { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 5px 5px 13px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-weight: 800; font-size: 13.5px; }
+    .chip .x { width: 30px; height: 30px; border-radius: 50%; border: none; background: transparent; color: inherit; font-size: 15px; cursor: pointer; display: grid; place-items: center; }
+    .chip.off { opacity: 0.5; }
+    .sched-add { display: grid; grid-template-columns: 1fr 84px auto; gap: 8px; align-items: center; }
+    .sched-add select { font-size: 15px; }
     .noscroll { overflow: hidden; }
   </style>
 </head>
@@ -358,15 +364,31 @@
 
         <div class="card">
           <div class="card-head"><div class="card-title">Aturan tagihan</div></div>
-          <div class="grid2">
-            <div class="field"><label>Pengingat (hari sebelum tempo)</label><input type="number" id="s_remind" min="0" max="30" inputmode="numeric" /></div>
-            <div class="field"><label>Batas tenggang (hari)</label><input type="number" id="s_grace" min="0" max="60" inputmode="numeric" /></div>
-          </div>
+          <div class="field"><label>Batas tenggang (hari setelah jatuh tempo)</label><input type="number" id="s_grace" min="0" max="60" inputmode="numeric" /></div>
           <p class="hint" id="s_ruleHint" style="margin-bottom:12px;"></p>
           <div class="field">
             <label>Paket & iuran (satu baris per paket: nama | harga)</label>
             <textarea id="s_plans" rows="4"></textarea>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title">Jadwal pengingat WhatsApp</div></div>
+          <label class="check"><input type="checkbox" id="s_auto" /> Kirim pengingat otomatis</label>
+          <div class="field">
+            <label>Titik pengingat</label>
+            <div class="sched" id="s_sched"></div>
+          </div>
+          <div class="sched-add">
+            <select id="s_dir">
+              <option value="-">Sebelum</option>
+              <option value="0">Hari H</option>
+              <option value="+">Sesudah</option>
+            </select>
+            <input type="number" id="s_n" min="1" max="60" inputmode="numeric" placeholder="Hari" />
+            <button class="btn ghost" data-act="schedAdd">+ Tambah</button>
+          </div>
+          <p class="hint" id="s_schedHint" style="margin-top:10px;"></p>
         </div>
 
         <div class="card">
@@ -500,14 +522,28 @@ function billing(c, today, cfg) {
 }
 // Tahap pengingat otomatis. 0 = tidak kirim otomatis hari ini.
 // 1 = H-R, 2 = hari H, 3 = H+(G-1) sebelum layanan dinonaktifkan.
+// Jadwal pengingat: offset hari terhadap jatuh tempo (negatif = sebelum, 0 = hari H, positif = sesudah).
+function rawScheduleOf(cfg) {
+  let arr = Array.isArray(cfg.reminderSchedule) ? cfg.reminderSchedule : null;
+  if (!arr) arr = [-Number(cfg.reminderDays ?? 5), 0, Number(cfg.graceDays ?? 10) - 1];
+  const out = [];
+  arr.forEach(v => { const n = Number(v); if (Number.isInteger(n) && n >= -60 && n <= 60 && out.indexOf(n) < 0) out.push(n); });
+  return out.sort((a, b) => a - b);
+}
+// Jadwal yang benar-benar aktif (kosong kalau pengingat otomatis dimatikan).
+function scheduleOf(cfg) {
+  return cfg.reminderAuto === false ? [] : rawScheduleOf(cfg);
+}
+// Berapa hari sebelum jatuh tempo tagihan mulai terbuka, supaya pengingat paling awal tetap di dalam periode tagihan.
+function leadOf(cfg) {
+  const neg = rawScheduleOf(cfg).filter(n => n < 0);
+  return neg.length ? -neg[0] : 0;
+}
+// Offset jadwal yang jatuh pada hari ini untuk tagihan yang belum lunas. null kalau tidak ada.
 function stageOf(b, today, cfg) {
-  if (!b.unpaid || !b.unpaid.length) return 0;
-  const R = Number(cfg.reminderDays ?? 5), G = Number(cfg.graceDays ?? 10);
-  const t = dnum(today), due = dnum(b.dueYmd);
-  if (t === due) return 2;
-  if (G >= 2 && t === due + G - 1) return 3;
-  if (R > 0 && t === due - R) return 1;
-  return 0;
+  if (!b.unpaid || !b.unpaid.length) return null;
+  const d = dnum(today) - dnum(b.dueYmd);
+  return scheduleOf(cfg).indexOf(d) >= 0 ? d : null;
 }
 // Tahap untuk pesan manual (kapan saja): sebelum hari H = 1, sesudahnya = 2.
 function manualStage(b, today) {
@@ -602,7 +638,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
   function clean(o) { return JSON.parse(JSON.stringify(o)); }
   function cfg() {
     const s = APP.settings;
-    return { ...s, reminderDays: Number(s.reminderDays ?? 5), graceDays: Number(s.graceDays ?? 10) };
+    return { ...s, reminderDays: leadOf(s), graceDays: Number(s.graceDays ?? 10) };
   }
   function getC(id) { return APP.customers.find(c => c.id === id); }
   function billOf(c) { return billing(c, todayYmd(), cfg()); }
@@ -1263,10 +1299,13 @@ function receiptMessage(c, cfg, link, owedAmount) {
   }
   async function markWaSent(id) {
     const c = getC(id); if (!c) return;
-    const b = billOf(c); if (!b.unpaid.length) return;
+    const today = todayYmd(), b = billOf(c);
+    if (!b.unpaid.length) return;
+    const d = dnum(today) - dnum(b.dueYmd);
+    const prev = c.waCycle === b.unpaid[0] ? (c.waSentOffsets || []) : [];
     c.waCycle = b.unpaid[0];
-    c.waStage = Math.max(Number(c.waStage) || 0, manualStage(b, todayYmd()));
-    await persist([db.collection("customers").doc(c.id).set({ waCycle: c.waCycle, waStage: c.waStage }, { merge: true })]);
+    c.waSentOffsets = prev.indexOf(d) >= 0 ? prev : prev.concat([d]);
+    await persist([db.collection("customers").doc(c.id).set({ waCycle: c.waCycle, waSentOffsets: c.waSentOffsets }, { merge: true })]);
   }
   function dataUrlToBlob(dataUrl) {
     const parts = dataUrl.split(",");
@@ -1346,7 +1385,10 @@ function receiptMessage(c, cfg, link, owedAmount) {
     $("#s_biz").value = s.bizName || "";
     $("#s_wa").value = s.adminWa || "";
     $("#s_bank").value = s.bankInfo || "";
-    $("#s_remind").value = s.reminderDays ?? 5;
+    schedDraft = rawScheduleOf(s).slice();
+    $("#s_auto").checked = s.reminderAuto !== false;
+    $("#s_n").disabled = $("#s_dir").value === "0";
+    renderSched();
     $("#s_grace").value = s.graceDays ?? 10;
     $("#s_plans").value = (s.plans || []).map(p => p.name + " | " + p.amount).join("\n");
     $("#s_tpl").value = s.waTemplate || DEFAULT_TPL;
@@ -1355,8 +1397,42 @@ function receiptMessage(c, cfg, link, owedAmount) {
     updateRuleHint();
   }
   function updateRuleHint() {
-    const r = Math.max(0, Number($("#s_remind").value) || 0), g = Math.max(0, Number($("#s_grace").value) || 0);
-    $("#s_ruleHint").textContent = `Pengingat dikirim ${r} hari sebelum jatuh tempo. Kalau belum bayar setelah ${g} hari lewat jatuh tempo, status jadi "Wajib putus".`;
+    const g = Math.max(0, Number($("#s_grace").value) || 0);
+    $("#s_ruleHint").textContent = `Kalau belum bayar sampai ${g} hari lewat jatuh tempo, status jadi "Wajib putus".`;
+  }
+  // Label ramah untuk satu titik: -5 → "H-5", 0 → "Hari H", 5 → "H+5".
+  function offsetLabel(n) { return n < 0 ? "H-" + (-n) : (n === 0 ? "Hari H" : "H+" + n); }
+  let schedDraft = [];
+  function renderSched() {
+    const auto = $("#s_auto") ? $("#s_auto").checked : true;
+    $("#s_sched").innerHTML = schedDraft.length
+      ? schedDraft.map(n => `<span class="chip ${auto ? "" : "off"}">${esc(offsetLabel(n))}
+          <button class="x" data-act="schedDel" data-id="${n}" aria-label="Hapus ${esc(offsetLabel(n))}">✕</button></span>`).join("")
+      : `<span class="small muted">Belum ada titik pengingat.</span>`;
+    const names = schedDraft.map(offsetLabel).join(", ");
+    $("#s_schedHint").textContent = !schedDraft.length
+      ? "Tanpa titik pengingat, tidak ada pesan otomatis yang dikirim."
+      : (auto
+        ? `Pesan dikirim di ${names}. Pelanggan hanya diingatkan di titik itu kalau tagihannya masih belum dibayar.`
+        : "Pengingat otomatis sedang dimatikan. Jadwal di atas disimpan, tapi tidak akan dikirim.");
+  }
+  function schedAdd() {
+    const dir = $("#s_dir").value;
+    let n = 0;
+    if (dir !== "0") {
+      n = Math.round(Number($("#s_n").value));
+      if (!Number.isInteger(n) || n < 1 || n > 60) return toast("Isi jumlah hari antara 1 sampai 60", "err");
+      if (dir === "-") n = -n;
+    }
+    if (schedDraft.indexOf(n) >= 0) return toast("Titik " + offsetLabel(n) + " sudah ada", "err");
+    schedDraft = schedDraft.concat([n]).sort((a, b) => a - b);
+    $("#s_n").value = "";
+    renderSched();
+  }
+  function schedDel(id) {
+    const n = Number(id);
+    schedDraft = schedDraft.filter(x => x !== n);
+    renderSched();
   }
   function renderQrisPrev() {
     const box = $("#s_qrisPrev");
@@ -1398,7 +1474,9 @@ function receiptMessage(c, cfg, link, owedAmount) {
       bizName: $("#s_biz").value.trim() || SETTINGS_DEFAULT.bizName,
       adminWa: $("#s_wa").value.replace(/\D/g, ""),
       bankInfo: $("#s_bank").value.trim(),
-      reminderDays: Math.min(30, Math.max(0, Number($("#s_remind").value) || 0)),
+      reminderSchedule: schedDraft.slice().sort((a, b) => a - b),
+      reminderAuto: $("#s_auto").checked,
+      reminderDays: leadOf({ reminderSchedule: schedDraft }),
       graceDays: Math.min(60, Math.max(0, Number($("#s_grace").value) || 0)),
       plans: plans.length ? plans : SETTINGS_DEFAULT.plans,
       waTemplate: $("#s_tpl").value.trim() || DEFAULT_TPL
@@ -1539,7 +1617,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
       const cDoc = custs[0];
       const c = cDoc.data;
       const s = { ...SETTINGS_DEFAULT, ...(st || {}) };
-      const cf = { ...s, reminderDays: Number(s.reminderDays ?? 5), graceDays: Number(s.graceDays ?? 10) };
+      const cf = { ...s, reminderDays: leadOf(s), graceDays: Number(s.graceDays ?? 10) };
       const today = todayYmd();
       const b = billing(c, today, cf);
       const hasQris = s.qrisImage && s.qrisImage.startsWith("data:image/");
@@ -1625,6 +1703,8 @@ function receiptMessage(c, cfg, link, owedAmount) {
      ============================================================ */
   const ACTIONS = {
     tab: id => switchTab(id),
+    schedAdd: () => schedAdd(),
+    schedDel: (id) => schedDel(id),
     close: () => closeSheet(),
     login: () => login(),
     logout: () => logout(),
@@ -1675,12 +1755,14 @@ function receiptMessage(c, cfg, link, owedAmount) {
       const v = normPhone(t.value);
       $("#f_phoneHint").textContent = !v ? "Awali dengan 62 (contoh: 6281234567890)." : (/^62\d{8,13}$/.test(v) ? "Nomor sudah benar." : "Nomor belum lengkap.");
     }
-    else if (t.id === "s_remind" || t.id === "s_grace") updateRuleHint();
+    else if (t.id === "s_grace") updateRuleHint();
   });
   document.addEventListener("change", (e) => {
     const t = e.target;
     if (t.dataset && t.dataset.change === "month" && t.value) { APP.month = t.value; $$(".monthPick").forEach(m => m.value = t.value); renderHome(); renderCash(); }
     else if (t.id === "sortSel") renderCustomers();
+    else if (t.id === "s_auto") renderSched();
+    else if (t.id === "s_dir") { $("#s_n").disabled = t.value === "0"; }
     else if (t.id === "f_plan") {
       const p = (APP.settings.plans || []).find(x => x.name === t.value.trim());
       if (p) $("#f_amount").value = p.amount;
