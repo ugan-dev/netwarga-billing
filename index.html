@@ -116,7 +116,7 @@
     /* Urgent / Customer Card */
     .urgent-card { background: var(--surface-2); border: 1px solid var(--border); border-left: 3.5px solid var(--danger); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .cust-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .cust-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
     .cust-name { font-weight: 800; font-size: 15.5px; }
     .cust-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 
@@ -986,7 +986,7 @@
               <div class="cust-meta">${c.address} • ${c.plan}</div>
               ${isSentThisCycle ? `<div style="margin-top:5px;"><span class="badge badge-sent">✓ WA Terkirim (${methodLabel})</span></div>` : ""}
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-end;align-items:center;white-space:nowrap;flex-shrink:0;">${badgeMap[c.status] || ""}${daysLate > 0 ? `<span class="badge badge-telat">⏰ Telat ${daysLate} hari</span>` : ""}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;white-space:nowrap;flex-shrink:0;">${badgeMap[c.status] || ""}${daysLate > 0 ? `<span class="badge badge-telat">⏰ Telat ${daysLate} hari</span>` : ""}</div>
           </div>
 
           <div class="info-box">
@@ -1261,6 +1261,11 @@ ${link}`;
       document.getElementById("waModal").classList.add("open");
     }
 
+    function dataUrlToFile(dataUrl, filename) {
+      const blob = dataUrlToBlob(dataUrl);
+      return new File([blob], filename, { type: blob.type });
+    }
+
     function dataUrlToBlob(dataUrl) {
       const parts = dataUrl.split(",");
       const mime = (parts[0].match(/:(.*?);/) || [])[1] || "image/jpeg";
@@ -1270,14 +1275,10 @@ ${link}`;
       return new Blob([arr], { type: mime });
     }
 
-    // Tagih WA + QRIS langsung ke room chat pelanggan: link wa.me tidak bisa
-    // melampirkan gambar otomatis, jadi gambar QRIS diunduh dulu ke HP, lalu
-    // room chat dibuka dengan teks tagihan (sama seperti tombol WA Tagih).
-    // Di WhatsApp tinggal ketuk 📎 -> Galeri -> pilih gambar QRIS -> Kirim.
-    // Catatan: unduhan harus via Blob URL — unduhan data: URL di Chrome Android
-    // tidak jalan dan malah membuka layar berbagi; dan chat harus dibuka lewat
-    // klik tautan wa.me yang sama dengan tombol "Buka WhatsApp" (bukan
-    // window.open), supaya langsung ke room chat.
+    // Tagih WA + QRIS: gambar QRIS dilampirkan lewat layar berbagi Android
+    // (navigator.share) — pilih kontak pelanggan, gambar + teks tagihan
+    // terkirim bersamaan. Ini satu-satunya cara gambar bisa tersemat dari
+    // browser; link wa.me tidak bisa melampirkan gambar.
     async function shareQrisViaWa(id) {
       const c = state.customers.find(x => x.id === id);
       if (!c) return;
@@ -1286,19 +1287,26 @@ ${link}`;
         return;
       }
       const text = document.getElementById("waPreviewText").value || buildWaMessage(c);
-      const blobUrl = URL.createObjectURL(dataUrlToBlob(state.settings.qrisImage));
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = "QRIS-NetWarga.jpg";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-      const waLinkEl = document.getElementById("waDirectLink");
-      waLinkEl.href = `https://wa.me/${c.phone}?text=${encodeURIComponent(text)}`;
-      waLinkEl.click();
-      await markWaSentManual(c.id);
-      closeModal("waModal");
+      const file = dataUrlToFile(state.settings.qrisImage, "QRIS-NetWarga.jpg");
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], text: text, title: "Tagihan NetWarga" });
+          await markWaSentManual(c.id);
+          closeModal("waModal");
+        } else {
+          const blobUrl = URL.createObjectURL(dataUrlToBlob(state.settings.qrisImage));
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = "QRIS-NetWarga.jpg";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+          alert("Perangkat tidak mendukung berbagi file. Gambar QRIS diunduh, lampirkan manual di WhatsApp.");
+        }
+      } catch (e) {
+        if (!e || e.name !== "AbortError") alert("Gagal berbagi. Coba lagi.");
+      }
     }
 
     function fillSettingsForm() {
