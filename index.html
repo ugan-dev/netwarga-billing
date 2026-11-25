@@ -427,8 +427,9 @@
           <input type="text" id="custPort" placeholder="Switch Utama - Port 2" />
         </div>
         <div class="form-group">
-          <label>Tanggal Jatuh Tempo (1-31)</label>
-          <input type="number" id="custDueDay" min="1" max="31" value="20" />
+          <label>Tanggal Jatuh Tempo</label>
+          <input type="date" id="custDueDay" />
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Ketuk kotaknya, pilih tanggal di kalender — tanggalnya (misal 20) dipakai sebagai jatuh tempo bulanan yang berulang.</div>
         </div>
       </div>
       <div class="form-row">
@@ -531,6 +532,20 @@
 
     const MONTHS_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const MONTHS_ID_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    // Format Date jadi "YYYY-MM-DD" untuk <input type="date">.
+    function toDateInputValue(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    // Ambil tanggal (1-31) dari input kalender. Yang dipakai hanya tanggalnya,
+    // karena jatuh tempo berulang tiap bulan.
+    function getDueDayFromInput() {
+      const v = document.getElementById("custDueDay").value;
+      if (!v) return 20;
+      const day = Number(v.split("-")[2]);
+      return Math.min(31, Math.max(1, day || 20));
+    }
+
     // Jatuh tempo yang ditampilkan = jatuh tempo BERIKUTNYA (belum lewat).
     // Misal hari ini 25 Nov dan dueDay 1 -> "1 Des 2026" (bulan 3 huruf).
     function formatDueDate(dueDay) {
@@ -960,7 +975,7 @@
         document.getElementById("custPhone").value = c.phone;
         document.getElementById("custAddress").value = c.address;
         document.getElementById("custPort").value = c.port || "";
-        document.getElementById("custDueDay").value = c.dueDay || 20;
+        document.getElementById("custDueDay").value = toDateInputValue(getNextDueDate(c.dueDay));
         document.getElementById("custPlan").value = c.plan;
         document.getElementById("custAmount").value = c.amount;
         document.getElementById("custStatus").value = c.status;
@@ -970,7 +985,7 @@
         document.getElementById("custPhone").value = "628";
         document.getElementById("custAddress").value = "";
         document.getElementById("custPort").value = "";
-        document.getElementById("custDueDay").value = 20;
+        document.getElementById("custDueDay").value = toDateInputValue(getNextDueDate(20));
         document.getElementById("custPlan").value = "Paket Keluarga 10 Mbps";
         document.getElementById("custAmount").value = 100000;
         document.getElementById("custStatus").value = "belum";
@@ -1017,7 +1032,7 @@
         phone: phone.startsWith("0") ? "62" + phone.slice(1) : phone,
         address: document.getElementById("custAddress").value.trim(),
         port: document.getElementById("custPort").value.trim(),
-        dueDay: Number(document.getElementById("custDueDay").value || 20),
+        dueDay: getDueDayFromInput(),
         plan: document.getElementById("custPlan").value.trim(),
         amount: Number(document.getElementById("custAmount").value || 0),
         status: document.getElementById("custStatus").value
