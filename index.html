@@ -568,6 +568,7 @@
         return;
       }
       try {
+        errEl.textContent = "Mengalihkan ke Google...";
         const provider = new firebase.auth.GoogleAuthProvider();
         await auth.signInWithRedirect(provider);
       } catch (e) {
@@ -1257,6 +1258,22 @@ ${link}`;
     (async function boot() {
       loadLocal();
       initFirebase();
+      const bootParams = new URLSearchParams(window.location.search);
+      const bootInv = bootParams.get("inv");
+      if (auth) {
+        auth.onAuthStateChanged(async (u) => {
+          if (!u) return;
+          if ((u.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
+            localStorage.setItem(SESSION_KEY, "true");
+            if (!bootInv && !document.getElementById("loginView").classList.contains("hidden")) {
+              await enterAdminDashboard();
+            }
+          } else {
+            try { await auth.signOut(); } catch (e) {}
+            localStorage.removeItem(SESSION_KEY);
+          }
+        });
+      }
       if (auth) {
         try {
           const res = await auth.getRedirectResult();
