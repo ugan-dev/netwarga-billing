@@ -574,13 +574,25 @@
         setLoginStatus("Status: Firebase tidak terhubung.");
         return;
       }
-      setLoginStatus("Status: mengalihkan ke Google...");
+      setLoginStatus("Status: membuka jendela login Google...");
       try {
-        errEl.textContent = "Mengalihkan ke Google...";
         const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithRedirect(provider);
+        const res = await auth.signInWithPopup(provider);
+        const u = res && res.user;
+        if (u && (u.email || "").toLowerCase() === ALLOWED_ADMIN_EMAIL) {
+          localStorage.setItem(SESSION_KEY, "true");
+          setLoginStatus("Status: login berhasil sebagai " + u.email + ", membuka dashboard...");
+          await enterAdminDashboard();
+        } else if (u) {
+          await auth.signOut();
+          errEl.textContent = "Hanya akun Google gagan.70700@gmail.com yang diizinkan.";
+          setLoginStatus("Status: akun " + u.email + " ditolak.");
+        } else {
+          setLoginStatus("Status: Google tidak mengembalikan sesi login.");
+        }
       } catch (e) {
         errEl.textContent = "Login Google gagal: " + (e && e.message ? e.message : e);
+        setLoginStatus("Status: login gagal (" + (e && e.code ? e.code : "tanpa kode") + ").");
       }
     }
 
