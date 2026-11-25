@@ -986,7 +986,7 @@
               <div class="cust-meta">${c.address} • ${c.plan}</div>
               ${isSentThisCycle ? `<div style="margin-top:5px;"><span class="badge badge-sent">✓ WA Terkirim (${methodLabel})</span></div>` : ""}
             </div>
-            <div>${badgeMap[c.status] || ""}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:flex-start;">${badgeMap[c.status] || ""}${daysLate > 0 ? `<span class="badge badge-telat">⏰ Telat ${daysLate} hari</span>` : ""}</div>
           </div>
 
           <div class="info-box">
@@ -1003,8 +1003,6 @@
               <div class="info-col-val">${c.port || "-"}</div>
             </div>
           </div>
-
-          ${daysLate > 0 ? `<div style="margin-top:8px;"><span class="badge badge-telat">⏰ Telat ${daysLate} hari</span></div>` : ""}
 
           <div class="action-grid-2">
             <button class="btn-wa btn-sm" onclick="openWaModal('${c.id}')">💬 WA Tagih</button>
