@@ -866,7 +866,15 @@ function receiptMessage(c, cfg, link, owedAmount) {
       reminderDays: leadOf(s), graceDays: Number(s.graceDays ?? 10)
     };
   }
-  function publicMetaOps() { return [opSet(db.collection("public_meta").doc("settings"), publicMetaData())]; }
+  // Salinan publik untuk halaman tagihan. includeQris=false (dipakai simpan
+  // pengaturan biasa) melewati foto QRIS supaya simpan cepat: foto QRIS hanya
+  // diunggah ulang saat QRIS-nya sendiri diubah (di sana pakai merge agar
+  // qrisImage yang sudah ada di server tidak terhapus).
+  function publicMetaOps(includeQris) {
+    const d = publicMetaData();
+    if (includeQris === false) { delete d.qrisImage; return [opSet(db.collection("public_meta").doc("settings"), d, { merge: true })]; }
+    return [opSet(db.collection("public_meta").doc("settings"), d)];
+  }
   /* Semua operasi tulis untuk satu pelanggan: data pelanggan + salinan tagihan publik. */
   function customerOps(c) {
     if (!c.publicToken) c.publicToken = makeToken();
@@ -1576,7 +1584,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
     };
     Object.assign(APP.settings, data);
     updateRuleHint();
-    await persist([commitOps([opSet(db.collection("app_meta").doc("settings"), data, { merge: true }), ...publicMetaOps()])], "Pengaturan disimpan");
+    await persist([commitOps([opSet(db.collection("app_meta").doc("settings"), data, { merge: true }), ...publicMetaOps(false)])], "Pengaturan disimpan");
   }
 
   function exportBackup() {
