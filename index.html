@@ -324,8 +324,8 @@
       <!-- PELANGGAN -->
       <section class="view" id="v-customers">
         <div class="toolbar">
-          <input type="search" id="searchInput" placeholder="Cari nama / HP / blok" autocomplete="off" />
-          <select id="sortSel" style="width:auto;min-width:130px;">
+          <input type="search" id="searchInput" placeholder="Cari nama / HP / blok" aria-label="Cari pelanggan" autocomplete="off" />
+          <select id="sortSel" aria-label="Urutkan pelanggan" style="width:auto;min-width:130px;">
             <option value="name">Nama A–Z</option>
             <option value="late">Terlambat terbanyak</option>
             <option value="due">Jatuh tempo terdekat</option>
@@ -405,10 +405,14 @@
           <div class="actions">
             <button class="btn" data-act="exportBackup">⬇️ Cadangan JSON</button>
             <button class="btn" data-act="exportCsv">📄 Kas ke CSV</button>
+            <label class="btn wide" style="cursor:pointer;">📥 Impor pelanggan dari CSV
+              <input type="file" accept=".csv,text/csv" id="importCsv" hidden />
+            </label>
             <label class="btn wide" style="cursor:pointer;">⬆️ Pulihkan dari JSON
               <input type="file" accept=".json,application/json" id="importFile" hidden />
             </label>
           </div>
+          <p class="hint">Impor CSV: kolom nama, hp, alamat, port, paket, iuran, tgl_tagihan, mulai (YYYY-MM, opsional). Pemisah koma atau titik koma.</p>
           <p class="hint">Pulihkan akan MENGGANTI semua data di server. Pakai hanya kalau kamu yakin.</p>
         </div>
 
@@ -609,7 +613,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
     plans: [{ name: "Paket Keluarga 10 Mbps", amount: 100000 }, { name: "Paket Keluarga 15 Mbps", amount: 130000 }],
     schemaVersion: 0
   };
-  const SCHEMA_VERSION = 3;
+  const SCHEMA_VERSION = 4;
 
   const APP = {
     settings: JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),
@@ -732,16 +736,6 @@ function receiptMessage(c, cfg, link, owedAmount) {
     if (!r.ok) throw new Error("HTTP " + r.status);
     return restDoc(await r.json());
   }
-  async function restQuery(collectionId, field, value, limit) {
-    const r = await fetch(FB_REST + ":runQuery", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ structuredQuery: { from: [{ collectionId }], where: { fieldFilter: { field: { fieldPath: field }, op: "EQUAL", value: { stringValue: value } } }, limit } })
-    });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const rows = await r.json();
-    return rows.filter(x => x.document).map(x => ({ id: x.document.name.split("/").pop(), data: restDoc(x.document) }));
-  }
   function initFirebase() {
     try {
       if (typeof firebase === "undefined") return false;
@@ -791,13 +785,58 @@ function receiptMessage(c, cfg, link, owedAmount) {
       toast("Gagal menyimpan. Cek koneksi lalu coba lagi.", "err");
     }
   }
-  function customerWrites(c) {
+  /* ---------- liveLedger: entri yang belum dibatalkan (dipakai untuk semua total) ---------- */
+  function liveLedger() { return APP.ledger.filter(l => !l.void); }
+
+  /* ---------- penulisan ke Firestore: operasi dikumpulkan lalu ditulis atomik lewat batch ---------- */
+  function opSet(ref, data, opts) { return { t: "set", ref, data: clean(data), opts: opts || {} }; }
+  function opDel(ref) { return { t: "del", ref }; }
+  function commitOps(ops) {
+    const parts = [];
+    for (let i = 0; i < ops.length; i += 400) parts.push(ops.slice(i, i + 400));
+    return Promise.all(parts.map(part => {
+      const b = db.batch();
+      part.forEach(o => {
+        if (o.t === "del") b.delete(o.ref);
+        else if (Object.keys(o.opts).length) b.set(o.ref, o.data, o.opts);
+        else b.set(o.ref, o.data);
+      });
+      return b.commit();
+    }));
+  }
+  /* Salinan publik per pelanggan: invoices/{token}. Hanya field yang dibutuhkan halaman tagihan
+     (tanpa nomor HP). Riwayat dibatasi 6 pembayaran terakhir yang belum dibatalkan. */
+  function invoiceDoc(c) {
+    const pays = liveLedger()
+      .filter(l => l.type === "in" && l.customerId === c.id)
+      .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 6)
+      .map(l => ({ cycles: l.cycles || [], amount: Number(l.amount) || 0, date: l.date || "" }));
+    return {
+      name: c.name || "", address: c.address || "", plan: c.plan || "",
+      amount: Number(c.amount) || 0, dueDay: Number(c.dueDay) || 20,
+      startCycle: c.startCycle || "", lastPaidCycle: c.lastPaidCycle ?? "",
+      paidAt: c.paidAt || "", active: c.active !== false, payments: pays
+    };
+  }
+  /* Salinan publik pengaturan: public_meta/settings (tanpa template WA, jadwal admin, dan data internal). */
+  function publicMetaData() {
+    const s = APP.settings;
+    return {
+      bizName: s.bizName || "", adminWa: s.adminWa || "", bankInfo: s.bankInfo || "",
+      qrisImage: s.qrisImage || "", reminderSchedule: rawScheduleOf(s),
+      reminderDays: leadOf(s), graceDays: Number(s.graceDays ?? 10)
+    };
+  }
+  function publicMetaOps() { return [opSet(db.collection("public_meta").doc("settings"), publicMetaData())]; }
+  /* Semua operasi tulis untuk satu pelanggan: data pelanggan + salinan tagihan publik. */
+  function customerOps(c) {
     if (!c.publicToken) c.publicToken = makeToken();
     return [
-      db.collection("customers").doc(c.id).set(clean(c), { merge: true })
+      opSet(db.collection("customers").doc(c.id), c, { merge: true }),
+      opSet(db.collection("invoices").doc(c.publicToken), invoiceDoc(c))
     ];
   }
-  function saveCustomer(c, msg) { return persist(customerWrites(c), msg); }
+  function saveCustomer(c, msg) { return persist([commitOps(customerOps(c))], msg); }
 
   /* ---------- migrasi data lama (sekali) ---------- */
   function maybeMigrate() {
@@ -806,19 +845,17 @@ function receiptMessage(c, cfg, link, owedAmount) {
     if (APP.settings.schemaVersion === SCHEMA_VERSION) return;
     APP.migrating = true;
     const today = todayYmd();
-    const writes = [];
+    const ops = [];
     APP.customers.forEach(c => {
       if (c.lastPaidCycle === undefined) {
         c.lastPaidCycle = effLast(c, today);
         if (!c.startCycle) c.startCycle = cycAdd(c.lastPaidCycle, 1);
-        writes.push(...customerWrites(c));
-      } else if (!c.publicToken) {
-        writes.push(...customerWrites(c));
       }
+      ops.push(...customerOps(c)); // pastikan invoices/{token} ada untuk setiap pelanggan
     });
-    APP.ledger.forEach(l => { if (!l.ts) l.ts = 0; });
-    writes.push(db.collection("app_meta").doc("settings").set({ schemaVersion: SCHEMA_VERSION }, { merge: true }));
-    Promise.all(writes).then(() => { APP.migrating = false; }).catch(e => { console.error(e); APP.migrating = false; });
+    ops.push(...publicMetaOps());
+    ops.push(opSet(db.collection("app_meta").doc("settings"), { schemaVersion: SCHEMA_VERSION }, { merge: true }));
+    commitOps(ops).then(() => { APP.migrating = false; }).catch(e => { console.error(e); APP.migrating = false; });
   }
 
   /* ============================================================
@@ -853,12 +890,13 @@ function receiptMessage(c, cfg, link, owedAmount) {
     const pct = denom.length ? Math.round(lunas / denom.length * 100) : 0;
     const tunggakan = act.reduce((s, x) => s + x.b.owed, 0);
     const tunggakanN = act.filter(x => x.b.unpaid.length).length;
-    const masuk = APP.ledger.filter(l => l.type === "in" && (l.date || "").startsWith(m)).reduce((s, l) => s + (+l.amount || 0), 0);
-    const keluar = APP.ledger.filter(l => l.type === "out" && (l.date || "").startsWith(m)).reduce((s, l) => s + (+l.amount || 0), 0);
-    const nMasuk = APP.ledger.filter(l => l.type === "in" && (l.date || "").startsWith(m)).length;
+    const masuk = liveLedger().filter(l => l.type === "in" && (l.date || "").startsWith(m)).reduce((s, l) => s + (+l.amount || 0), 0);
+    const keluar = liveLedger().filter(l => l.type === "out" && (l.date || "").startsWith(m)).reduce((s, l) => s + (+l.amount || 0), 0);
+    const nMasuk = liveLedger().filter(l => l.type === "in" && (l.date || "").startsWith(m)).length;
     const kas = (Number(APP.settings.openingCash) || 0) +
-      APP.ledger.reduce((s, l) => s + (l.type === "in" ? 1 : -1) * (+l.amount || 0), 0);
+      liveLedger().reduce((s, l) => s + (l.type === "in" ? 1 : -1) * (+l.amount || 0), 0);
 
+    const bulkN = act.filter(x => x.b.unpaid.length && x.b.status !== "belum-tagih" && normPhone(x.c.phone)).length;
     const urgent = rows.filter(x => x.b.status === "putus" || x.b.status === "terlambat")
       .sort((a, b) => b.b.late - a.b.late);
     const dueSoon = rows.filter(x => x.b.status === "belum" && x.b.unpaid.length &&
@@ -912,6 +950,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
           <div class="stat-sub">Termasuk saldo awal ${fmtRp(APP.settings.openingCash || 0)}</div>
         </div>
       </div>
+      ${bulkN ? `<button class="btn wa block" data-act="bulkWa" style="margin:4px 0 6px;">📨 Tagih ${bulkN} pelanggan yang belum bayar</button>` : ""}
       <div class="section-label">Perlu tindakan</div>
       ${urgentHtml}
       <div class="section-label">Jatuh tempo 7 hari ke depan</div>
@@ -964,7 +1003,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
         <div class="row-main">
           <div class="row-top"><span class="row-name">${esc(x.c.name)}</span>${badge(b.status)}</div>
           <div class="row-meta">${esc(x.c.address || "-")} · ${esc(x.c.plan || "")}</div>
-          <div class="row-foot">${info}</div>
+          <div class="row-foot">${info}${b.unpaid.length && x.c.waCycle === b.unpaid[0] && (x.c.waSentOffsets || []).length ? ' · <span class="muted">✓ pengingat terkirim</span>' : ""}</div>
         </div>
         ${b.status !== "nonaktif" ? `<button class="btn ${b.unpaid.length ? "success" : "ghost"} sm" data-act="pay" data-id="${esc(x.c.id)}">Terima</button>` : ""}
       </div>`;
@@ -975,7 +1014,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
 
   function renderCash() {
     const m = APP.month, t = APP.cashType;
-    const inMonth = APP.ledger.filter(l => (l.date || "").startsWith(m));
+    const inMonth = liveLedger().filter(l => (l.date || "").startsWith(m));
     const masuk = inMonth.filter(l => l.type === "in").reduce((s, l) => s + (+l.amount || 0), 0);
     const keluar = inMonth.filter(l => l.type === "out").reduce((s, l) => s + (+l.amount || 0), 0);
     const list = APP.ledger.filter(l => (l.date || "").startsWith(m) && (t === "all" || l.type === t))
@@ -986,8 +1025,8 @@ function receiptMessage(c, cfg, link, owedAmount) {
     for (let i = 5; i >= 0; i--) months.push(cycAdd(m, -i));
     const recap = months.map(mm => ({
       m: mm,
-      masuk: APP.ledger.filter(l => l.type === "in" && (l.date || "").startsWith(mm)).reduce((s, l) => s + (+l.amount || 0), 0),
-      keluar: APP.ledger.filter(l => l.type === "out" && (l.date || "").startsWith(mm)).reduce((s, l) => s + (+l.amount || 0), 0)
+      masuk: liveLedger().filter(l => l.type === "in" && (l.date || "").startsWith(mm)).reduce((s, l) => s + (+l.amount || 0), 0),
+      keluar: liveLedger().filter(l => l.type === "out" && (l.date || "").startsWith(mm)).reduce((s, l) => s + (+l.amount || 0), 0)
     }));
     const maxV = Math.max(1, ...recap.map(r => Math.max(r.masuk, r.keluar)));
 
@@ -1011,12 +1050,12 @@ function receiptMessage(c, cfg, link, owedAmount) {
       <div class="list" style="margin-bottom:14px;">${list.length ? list.map(l => {
         const isIn = l.type === "in";
         return `
-        <div class="row" data-act="ledger" data-id="${esc(l.id)}">
+        <div class="row" data-act="ledger" data-id="${esc(l.id)}" style="${l.void ? "opacity:.55;" : ""}">
           <div class="row-main">
-            <div class="row-name" style="font-size:14px;">${esc(l.desc || "")}</div>
-            <div class="row-meta">${esc(dateLong(l.date || todayYmd()))}${l.category ? " · " + esc(l.category) : ""}</div>
+            <div class="row-name" style="font-size:14px;${l.void ? "text-decoration:line-through;" : ""}">${esc(l.desc || "")}</div>
+            <div class="row-meta">${esc(dateLong(l.date || todayYmd()))}${l.category ? " · " + esc(l.category) : ""}${l.method ? " · " + esc(l.method) : ""}${l.void ? ' · <b style="color:var(--danger);">Dibatalkan</b>' : ""}</div>
           </div>
-          <div class="row-amt ${isIn ? "in" : "out"}">${isIn ? "+" : "−"} ${fmtRp(l.amount)}</div>
+          <div class="row-amt ${l.void ? "" : (isIn ? "in" : "out")}">${l.void ? "—" : (isIn ? "+" : "−") + " " + fmtRp(l.amount)}</div>
         </div>`;
       }).join("") : `<div class="empty"><b>Belum ada catatan</b>Pembayaran pelanggan akan muncul di sini otomatis.</div>`}</div>
 
@@ -1040,7 +1079,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
   function openCustomer(id) {
     const c = getC(id); if (!c) return;
     const b = billOf(c);
-    const hist = APP.ledger.filter(l => l.type === "in" && l.customerId === c.id)
+    const hist = liveLedger().filter(l => l.type === "in" && l.customerId === c.id)
       .sort((a, b2) => (b2.ts || 0) - (a.ts || 0));
     const last = hist[0];
     const canUndo = last && (last.cycles || []).length && last.cycles[last.cycles.length - 1] === c.lastPaidCycle;
@@ -1093,6 +1132,10 @@ function receiptMessage(c, cfg, link, owedAmount) {
         <label>Tanggal pembayaran</label>
         <input type="date" id="payDate" value="${today}" />
       </div>
+      <div class="field">
+        <label>Cara bayar</label>
+        <select id="payMethod">${["Tunai", "Transfer", "QRIS", "Lainnya"].map(m => `<option>${m}</option>`).join("")}</select>
+      </div>
       <button class="btn primary block" data-act="savePay" data-id="${esc(c.id)}">Simpan pembayaran</button>
     `);
     updatePaySum(c);
@@ -1115,13 +1158,14 @@ function receiptMessage(c, cfg, link, owedAmount) {
     const c = getC(id); if (!c) return;
     const n = Math.min(12, Math.max(1, parseInt($("#payN").value, 10) || 1));
     const date = $("#payDate").value || todayYmd();
-    await recordPayment(c, n, date);
+    const method = ($("#payMethod") && $("#payMethod").value) || "Tunai";
+    await recordPayment(c, n, date, method);
   }
-  async function recordPayment(c, n, date) {
+  async function recordPayment(c, n, date, method = "Tunai") {
     const today = todayYmd();
     const cycles = payCycles(c, today, n);
     const entry = {
-      id: uid(), ts: Date.now(), type: "in", category: "Iuran", customerId: c.id,
+      id: uid(), ts: Date.now(), type: "in", category: "Iuran", customerId: c.id, method,
       desc: `Iuran ${c.name} · ${cycles.map(cycLabel).join(", ")}`,
       cycles, amount: n * (Number(c.amount) || 0), date,
       prevLastPaid: c.lastPaidCycle ?? "", prevPaidAt: c.paidAt || ""
@@ -1132,22 +1176,23 @@ function receiptMessage(c, cfg, link, owedAmount) {
     APP.ledger.push(entry);
     closeSheet();
     renderAll();
-    await persist([db.collection("ledger").doc(entry.id).set(clean(entry)), ...customerWrites(c)],
+    await persist([commitOps([opSet(db.collection("ledger").doc(entry.id), entry), ...customerOps(c)])],
       `Pembayaran ${fmtRp(entry.amount)} tercatat`);
   }
   function undoPayment(id) {
     const c = getC(id); if (!c) return;
-    const last = APP.ledger.filter(l => l.type === "in" && l.customerId === c.id)
+    const last = liveLedger().filter(l => l.type === "in" && l.customerId === c.id)
       .sort((a, b) => (b.ts || 0) - (a.ts || 0))[0];
     if (!last) return toast("Tidak ada pembayaran untuk dibatalkan", "err");
     confirmSheet("Batalkan pembayaran?",
-      `Pembayaran ${fmtRp(last.amount)} (${(last.cycles || []).map(cycLabel).join(", ")}) akan dihapus dari kas dan pelanggan kembali berstatus belum bayar.`,
+      `Pembayaran ${fmtRp(last.amount)} (${(last.cycles || []).map(cycLabel).join(", ")}) dibatalkan. Catatannya tetap ada di kas sebagai "Dibatalkan" dan tidak dihitung, lalu pelanggan kembali berstatus belum bayar.`,
       "Batalkan pembayaran", async () => {
         c.lastPaidCycle = last.prevLastPaid ?? "";
         c.paidAt = last.prevPaidAt || "";
-        APP.ledger = APP.ledger.filter(l => l.id !== last.id);
+        last.void = true;
+        last.voidDate = todayYmd();
         renderAll();
-        await persist([db.collection("ledger").doc(last.id).delete(), ...customerWrites(c)], "Pembayaran dibatalkan");
+        await persist([commitOps([opSet(db.collection("ledger").doc(last.id), last), ...customerOps(c)])], "Pembayaran dibatalkan");
       });
   }
 
@@ -1263,8 +1308,9 @@ function receiptMessage(c, cfg, link, owedAmount) {
       "Hapus", async () => {
         APP.customers = APP.customers.filter(x => x.id !== id);
         renderAll();
-        const writes = [db.collection("customers").doc(id).delete()];
-        await persist(writes, "Pelanggan dihapus");
+        const ops = [opDel(db.collection("customers").doc(id))];
+        if (c.publicToken) ops.push(opDel(db.collection("invoices").doc(c.publicToken)));
+        await persist([commitOps(ops)], "Pelanggan dihapus");
       });
   }
 
@@ -1454,7 +1500,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
         canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
         APP.settings.qrisImage = canvas.toDataURL("image/jpeg", 0.8);
         renderQrisPrev();
-        persist([db.collection("app_meta").doc("settings").set({ qrisImage: APP.settings.qrisImage }, { merge: true })], "QRIS disimpan");
+        persist([commitOps([opSet(db.collection("app_meta").doc("settings"), { qrisImage: APP.settings.qrisImage }, { merge: true }), ...publicMetaOps()])], "QRIS disimpan");
       };
       img.src = ev.target.result;
     };
@@ -1463,7 +1509,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
   function removeQris() {
     APP.settings.qrisImage = "";
     renderQrisPrev();
-    persist([db.collection("app_meta").doc("settings").set({ qrisImage: "" }, { merge: true })], "QRIS dihapus");
+    persist([commitOps([opSet(db.collection("app_meta").doc("settings"), { qrisImage: "" }, { merge: true }), ...publicMetaOps()])], "QRIS dihapus");
   }
   async function saveSettings() {
     const plans = $("#s_plans").value.split("\n").map(line => {
@@ -1483,7 +1529,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
     };
     Object.assign(APP.settings, data);
     updateRuleHint();
-    await persist([db.collection("app_meta").doc("settings").set(clean(data), { merge: true })], "Pengaturan disimpan");
+    await persist([commitOps([opSet(db.collection("app_meta").doc("settings"), data, { merge: true }), ...publicMetaOps()])], "Pengaturan disimpan");
   }
 
   function exportBackup() {
@@ -1503,25 +1549,119 @@ function receiptMessage(c, cfg, link, owedAmount) {
       confirmSheet("Pulihkan cadangan?",
         `Akan mengganti ${APP.customers.length} pelanggan dan ${APP.ledger.length} catatan kas di server dengan isi file ini (${data.customers.length} pelanggan, ${data.ledger.length} catatan).`,
         "Ya, pulihkan", async () => {
-          const writes = [];
+          const ops = [];
           const newIds = new Set(data.customers.map(c => c.id));
-          APP.customers.filter(c => !newIds.has(c.id)).forEach(c => writes.push(db.collection("customers").doc(c.id).delete()));
-          data.customers.forEach(c => { if (c.id) writes.push(...customerWrites(c)); });
+          APP.customers.filter(c => !newIds.has(c.id)).forEach(c => {
+            ops.push(opDel(db.collection("customers").doc(c.id)));
+            if (c.publicToken) ops.push(opDel(db.collection("invoices").doc(c.publicToken)));
+          });
           const newLedger = new Set(data.ledger.map(l => l.id));
-          APP.ledger.filter(l => !newLedger.has(l.id)).forEach(l => writes.push(db.collection("ledger").doc(l.id).delete()));
-          data.ledger.forEach(l => { if (l.id) writes.push(db.collection("ledger").doc(l.id).set(clean(l))); });
-          if (data.settings) writes.push(db.collection("app_meta").doc("settings").set(clean(data.settings), { merge: true }));
-          await persist(writes, "Cadangan dipulihkan");
+          APP.ledger.filter(l => !newLedger.has(l.id)).forEach(l => ops.push(opDel(db.collection("ledger").doc(l.id))));
+          // Isi cadangan dipakai sebagai data acuan untuk salinan tagihan publik sebelum ditulis.
+          APP.customers = data.customers; APP.ledger = data.ledger;
+          data.customers.forEach(c => { if (c.id) ops.push(...customerOps(c)); });
+          data.ledger.forEach(l => { if (l.id) ops.push(opSet(db.collection("ledger").doc(l.id), l)); });
+          if (data.settings) {
+            Object.assign(APP.settings, data.settings);
+            ops.push(opSet(db.collection("app_meta").doc("settings"), data.settings, { merge: true }));
+            ops.push(...publicMetaOps());
+          }
+          renderAll();
+          await persist([commitOps(ops)], "Cadangan dipulihkan");
         });
+    };
+    reader.readAsText(f);
+    e.target.value = "";
+  }
+  /* ============================================================
+     TAGIH MASSAL & IMPOR PELANGGAN (CSV)
+     ============================================================ */
+  function openBulkWa() {
+    const c0 = cfg(), today = todayYmd();
+    const list = APP.customers
+      .map(c => ({ c, b: billing(c, today, c0) }))
+      .filter(x => x.b.unpaid.length && x.b.status !== "nonaktif" && x.b.status !== "belum-tagih" && normPhone(x.c.phone))
+      .sort((a, b) => dnum(a.b.dueYmd) - dnum(b.b.dueYmd));
+    if (!list.length) return toast("Tidak ada tagihan yang perlu ditagih", "err");
+    openSheet(`Tagih ${list.length} pelanggan`, `
+      <p class="hint" style="margin-bottom:12px;">Setiap tombol membuka WhatsApp dengan pesan yang sudah terisi. Kirim satu per satu. Tagihan yang dibuka otomatis ditandai sudah ditagih.</p>
+      <div class="list">${list.map(({ c, b }) => {
+        const href = telLink(c.phone) + "?text=" + encodeURIComponent(waMessageFor(c));
+        return `<div class="row">
+          <div class="row-main">
+            <div class="row-top"><span class="row-name">${esc(c.name)}</span>${badge(b.status)}</div>
+            <div class="row-foot"><b>${b.unpaid.length} bulan</b> · ${fmtRp(b.owed)} · tempo ${esc(dateLong(b.dueYmd))}</div>
+          </div>
+          <a class="btn wa sm" target="_blank" rel="noopener" href="${esc(href)}" data-act="waOpen" data-id="${esc(c.id)}">Kirim</a>
+        </div>`;
+      }).join("")}</div>`);
+  }
+
+  /* Parser CSV sederhana: mendukung tanda kutip, pemisah koma atau titik koma. */
+  function parseCsv(text, delim) {
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) {
+        if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+        else if (ch === '"') q = false;
+        else cell += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === delim) { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        row.push(cell); rows.push(row); row = []; cell = "";
+      } else cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.some(v => String(v).trim() !== ""));
+  }
+  function importCsv(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const text = String(ev.target.result || "").replace(/^﻿/, "");
+      const first = text.split(/\r?\n/)[0] || "";
+      const delim = first.split(";").length > first.split(",").length ? ";" : ",";
+      const rows = parseCsv(text, delim);
+      if (rows.length < 2) return toast("File CSV kosong atau tidak ada data", "err");
+      const head = rows[0].map(h => String(h).trim().toLowerCase().replace(/\s+/g, "_"));
+      if (head.indexOf("nama") < 0) return toast("Kolom 'nama' tidak ditemukan di baris pertama", "err");
+      const get = (r, name) => { const i = head.indexOf(name); return i >= 0 ? String(r[i] ?? "").trim() : ""; };
+      const today = todayYmd(), curCycle = cycleOf(today);
+      const defAmount = Number(APP.settings.plans && APP.settings.plans[0] ? APP.settings.plans[0].amount : 0) || 0;
+      const parsed = []; let skip = 0;
+      rows.slice(1).forEach(r => {
+        const name = get(r, "nama");
+        if (!name) { skip++; return; }
+        const phone = normPhone(get(r, "hp"));
+        if (phone && !/^62\d{8,13}$/.test(phone)) { skip++; return; }
+        const amount = Number(get(r, "iuran").replace(/\D/g, "")) || defAmount;
+        const startRaw = get(r, "mulai");
+        parsed.push({
+          id: uid(), name, phone, address: get(r, "alamat"), port: get(r, "port"), plan: get(r, "paket"),
+          amount, dueDay: Math.min(31, Math.max(1, Number(get(r, "tgl_tagihan")) || 20)), notes: "",
+          active: true, startCycle: /^\d{4}-\d{2}$/.test(startRaw) ? startRaw : curCycle,
+          lastPaidCycle: "", paidAt: "", waCycle: "", waStage: 0, createdAt: today, publicToken: makeToken()
+        });
+      });
+      if (!parsed.length) return toast("Tidak ada baris pelanggan yang valid", "err");
+      confirmSheet("Impor pelanggan?",
+        `${parsed.length} pelanggan akan ditambahkan${skip ? ` (${skip} baris dilewati karena nama atau nomor tidak valid)` : ""}. Tagihan mulai bulan berjalan, kecuali kolom "mulai" diisi (format YYYY-MM). Iuran kosong memakai harga paket pertama.`,
+        "Impor", async () => {
+          APP.customers.push(...parsed);
+          renderAll();
+          await persist([commitOps(parsed.flatMap(c => customerOps(c)))], `${parsed.length} pelanggan diimpor`);
+        }, false);
     };
     reader.readAsText(f);
     e.target.value = "";
   }
   function exportCsv() {
     const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
-    const rows = [["tanggal", "jenis", "kategori", "keterangan", "jumlah"]]
+    const rows = [["tanggal", "jenis", "kategori", "cara bayar", "keterangan", "jumlah", "status"]]
       .concat(APP.ledger.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""))
-        .map(l => [l.date, l.type === "in" ? "masuk" : "keluar", l.category || "", l.desc, l.amount]));
+        .map(l => [l.date, l.type === "in" ? "masuk" : "keluar", l.category || "", l.method || "", l.desc, l.amount, l.void ? "dibatalkan" : "aktif"]));
     const blob = new Blob(["﻿" + rows.map(r => r.map(q).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -1586,7 +1726,9 @@ function receiptMessage(c, cfg, link, owedAmount) {
   async function logout() {
     stopListeners();
     try { await auth.signOut(); } catch (e) {}
-    showLogin();
+    // Hapus salinan data pelanggan yang tersimpan di perangkat ini (cache offline), lalu muat ulang halaman.
+    try { if (db) { await db.terminate(); await db.clearPersistence(); } } catch (e) {}
+    location.reload();
   }
 
   /* ============================================================
@@ -1602,20 +1744,18 @@ function receiptMessage(c, cfg, link, owedAmount) {
     }
     try {
       // Halaman tagihan membaca lewat REST API (tanpa SDK Firebase) supaya
-      // buka pertama dari link tidak perlu menunggu unduhan SDK. Datanya
-      // tetap dokumen pelanggan lewat token (bukan koleksi invoices
-      // terpisah), sesuai rules Firestore yang sudah terbit — rules itu
-      // hanya membuka customers/ledger/app_meta.
-      const [custs, st] = await Promise.all([
-        restQuery("customers", "publicToken", token, 1),
-        restGetDoc("app_meta/settings")
+      // buka pertama dari link tidak perlu menunggu unduhan SDK. Yang dibaca
+      // hanya dokumen invoices/{token} (dapat di-get, tidak bisa di-list) dan
+      // public_meta/settings. Data internal (nomor HP, rules admin) tidak ikut.
+      const [inv, st] = await Promise.all([
+        restGetDoc("invoices/" + encodeURIComponent(token)),
+        restGetDoc("public_meta/settings")
       ]);
-      if (!custs.length) {
+      if (!inv) {
         box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Tagihan tidak ditemukan</b>Link ini mungkin sudah tidak berlaku. Hubungi admin.</div>`;
         return;
       }
-      const cDoc = custs[0];
-      const c = cDoc.data;
+      const c = inv;
       const s = { ...SETTINGS_DEFAULT, ...(st || {}) };
       const cf = { ...s, reminderDays: leadOf(s), graceDays: Number(s.graceDays ?? 10) };
       const today = todayYmd();
@@ -1642,6 +1782,11 @@ function receiptMessage(c, cfg, link, owedAmount) {
         </div>`;
       }
 
+      const histHtml = (c.payments || []).length ? `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:8px;">Riwayat pembayaran</div>
+          ${c.payments.map(p => `<div class="hist"><span>${esc((p.cycles || []).map(cycLabel).join(", "))}<br><span class="tiny muted">${esc(dateLong(p.date || today))}</span></span><b class="in num">${fmtRp(p.amount)}</b></div>`).join("")}
+        </div>` : "";
       box.innerHTML = `
         <div class="inv-head">
           <div class="kicker">Tagihan WiFi</div>
@@ -1671,27 +1816,9 @@ function receiptMessage(c, cfg, link, owedAmount) {
           <a class="btn wa block" style="margin-bottom:14px;" target="_blank" rel="noopener"
              href="https://wa.me/${esc(s.adminWa)}?text=${encodeURIComponent(`Halo Admin ${s.bizName}, saya ${c.name} sudah membayar tagihan WiFi ${b.unpaid.map(cycLabel).join(", ")} sebesar ${fmtRp(b.owed)}. Berikut bukti transfernya:`)}">
             📲 Konfirmasi sudah bayar ke admin</a>` : ""}
-        <div id="invHist"></div>
+        ${histHtml}
         <div class="inv-foot">${esc(s.bizName)} · Terima kasih 🙏</div>`;
       box.dataset.bank = s.bankInfo || "";
-      // Riwayat pembayaran dimuat belakangan supaya tagihan utama tampil dulu:
-      // di v4 halaman tagihan hanya butuh 1x baca data, di v5 tadinya 2x berurutan
-      // (pelanggan + riwayat), itu yang bikin terasa lama.
-      restQuery("ledger", "customerId", cDoc.id, 12)
-        .then(rows => {
-          const payments = rows.map(r => r.data)
-            .filter(l => l.type === "in")
-            .sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 6)
-            .map(l => ({ cycles: l.cycles || [], amount: l.amount || 0, date: l.date || "" }));
-          const el = document.getElementById("invHist");
-          if (!el) return;
-          el.innerHTML = payments.length ? `
-            <div class="card">
-              <div class="card-title" style="margin-bottom:8px;">Riwayat pembayaran</div>
-              ${payments.map(p => `<div class="hist"><span>${esc((p.cycles || []).map(cycLabel).join(", "))}<br><span class="tiny muted">${esc(dateLong(p.date || today))}</span></span><b class="in num">${fmtRp(p.amount)}</b></div>`).join("")}
-            </div>` : "";
-        })
-        .catch(() => {});
     } catch (e) {
       console.error(e);
       box.innerHTML = `<div class="card empty" style="margin-top:40px;"><b>Gagal memuat tagihan</b>Periksa koneksi lalu muat ulang halaman.</div>`;
@@ -1734,7 +1861,8 @@ function receiptMessage(c, cfg, link, owedAmount) {
     exportBackup: () => exportBackup(),
     exportCsv: () => exportCsv(),
     install: () => installApp(),
-    copyBank: () => copyText($("#bankText").textContent, "Info rekening")
+    copyBank: () => copyText($("#bankText").textContent, "Info rekening"),
+    bulkWa: () => openBulkWa()
   };
   document.addEventListener("click", (e) => {
     const el = e.target.closest("[data-act]");
@@ -1769,6 +1897,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
     }
     else if (t.id === "s_qrisFile") handleQrisFile(e);
     else if (t.id === "importFile") importBackup(e);
+    else if (t.id === "importCsv") importCsv(e);
     else if (t.id === "payN") { const c = getC(($("#sheetBody [data-act='savePay']") || {}).dataset?.id); updatePaySum(c); }
   });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });

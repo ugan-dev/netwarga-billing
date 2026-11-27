@@ -8,14 +8,15 @@
  *  4. Jalankan sekali fungsi pasangTrigger() (akan minta izin akses) lalu cek log dengan
  *     kirimPengingatTagihanOtomatis(true) = mode uji coba tanpa kirim pesan.
  *
- * Akun yang menjalankan script HARUS akun admin (gagan.70700@gmail.com),
- * karena Firestore hanya mengizinkan admin menulis dan membaca data pelanggan.
+ * Akun yang menjalankan script HARUS akun admin (email yang sama dengan ADMIN_EMAIL di index.html
+ * dan isAdmin() di firestore.rules), karena Firestore hanya mengizinkan admin membaca data pelanggan.
+ * Setelah mengganti manifest, jalankan pasangTrigger() lagi lalu setujui izin email yang baru.
  */
 const CONFIG = {
   FIREBASE_PROJECT_ID: "netwarga-manager",
   APP_URL: "https://ugan-dev.github.io/netwarga-billing/",
   WA_GATEWAY: "WAHA",                // "WAHA" atau "FONNTE"
-  WA_API_URL: "http://sg-sgp11.tryaltare.ai:27191/api/sendText",
+  WA_API_URL: "http://sg-sgp11.tryaltare.ai:27191/api/sendText", // server WAHA ini hanya HTTP (tanpa TLS), jadi WAJIB http.
   WA_API_KEY: "GANTI_API_KEY_WAHA",   // isi API key WAHA
   WA_SESSION: "default",
   TIMEZONE: "Asia/Jakarta",

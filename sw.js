@@ -3,7 +3,7 @@
  * Aset statis: cache dulu. Permintaan ke Firebase/gstatic TIDAK di-cache
  * (ditangani SDK Firestore sendiri lewat persistence).
  */
-const CACHE_NAME = "netwarga-v5";
+const CACHE_NAME = "netwarga-v6";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
