@@ -120,7 +120,7 @@ function keterangan(b, today, stage) {
   let s;
   if (t < due) s = "jatuh tempo " + (due - t) + " hari lagi (" + dateLong(b.dueYmd) + ")";
   else if (t === due) s = "jatuh tempo HARI INI";
-  else s = "sudah lewat jatuh tempo " + (t - due) + " hari";
+  else s = "telat bayar " + (t - due) + " hari (jatuh tempo " + dateLong(b.dueYmd) + ")";
   if (stage === 3) s += "; layanan akan dinonaktifkan besok jika belum dibayar";
   return s;
 }
@@ -142,6 +142,7 @@ function buildMessage(c, b, cfg, today, link, stage) {
     periode: b.unpaid.map(cycLabel).join(", "),
     bulan: b.unpaid.length + " bulan",
     keterangan: keterangan(b, today, stage),
+    telat: b.dueYmd ? Math.max(0, dnum(today) - dnum(b.dueYmd)) : 0,
     link: link
   };
   const tpl = (cfg.waTemplate && String(cfg.waTemplate).trim()) ? cfg.waTemplate : DEFAULT_TPL;
