@@ -257,6 +257,11 @@ function kirimWa(nomor, teks) {
 // Fungsi utama — dipasang trigger harian.
 // ---------------------------------------------------------------
 function kirimPengingatTagihanOtomatis(dryRun) {
+  // Hanya true eksplisit yang berarti mode uji. Trigger berbasis waktu selalu
+  // mengoper objek event sebagai argumen pertama, jadi tanpa baris ini setiap
+  // jalan otomatis dari trigger akan salah terbaca sebagai mode uji dan tidak
+  // pernah mengirim pesan.
+  dryRun = (dryRun === true);
   const mulai = Date.now();
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd");
   const cfg = bacaPengaturan();
