@@ -2,16 +2,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Data utama: terbuka, supaya link tagihan publik (?inv=...) dan
-    // script cronjob (tanpa login) tetap bisa baca/tulis.
+    // Hanya akun admin (email harus sama dengan ADMIN_EMAIL di index.html).
+    // Akun Google biasa, pengunjung, dan siapa pun yang punya config Firebase tidak bisa membaca/menulis data ini.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "gagan.70700@gmail.com";
+    }
+
     match /customers/{docId} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
     match /ledger/{docId} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
     match /app_meta/{docId} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
+    }
+
+    // Salinan tagihan untuk halaman ?inv=TOKEN. Doc ID = token acak (tidak bisa ditebak).
+    // Boleh di-get satu per satu, TIDAK bisa di-list.
+    match /invoices/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
+    }
+
+    // Pengaturan yang dibutuhkan halaman tagihan publik (bank, QRIS, nama usaha). Tidak bisa di-list.
+    match /public_meta/{docId} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
     }
 
     match /{document=**} {
