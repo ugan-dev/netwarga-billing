@@ -20,7 +20,6 @@ const CONFIG = {
   WA_API_KEY: "GANTI_API_KEY_WAHA",   // isi API key WAHA
   WA_SESSION: "default",
   TIMEZONE: "Asia/Jakarta",
-  JAM_JALAN: 8,                      // pemicu harian jam 08:00-09:00
   MAX_RUN_MS: 5 * 60 * 1000,         // berhenti sebelum batas 6 menit Apps Script
   JEDA_MIN_DETIK: 6,
   JEDA_MAX_DETIK: 12,
@@ -202,7 +201,7 @@ function fsListAll(koleksi) {
   return out;
 }
 function bacaPengaturan() {
-  const cfg = { reminderDays: 5, graceDays: 10, bizName: CONFIG.NAMA_WIFI_CADANGAN, waTemplate: DEFAULT_TPL };
+  const cfg = { reminderDays: 5, graceDays: 10, reminderTime: "08:00", bizName: CONFIG.NAMA_WIFI_CADANGAN, waTemplate: DEFAULT_TPL };
   const r = UrlFetchApp.fetch(fsUrl("app_meta/settings"), { headers: fsHeaders(), muteHttpExceptions: true });
   if (r.getResponseCode() === 200) {
     const s = dokumenKeObjek(JSON.parse(r.getContentText()));
@@ -210,6 +209,7 @@ function bacaPengaturan() {
   }
   cfg.reminderDays = Number(cfg.reminderDays ?? 5);
   cfg.graceDays = Number(cfg.graceDays ?? 10);
+  cfg.reminderTime = String(cfg.reminderTime || "08:00");
   return cfg;
 }
 function tandaiTerkirim(docId, cycle, offset, prevOffsets, today) {
@@ -259,6 +259,7 @@ function kirimPengingatTagihanOtomatis(dryRun) {
   const mulai = Date.now();
   const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd");
   const cfg = bacaPengaturan();
+  sesuaikanTrigger(cfg);
   cfg.reminderDays = leadOf(cfg);
   if (!scheduleOf(cfg).length) {
     Logger.log("Pengingat otomatis nonaktif atau jadwal kosong. Tidak ada pesan dikirim.");
@@ -301,10 +302,42 @@ function kirimPengingatTagihanOtomatis(dryRun) {
     (sisa ? ", belum diproses " + sisa + " (dilanjut besok)" : "") + (dryRun ? " [mode uji]" : ""));
 }
 
+// Jam kirim dari pengaturan (format "HH:MM", bawaan 08:00).
+function jamDariPengaturan(cfg) {
+  const m = String(cfg.reminderTime || "08:00").match(/^(\d{1,2}):(\d{2})/);
+  const jam = m ? Math.min(23, Math.max(0, Number(m[1]) || 8)) : 8;
+  const menit = m ? Math.min(59, Math.max(0, Number(m[2]) || 0)) : 0;
+  return { jam: jam, menit: menit };
+}
+function jamLabel(t) { return t.jam + ":" + (t.menit < 10 ? "0" : "") + t.menit; }
+function buatTriggerJam(t) {
+  return ScriptApp.newTrigger("kirimPengingatTagihanOtomatis").timeBased().everyDays(1).atHour(t.jam).nearMinute(t.menit).create();
+}
+// Samakan trigger harian dengan jam di pengaturan. Dipanggil di awal setiap jalan
+// supaya perubahan jam di aplikasi berlaku otomatis mulai besok.
+function sesuaikanTrigger(cfg) {
+  try {
+    const t = jamDariPengaturan(cfg);
+    const kunci = jamLabel(t);
+    const props = PropertiesService.getScriptProperties();
+    if (props.getProperty("jamTrigger") === kunci) return;
+    const baru = buatTriggerJam(t);
+    ScriptApp.getProjectTriggers().forEach(tr => {
+      if (tr.getHandlerFunction() === "kirimPengingatTagihanOtomatis" && tr.getUniqueId() !== baru.getUniqueId()) ScriptApp.deleteTrigger(tr);
+    });
+    props.setProperty("jamTrigger", kunci);
+    Logger.log("Trigger harian diubah ke jam " + kunci + " (" + CONFIG.TIMEZONE + ").");
+  } catch (e) {
+    Logger.log("Sesuaikan trigger gagal: " + e);
+  }
+}
 function pasangTrigger() {
-  ScriptApp.getProjectTriggers().forEach(t => {
-    if (t.getHandlerFunction() === "kirimPengingatTagihanOtomatis") ScriptApp.deleteTrigger(t);
+  const cfg = bacaPengaturan();
+  const t = jamDariPengaturan(cfg);
+  ScriptApp.getProjectTriggers().forEach(tr => {
+    if (tr.getHandlerFunction() === "kirimPengingatTagihanOtomatis") ScriptApp.deleteTrigger(tr);
   });
-  ScriptApp.newTrigger("kirimPengingatTagihanOtomatis").timeBased().everyDays(1).atHour(CONFIG.JAM_JALAN).create();
-  Logger.log("Trigger harian dipasang jam " + CONFIG.JAM_JALAN + ":00 (" + CONFIG.TIMEZONE + ").");
+  buatTriggerJam(t);
+  PropertiesService.getScriptProperties().setProperty("jamTrigger", jamLabel(t));
+  Logger.log("Trigger harian dipasang jam " + jamLabel(t) + " (" + CONFIG.TIMEZONE + ").");
 }

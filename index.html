@@ -390,6 +390,11 @@
           <div class="card-head"><div class="card-title">Jadwal pengingat WhatsApp</div></div>
           <label class="check"><input type="checkbox" id="s_auto" /> Kirim pengingat otomatis</label>
           <div class="field">
+            <label>Jam kirim pengingat</label>
+            <input type="time" id="s_time" value="08:00" />
+            <span class="hint">Pengingat otomatis dikirim setiap hari pada jam ini. Perubahan jam berlaku mulai besok.</span>
+          </div>
+          <div class="field">
             <label>Titik pengingat</label>
             <div class="sched" id="s_sched"></div>
           </div>
@@ -1472,6 +1477,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
     $("#s_bank").value = s.bankInfo || "";
     schedDraft = rawScheduleOf(s).slice();
     $("#s_auto").checked = s.reminderAuto !== false;
+    $("#s_time").value = s.reminderTime || "08:00";
     $("#s_n").disabled = $("#s_dir").value === "0";
     renderSched();
     $("#s_grace").value = s.graceDays ?? 10;
@@ -1561,6 +1567,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
       bankInfo: $("#s_bank").value.trim(),
       reminderSchedule: schedDraft.slice().sort((a, b) => a - b),
       reminderAuto: $("#s_auto").checked,
+      reminderTime: ($("#s_time").value || "08:00"),
       reminderDays: leadOf({ reminderSchedule: schedDraft }),
       graceDays: Math.min(60, Math.max(0, Number($("#s_grace").value) || 0)),
       plans: plans.length ? plans : SETTINGS_DEFAULT.plans,
