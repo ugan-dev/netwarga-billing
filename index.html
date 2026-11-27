@@ -1237,7 +1237,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
       </div>
       <div class="grid2">
         <div class="field"><label>Tanggal tagihan tiap bulan</label><select id="f_due">${dueOpts}</select></div>
-        ${c ? `<div class="field"><label>Terakhir dibayar s/d</label><input value="${esc(c.lastPaidCycle ? cycLabel(c.lastPaidCycle) : "Belum pernah")}" disabled /></div>`
+        ${c ? `<div class="field"><label>Terakhir dibayar s/d</label><input type="month" id="f_lastPaid" value="${esc(c.lastPaidCycle || "")}" /><span class="hint">Kosongkan kalau belum pernah dibayar.</span></div>`
             : `<div class="field"><label>Mulai tagihan dari</label><input type="month" id="f_start" value="${defStart}" /></div>`}
       </div>
       <div class="field"><label>Catatan (opsional)</label><textarea id="f_notes" rows="2">${esc(c ? c.notes : "")}</textarea></div>
@@ -1266,6 +1266,12 @@ function receiptMessage(c, cfg, link, owedAmount) {
     if (id) {
       const c = getC(id); if (!c) return;
       Object.assign(c, data);
+      const lpEl = $("#f_lastPaid");
+      if (lpEl) {
+        const lp = lpEl.value || "";
+        c.lastPaidCycle = lp;
+        if (lp) c.startCycle = cycAdd(lp, 1);
+      }
       closeSheet();
       renderAll();
       await saveCustomer(c, "Data pelanggan disimpan");
