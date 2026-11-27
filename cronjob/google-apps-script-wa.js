@@ -315,7 +315,8 @@ function buatTriggerJam(t) {
   return ScriptApp.newTrigger("kirimPengingatTagihanOtomatis").timeBased().everyDays(1).atHour(t.jam).nearMinute(t.menit).create();
 }
 // Samakan trigger harian dengan jam di pengaturan. Dipanggil di awal setiap jalan
-// supaya perubahan jam di aplikasi berlaku otomatis mulai besok.
+// dan berkala oleh cekJamTrigger() supaya perubahan jam di aplikasi berlaku
+// dalam hitungan menit (hari ini juga kalau jamnya belum lewat).
 function sesuaikanTrigger(cfg) {
   try {
     const t = jamDariPengaturan(cfg);
@@ -332,6 +333,15 @@ function sesuaikanTrigger(cfg) {
     Logger.log("Sesuaikan trigger gagal: " + e);
   }
 }
+// Pengecek berkala (tiap 15 menit): kalau jam di pengaturan berubah, pindahkan
+// trigger harian segera supaya perubahan jam berlaku hari ini juga.
+function cekJamTrigger() {
+  try {
+    sesuaikanTrigger(bacaPengaturan());
+  } catch (e) {
+    Logger.log("Cek jam trigger gagal: " + e);
+  }
+}
 function pasangTrigger() {
   const cfg = bacaPengaturan();
   const t = jamDariPengaturan(cfg);
@@ -341,4 +351,10 @@ function pasangTrigger() {
   buatTriggerJam(t);
   PropertiesService.getScriptProperties().setProperty("jamTrigger", jamLabel(t));
   Logger.log("Trigger harian dipasang jam " + jamLabel(t) + " (" + CONFIG.TIMEZONE + ").");
+  // Pasang pengecek berkala supaya perubahan jam berlaku dalam hitungan menit.
+  const adaPengecek = ScriptApp.getProjectTriggers().some(tr => tr.getHandlerFunction() === "cekJamTrigger");
+  if (!adaPengecek) {
+    ScriptApp.newTrigger("cekJamTrigger").timeBased().everyMinutes(15).create();
+    Logger.log("Pengecek jam dipasang tiap 15 menit.");
+  }
 }
