@@ -787,17 +787,17 @@ function receiptMessage(c, cfg, link, owedAmount) {
   }
   function startListeners() {
     stopListeners();
-    unsubs.push(db.collection("customers").onSnapshot(snap => {
+    unsubs.push(db.collection("customers").onSnapshot({ includeMetadataChanges: true }, snap => {
       APP.customers = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       APP.loaded.customers = true; APP.pend.customers = snap.metadata.hasPendingWrites;
       onData();
     }, err => onListenErr(err)));
-    unsubs.push(db.collection("ledger").onSnapshot(snap => {
+    unsubs.push(db.collection("ledger").onSnapshot({ includeMetadataChanges: true }, snap => {
       APP.ledger = snap.docs.map(d => ({ ...d.data(), id: d.id }));
       APP.loaded.ledger = true; APP.pend.ledger = snap.metadata.hasPendingWrites;
       onData();
     }, err => onListenErr(err)));
-    unsubs.push(db.collection("app_meta").doc("settings").onSnapshot(d => {
+    unsubs.push(db.collection("app_meta").doc("settings").onSnapshot({ includeMetadataChanges: true }, d => {
       APP.settings = { ...JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), ...(d.exists ? d.data() : {}) };
       APP.loaded.settings = true; APP.pend.settings = d.metadata.hasPendingWrites;
       onData();
