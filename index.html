@@ -285,9 +285,23 @@
     .sched-add { display: grid; grid-template-columns: 1fr 84px auto; gap: 8px; align-items: center; }
     .sched-add select { font-size: 15px; }
     .noscroll { overflow: hidden; }
+    .spin { width: 30px; height: 30px; margin: 20px auto 0; border: 3px solid rgba(128,128,128,.35); border-top-color: #7c8cff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+
+  <!-- LAYAR MUAT (tampil selagi memeriksa sesi login) -->
+  <div id="bootView" class="login">
+    <div class="login-card">
+      <div class="logo">
+        <svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      </div>
+      <h1>NetWarga Billing</h1>
+      <div class="spin"></div>
+      <p>Memuat…</p>
+    </div>
+  </div>
 
   <!-- LOGIN ADMIN -->
   <div id="loginView" class="login" hidden>
@@ -681,6 +695,25 @@ function receiptMessage(c, cfg, link, owedAmount) {
     $("#sheet").classList.remove("open");
     document.body.classList.remove("noscroll");
   }
+  /* ---------- tombol Back Android ---------- */
+  /* Back saat sheet terbuka menutup sheet (kembali ke menu sebelumnya).
+     Back di menu utama: sekali = peringatan, dua kali dalam 2 detik = keluar. */
+  let backArmed = false, backAt = 0, backExiting = false;
+  function armBack() {
+    if (backArmed) return;
+    try { history.pushState({ nw: 1 }, ""); backArmed = true; } catch (e) {}
+  }
+  window.addEventListener("popstate", () => {
+    if (backExiting) return;
+    backArmed = false;
+    if ($("#adminView").hidden) return;
+    if ($("#sheet").classList.contains("open")) { closeSheet(); armBack(); return; }
+    const now = Date.now();
+    if (now - backAt < 2000) { backExiting = true; history.back(); return; }
+    backAt = now;
+    toast("Tekan sekali lagi untuk keluar");
+    armBack();
+  });
   function confirmSheet(title, text, okLabel, fn, danger = true) {
     openSheet(title, `
       <p class="muted" style="margin-bottom:16px;">${esc(text)}</p>
@@ -1706,11 +1739,14 @@ function receiptMessage(c, cfg, link, owedAmount) {
   }
 
   function showLogin() {
+    $("#bootView").hidden = true;
     $("#loginView").hidden = false; $("#adminView").hidden = true; $("#invView").hidden = true;
   }
   function showAdmin() {
+    $("#bootView").hidden = true;
     $("#loginView").hidden = true; $("#adminView").hidden = false; $("#invView").hidden = true;
     switchTab(APP.tab || "home");
+    armBack();
   }
   function loginErr(msg) { $("#loginErr").textContent = msg || ""; }
   async function login() {
@@ -1741,6 +1777,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
      TAGIHAN PUBLIK (?inv=...)
      ============================================================ */
   async function renderPublicInvoice(token) {
+    $("#bootView").hidden = true;
     $("#loginView").hidden = true; $("#adminView").hidden = true; $("#invView").hidden = false;
     const box = $("#invView");
     box.innerHTML = `<div class="card empty" style="margin-top:40px;">Memuat tagihan…</div>`;
@@ -1935,7 +1972,6 @@ function receiptMessage(c, cfg, link, owedAmount) {
     let ok = false;
     try { await loadFirebaseSdk(); ok = initFirebase(); } catch (e) { console.error(e); }
     if (!ok) { showLogin(); loginErr("Koneksi ke server gagal dimuat. Periksa internet lalu muat ulang."); return; }
-    showLogin();
     auth.onAuthStateChanged(user => {
       if (!user) { stopListeners(); showLogin(); return; }
       if ((user.email || "").toLowerCase() !== ADMIN_EMAIL || !user.emailVerified) {
