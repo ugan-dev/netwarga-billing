@@ -1782,6 +1782,7 @@ function receiptMessage(c, cfg, link, owedAmount) {
     } finally { btn.disabled = false; }
   }
   async function logout() {
+    try { localStorage.removeItem("nw_admin"); } catch (e) {}
     stopListeners();
     try { await auth.signOut(); } catch (e) {}
     // Hapus salinan data pelanggan yang tersimpan di perangkat ini (cache offline), lalu muat ulang halaman.
@@ -1985,16 +1986,21 @@ function receiptMessage(c, cfg, link, owedAmount) {
     initTheme();
     const inv = new URLSearchParams(location.search).get("inv");
     if (inv) { renderPublicInvoice(inv); return; }
+    // Optimistis ala aplikasi natif: kalau perangkat ini mengingat sudah login,
+    // langsung tampilkan layar utama tanpa menunggu Firebase. Verifikasi jalan di belakang.
+    try { if (localStorage.getItem("nw_admin") === "1") showAdmin(); } catch (e) {}
     let ok = false;
     try { await loadFirebaseSdk(); ok = initFirebase(); } catch (e) { console.error(e); }
     if (!ok) { showLogin(); loginErr("Koneksi ke server gagal dimuat. Periksa internet lalu muat ulang."); return; }
     auth.onAuthStateChanged(user => {
-      if (!user) { stopListeners(); showLogin(); return; }
+      if (!user) { try { localStorage.removeItem("nw_admin"); } catch (e) {} stopListeners(); showLogin(); return; }
       if ((user.email || "").toLowerCase() !== ADMIN_EMAIL || !user.emailVerified) {
+        try { localStorage.removeItem("nw_admin"); } catch (e) {}
         loginErr("Akun ini tidak punya akses admin.");
         auth.signOut();
         return;
       }
+      try { localStorage.setItem("nw_admin", "1"); } catch (e) {}
       showAdmin();
       startListeners();
     });
