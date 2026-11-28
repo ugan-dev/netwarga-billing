@@ -1,9 +1,9 @@
 /* NetWarga Billing — service worker.
- * Halaman: network dulu (selalu versi terbaru), cadangan cache saat offline.
+ * Halaman: cache dulu (langsung tampil), perbarui di belakang layar.
  * Aset statis: cache dulu. Permintaan ke Firebase/gstatic TIDAK di-cache
  * (ditangani SDK Firestore sendiri lewat persistence).
  */
-const CACHE_NAME = "netwarga-v6";
+const CACHE_NAME = "netwarga-v7";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -27,13 +27,15 @@ self.addEventListener("fetch", (event) => {
 
   const isPage = event.request.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/");
   if (isPage) {
+    // Buka langsung dari cache (cepat), unduh versi baru di belakang layar.
     event.respondWith(
-      fetch(event.request)
-        .then((res) => {
+      caches.match(event.request, { ignoreSearch: true }).then((cached) => {
+        const network = fetch(event.request).then((res) => {
           if (res && res.ok) caches.open(CACHE_NAME).then((c) => c.put(event.request, res.clone()));
           return res;
-        })
-        .catch(() => caches.match(event.request, { ignoreSearch: true }))
+        }).catch(() => cached);
+        return cached || network;
+      })
     );
     return;
   }
