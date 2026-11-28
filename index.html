@@ -946,8 +946,20 @@ function receiptMessage(c, cfg, link, owedAmount) {
     const bulkN = act.filter(x => x.b.unpaid.length && x.b.status !== "belum-tagih" && normPhone(x.c.phone)).length;
     const urgent = rows.filter(x => x.b.status === "putus" || x.b.status === "terlambat")
       .sort((a, b) => b.b.late - a.b.late);
-    const dueSoon = rows.filter(x => x.b.status === "belum" && x.b.unpaid.length &&
-      dnum(x.b.dueYmd) - dnum(today) <= 7).sort((a, b) => dnum(a.b.dueYmd) - dnum(b.b.dueYmd));
+    // Jatuh tempo 7 hari ke depan: tagihan yang sudah terbuka dan belum dibayar,
+    // ditambah tagihan yang belum terbuka tapi jatuh temponya sudah dekat
+    // (mis. Udin, tagihan Des baru terbuka tgl 1, tapi jatuh temponya 3 hari lagi).
+    const dueSoon = rows.map(x => {
+      let due = x.b.dueYmd, amt = x.b.owed;
+      if (x.b.status === "belum-tagih") {
+        const nextCyc = x.b.last ? cycAdd(x.b.last, 1) : (x.c.startCycle || cycleOf(today));
+        due = dueYmd(nextCyc, x.c.dueDay);
+        amt = Number(x.c.amount) || 0;
+      }
+      return { x, due, amt };
+    }).filter(o => (o.x.b.status === "belum" && o.x.b.unpaid.length || o.x.b.status === "belum-tagih") &&
+      o.due && dnum(o.due) - dnum(today) >= 0 && dnum(o.due) - dnum(today) <= 7)
+      .sort((a, b) => dnum(a.due) - dnum(b.due));
 
     const urgentHtml = urgent.length ? `<div class="list">${urgent.map(x => `
       <div class="row" data-act="open" data-id="${esc(x.c.id)}">
@@ -961,14 +973,14 @@ function receiptMessage(c, cfg, link, owedAmount) {
       </div>`).join("")}</div>`
       : `<div class="card empty"><b>Tidak ada yang perlu tindakan 🎉</b>Semua pelanggan aktif sudah bayar atau masih dalam tenggang.</div>`;
 
-    const dueHtml = dueSoon.length ? `<div class="list">${dueSoon.slice(0, 8).map(x => `
-      <div class="row" data-act="open" data-id="${esc(x.c.id)}">
-        <div class="avatar">${initial(x.c.name)}</div>
+    const dueHtml = dueSoon.length ? `<div class="list">${dueSoon.slice(0, 8).map(o => `
+      <div class="row" data-act="open" data-id="${esc(o.x.c.id)}">
+        <div class="avatar">${initial(o.x.c.name)}</div>
         <div class="row-main">
-          <div class="row-top"><span class="row-name">${esc(x.c.name)}</span></div>
-          <div class="row-meta">Jatuh tempo ${dateLong(x.b.dueYmd)}</div>
+          <div class="row-top"><span class="row-name">${esc(o.x.c.name)}</span></div>
+          <div class="row-meta">Jatuh tempo ${dateLong(o.due)}</div>
         </div>
-        <div class="row-amt">${fmtRp(x.b.owed)}</div>
+        <div class="row-amt">${fmtRp(o.amt)}</div>
       </div>`).join("")}</div>` : `<div class="card empty">Tidak ada jatuh tempo dalam 7 hari ke depan.</div>`;
 
     $("#v-home").innerHTML = `
